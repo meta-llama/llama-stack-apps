@@ -1,0 +1,21 @@
+agentic_system_config:
+  impl_config:
+    impl_type: inline
+    inference_config:
+      impl_config:
+        impl_type: remote
+        url: {inference_server_url}
+  safety_config:
+    llama_guard_shield:
+      model_dir: {llama_guard_model_dir}
+      excluded_categories: []
+      disable_input_check: False
+      disable_output_check: False
+    prompt_guard_shield:
+      model_dir: {prompt_guard_model_dir}
+
+sampling_params:
+  temperature: 0.0
+  strategy: "top_p"
+  top_p: 0.95
+  top_k: 0

@@ -1,0 +1,51 @@
+00:00:00 - Llama 3
+
+Dwarkesh Patel 00:00:00
+
+Mark, welcome to the podcast.
+
+Mark Zuckerberg 0:00:01
+
+Thanks for having me. Big fan of your podcast.
+
+Dwarkesh Patel 00:00:03
+
+Thank you, that's very nice of you to say. Let's start by talking about the releases that will go out when this interview goes out. Tell me about the models and Meta AI. What’s new and exciting about them?
+
+Mark Zuckerberg 00:00:15
+
+I think the main thing that most people in the world are going to see is the new version of Meta AI. The most important thing that we're doing is the upgrade to the model. We're rolling out Llama-3. We're doing it both as open source for the dev community and it is now going to be powering Meta AI. There's a lot that I'm sure we'll get into around Llama-3, but I think the bottom line on this is that we think now that Meta AI is the most intelligent, freely-available AI assistant that people can use. We're also integrating Google and Bing for real-time knowledge.
+
+We're going to make it a lot more prominent across our apps. At the top of Facebook and Messenger, you'll be able to just use the search box right there to ask any question. There's a bunch of new creation features that we added that I think are pretty cool and that I think people will enjoy. I think animations is a good one. You can basically take any image and just animate it.
+
+One that people are going to find pretty wild is that it now generates high quality images so quickly that it actually generates it as you're typing and updates it in real time. So you're typing your query and it's honing in. It’s like “show me a picture of a cow in a field with mountains in the background, eating macadamia nuts, drinking beer” and it's updating the image in real time. It's pretty wild. I think people are going to enjoy that. So I think that's what most people are going to see in the world. We're rolling that out, not everywhere, but we're starting in a handful of countries and we'll do more over the coming weeks and months. I think that’s going to be a pretty big deal and I'm really excited to get that in people's hands. It's a big step forward for Meta AI.
+
+But I think if you want to get under the hood a bit, the Llama-3 stuff is obviously the most technically interesting. We're training three versions: an 8 billion parameter model and a 70 billion, which we're releasing today, and a 405 billion dense model, which is still training. So we're not releasing that today, but I'm pretty excited about how the 8B and the 70B turned out. They're leading for their scale. We'll release a blog post with all the benchmarks so people can check it out themselves. Obviously it's open source so people get a chance to play with it.
+
+We have a roadmap of new releases coming that are going to bring multimodality, more multi-linguality, and bigger context windows as well. Hopefully, sometime later in the year we'll get to roll out the 405B. For where it is right now in training, it is already at around 85 MMLU and we expect that it's going to have leading benchmarks on a bunch of the benchmarks. I'm pretty excited about all of that. The 70 billion is great too. We're releasing that today. It's around 82 MMLU and has leading scores on math and reasoning. I think just getting this in people's hands is going to be pretty wild.
+
+Dwarkesh Patel 00:03:42
+
+Oh, interesting. That's the first I’m hearing of it as a benchmark. That's super impressive.
+
+Mark Zuckerberg 00:03:45
+
+The 8 billion is nearly as powerful as the biggest version of Llama-2 that we released. So the smallest Llama-3 is basically as powerful as the biggest Llama-2.
+
+Dwarkesh Patel 00:03:59
+
+Before we dig into these models, I want to go back in time. I'm assuming 2022 is when you started acquiring these H100s, or you can tell me when. The stock price is getting hammered. People are asking what's happening with all this capex. People aren't buying the metaverse. Presumably you're spending that capex to get these H100s. How did you know back then to get the H100s? How did you know that you’d need the GPUs?
+
+Mark Zuckerberg 00:04:22
+
+I think it was because we were working on Reels. We always want to have enough capacity to build something that we can't quite see on the horizon yet. We got into this position with Reels where we needed more GPUs to train the models. It was this big evolution for our services. Instead of just ranking content from people or pages you follow, we made this big push to start recommending what we call unconnected content, content from people or pages that you're not following.
+
+The corpus of content candidates that we could potentially show you expanded from on the order of thousands to on the order of hundreds of millions. It needed a completely different infrastructure. We started working on doing that and we were constrained on the infrastructure in catching up to what TikTok was doing as quickly as we wanted to. I basically looked at that and I was like “hey, we have to make sure that we're never in this situation again. So let's order enough GPUs to do what we need to do on Reels and ranking content and feed. But let's also double that.” Again, our normal principle is that there's going to be something on the horizon that we can't see yet.
+
+Dwarkesh Patel 00:05:51
+
+Did you know it would be AI?
+
+Mark Zuckerberg 00:05:52
+
+We thought it was going to be something that had to do with training large models. At the time I thought it was probably going to be something that had to do with content. It’s just the pattern matching of running the company, there's always another thing. At that time I was so deep into trying to get the recommendations working for Reels and other content. That’s just such a big unlock for Instagram and Facebook now, being able to show people content that's interesting to them from people that they're not even following.
