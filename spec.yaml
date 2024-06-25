@@ -1,0 +1,174 @@
+openapi: 3.0.0
+info:
+  title: The Llama Stack: Agentic Systems API
+  version: 0.0.1
+  description: >
+    The Llama Stack API is a comprehensive toolkit designed to facilitate the development and deployment of single-node and multi-node production applications using large language models like those in the Llama family.
+    
+    
+    This robust API suite covers a wide range of functionalities necessary for the lifecycle of language models, including but not limited to, model training, fine-tuning, quantization, execution, chat completions, and synthetic data generation. It provides developers with the tools needed to build, scale, and maintain advanced AI-driven applications efficiently.
+    
+    For further details, see the [meta-llama](https://github.com/meta-llama/) GitHub or the [AI at Meta](https://ai.meta.com/) website.
+paths:
+  /agents/execute:
+    post:
+      summary: Execute an agent with the provided turn history and user step
+      description: >
+        This endpoint allows for the execution of a specified agent, taking into account the historical steps and a new user step to generate a response turn.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                agent:
+                  $ref: '#/components/schemas/Agent'
+                turnHistory:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Step'
+                userStep:
+                  $ref: '#/components/schemas/Step'
+      responses:
+        '200':
+          description: Successfully executed the agent and returned the resulting turn.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Turn'
+components:
+  schemas:
+    Agent:
+      type: object
+      description: Represents an AI agent with specific tools and a model configuration.
+      properties:
+        name:
+          type: string
+          description: The name of the agent.
+        description:
+          type: string
+          description: A brief description of the agent's purpose and capabilities.
+        tools:
+          type: array
+          description: A collection of tools that the agent can utilize.
+          items:
+            $ref: '#/components/schemas/Tool'
+        model:
+          type: string
+          enum: [llama31_405, llama3_70, llama3_8]
+          description: The model identifier that the agent uses for processing.
+    Tool:
+      type: object
+      description: A tool that can be used by an agent to perform specific tasks.
+      properties:
+        name:
+          type: string
+          description: The name of the tool.
+        description:
+          type: string
+          description: A brief description of what the tool does and how it should be used.
+        parameters:
+          type: array
+          description: The parameters that the tool requires to function properly.
+          items:
+            $ref: '#/components/schemas/ToolParameter'
+        returnValue:
+          $ref: '#/components/schemas/ToolReturnValue'
+    ToolParameter:
+      type: object
+      description: Defines a parameter that a tool requires to operate.
+      properties:
+        type:
+          type: string
+          enum: [string, int, float, list, bool]
+          description: The data type of the parameter.
+        itemType:
+          type: string
+          description: The type of items in the parameter if it is a list.
+        description:
+          type: string
+          description: Details about what the parameter is used for and any constraints.
+    ToolReturnValue:
+      type: object
+      description: Describes the return value of a tool after execution.
+      properties:
+        type:
+          type: string
+          enum: [string, int, float, list, bool]
+          description: The data type of the return value.
+        itemType:
+          type: string
+          description: The type of items in the return value if it is a list.
+        description:
+          type: string
+          description: Details about the significance of the return value.
+    Attachment:
+      type: object
+      description: Todo
+      properites:
+        uri:
+          type: string
+          description: foo
+        mime-type:
+          type: string
+          description: foo
+    Step:
+      type: object
+      description: Represents a step in the interaction with an agent, such as a user query or an agent response. Each step captures a discrete part of the conversation, including user inputs, agent responses, or interactions with tools.
+      properties:
+        id:
+          type: string
+          description: A unique identifier for the step, facilitating tracking and referencing within the interaction flow.
+        role:
+          type: string
+          enum: [assistant, user]
+          description: The role of the actor in this step, indicating whether the step originated from the user or the assistant.
+        stepType:
+          type: string
+          enum: [user_response, assistant_response, tool_request, tool_response]
+          description: The type of step, categorizing the nature of the interaction such as a user response, an assistant response, a request to a tool, or a response from a tool.
+        text:
+          type: string
+          description: The text content of the step, which may include the user's query or the assistant's response.
+        attachments:
+          type: array
+          description: Any binary data attached to the step, such as images, files, or other media types, enhancing the interaction with multimedia content.
+          items:
+            $ref: '#/components/schemas/Attachment'
+        timestamp:
+          type: string
+          format: date-time
+          description: The timestamp when the step occurred, providing a temporal context to the interaction.
+        metadata:
+          type: object
+          additionalProperties: true
+          description: A flexible structure to store additional metadata about the step, such as contextual information, flags, or any other relevant data that supports the interaction process.
+    Turn:
+      type: object
+      description: Represents a complete turn in the interaction between the user and the agent. A turn consists of one or more steps that capture the sequence of interactions, including user inputs, agent responses, and any tool interactions that occur within a single conversational exchange.
+      properties:
+        id:
+          type: string
+          description: A unique identifier for the turn, which helps in tracking and referencing specific turns within a session.
+        steps:
+          type: array
+          description: An ordered list of steps that occurred during this turn. Each step can be a user query, an agent response, or a tool interaction.
+          items:
+            $ref: '#/components/schemas/Step'
+        startTime:
+          type: string
+          format: date-time
+          description: The timestamp marking the start of the turn. This helps in analyzing the timing and duration of interactions.
+        endTime:
+          type: string
+          format: date-time
+          description: The timestamp marking the end of the turn. This is useful for performance metrics and understanding user-agent interaction patterns.
+        status:
+          type: string
+          enum: [completed, failed]
+          description: The status of the turn, indicating whether the turn was completed successfully or failed due to an error.
+        metadata:
+          type: object
+          additionalProperties: true
+          description: A flexible structure to store additional metadata about the turn, such as context variables, flags, or any other relevant information that needs to be persisted or passed along with the turn.
