@@ -182,14 +182,14 @@ components:
 
     Attachment:
       type: object
-      description: Todo
+      description: Represents a file (text or media).
       properites:
         uri:
           type: string
-          description: foo
+          description: The path at which the attachment resides.
         mime-type:
           type: string
-          description: foo
+          description: The attachment's MIME type.
 
     Step:
       type: object
