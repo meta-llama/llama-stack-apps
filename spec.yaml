@@ -1,14 +1,16 @@
 openapi: 3.0.0
 info:
-  title: The Llama Stack: Agentic Systems API
+  title: The Llama Stack API
   version: 0.0.1
   description: >
     The Llama Stack API is a comprehensive toolkit designed to facilitate the development and deployment of single-node and multi-node production applications using large language models like those in the Llama family.
     
     
     This robust API suite covers a wide range of functionalities necessary for the lifecycle of language models, including but not limited to, model training, fine-tuning, quantization, execution, chat completions, and synthetic data generation. It provides developers with the tools needed to build, scale, and maintain advanced AI-driven applications efficiently.
+
     
     For further details, see the [meta-llama](https://github.com/meta-llama/) GitHub or the [AI at Meta](https://ai.meta.com/) website.
+
 paths:
   /agents/execute:
     post:
@@ -37,6 +39,77 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Turn'
+  /memory/create_bank:
+    post:
+      summary: Create a memory bank
+      description: Creates a new memory bank that stores a corpora of text content/facts to later query.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: The name of the memory bank.
+                description:
+                  type: string
+                  description: A brief description of the memory bank's purpose and contents.
+      responses:
+        '200':
+          description: Successfully created the memory bank.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemoryBank'
+  /memory/add_to_bank:
+    post:
+      summary: Add a memory nugget to a memory bank
+      description: Stores some text corpus as a nugget within the provided memory bank to be queried at a later time.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                bankId:
+                  type: string
+                  description: The ID of the memory bank to add the nugget to.
+                content:
+                  type: string
+                  description: The content to embed and add as a nugget.
+      responses:
+        '200':
+          description: Successfully added the memory nugget to the memory bank.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemoryNugget'
+  /memory/fetch_memories:
+    get:
+      summary: Fetch memories from multiple memory banks
+      description: Embeds input, queries for nuggets across specified memory banks.
+      parameters:
+        - in: query
+          name: bankIds
+          description: A list of memory bank IDs to fetch memories from.
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Successfully fetched memories from the specified memory banks.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MemoryNugget'
+
 components:
   schemas:
     Agent:
@@ -58,6 +131,7 @@ components:
           type: string
           enum: [llama31_405, llama3_70, llama3_8]
           description: The model identifier that the agent uses for processing.
+
     Tool:
       type: object
       description: A tool that can be used by an agent to perform specific tasks.
@@ -75,6 +149,7 @@ components:
             $ref: '#/components/schemas/ToolParameter'
         returnValue:
           $ref: '#/components/schemas/ToolReturnValue'
+
     ToolParameter:
       type: object
       description: Defines a parameter that a tool requires to operate.
@@ -89,6 +164,7 @@ components:
         description:
           type: string
           description: Details about what the parameter is used for and any constraints.
+
     ToolReturnValue:
       type: object
       description: Describes the return value of a tool after execution.
@@ -103,6 +179,7 @@ components:
         description:
           type: string
           description: Details about the significance of the return value.
+
     Attachment:
       type: object
       description: Todo
@@ -113,6 +190,7 @@ components:
         mime-type:
           type: string
           description: foo
+
     Step:
       type: object
       description: Represents a step in the interaction with an agent, such as a user query or an agent response. Each step captures a discrete part of the conversation, including user inputs, agent responses, or interactions with tools.
@@ -144,6 +222,7 @@ components:
           type: object
           additionalProperties: true
           description: A flexible structure to store additional metadata about the step, such as contextual information, flags, or any other relevant data that supports the interaction process.
+
     Turn:
       type: object
       description: Represents a complete turn in the interaction between the user and the agent. A turn consists of one or more steps that capture the sequence of interactions, including user inputs, agent responses, and any tool interactions that occur within a single conversational exchange.
@@ -172,3 +251,29 @@ components:
           type: object
           additionalProperties: true
           description: A flexible structure to store additional metadata about the turn, such as context variables, flags, or any other relevant information that needs to be persisted or passed along with the turn.
+    MemoryBank:
+      type: object
+      description: Represents a memory bank.
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the memory bank.
+        name:
+          type: string
+          description: The name of the memory bank.
+        description:
+          type: string
+          description: A brief description of the memory bank's purpose and contents.
+    MemoryNugget:
+      type: object
+      description: Represents a memory nugget.
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the memory nugget.
+        content:
+          type: string
+          description: The embedded content of the memory nugget.
+        bankId:
+          type: string
+          description: The ID of the memory bank that the nugget belongs to.
