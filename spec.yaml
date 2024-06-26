@@ -221,7 +221,7 @@ components:
         metadata:
           type: object
           additionalProperties: true
-          description: A flexible structure to store additional metadata about the step, such as contextual information, flags, or any other relevant data that supports the interaction process.
+          description: A flexible structure to store additional metadata about the step, such as contextual information, execution details, or any other relevant data that supports the interaction process.
 
     Turn:
       type: object
@@ -250,7 +250,7 @@ components:
         metadata:
           type: object
           additionalProperties: true
-          description: A flexible structure to store additional metadata about the turn, such as context variables, flags, or any other relevant information that needs to be persisted or passed along with the turn.
+          description: A flexible structure to store additional metadata about the turn, such as such as contextual information, execution details, or any other relevant data that needs to be persisted or passed along with the turn.
     MemoryBank:
       type: object
       description: Represents a memory bank.
