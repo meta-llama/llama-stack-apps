@@ -274,6 +274,13 @@ components:
         content:
           type: string
           description: The embedded content of the memory nugget.
-        bankId:
+    AgenticSystemDeploymentConfig:
+      type: object
+      description: Holds global deployment configuration needed to make different API calls across the stack.
+      properties:
+        braveSearchKey:
           type: string
-          description: The ID of the memory bank that the nugget belongs to.
+          description: The API key to use for agent-invoked Brave search.
+        wolframAlphaKey:
+          type: string
+          description: The API key to use for agent-invoked Wolfram search.
