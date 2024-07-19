@@ -141,8 +141,10 @@ def _get_endpoint_functions(
     functions = inspect.getmembers(endpoint, inspect.isfunction)
     for func_name, func_ref in functions:
         prefix, operation_name = split_prefix(func_name, "_", prefixes)
-        if not prefix:
+        if operation_name.startswith("__"):
             continue
+        if not prefix:
+            prefix = "post"
 
         yield prefix, operation_name, func_name, func_ref
 
