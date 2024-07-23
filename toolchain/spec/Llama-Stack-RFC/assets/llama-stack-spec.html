@@ -21,7 +21,7 @@
     "info": {
         "title": "[DRAFT] Llama Stack Specification",
         "version": "0.0.1",
-        "description": "This is the specification of the llama stack that provides\n                a set of endpoints and their corresponding interfaces that are tailored to\n                best leverage Llama Models. The specification is still in draft and subject to change.\n                Generated at 2024-07-21 12:19:33.327857"
+        "description": "This is the specification of the llama stack that provides\n                a set of endpoints and their corresponding interfaces that are tailored to\n                best leverage Llama Models. The specification is still in draft and subject to change.\n                Generated at 2024-07-22 23:07:00.350931"
     },
     "servers": [
         {
@@ -29,6 +29,213 @@
         }
     ],
     "paths": {
+        "/agentic_system/memory_bank/attach": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "tags": [
+                    "AgenticSystem"
+                ],
+                "parameters": [
+                    {
+                        "name": "agent_id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "session_id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "required": true
+                }
+            }
+        },
+        "/inference/batch_chat_completion": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BatchChatCompletionResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "Inference"
+                ],
+                "parameters": [],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BatchChatCompletionRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                }
+            }
+        },
+        "/inference/batch_completion": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BatchCompletionResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "Inference"
+                ],
+                "parameters": [],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BatchCompletionRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                }
+            }
+        },
+        "/evaluate/job/cancel": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "tags": [
+                    "Evaluations"
+                ],
+                "parameters": [
+                    {
+                        "name": "job_uuid",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/post_training/job/cancel": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "tags": [
+                    "PostTraining"
+                ],
+                "parameters": [
+                    {
+                        "name": "job_uuid",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/inference/chat_completion": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "SSE-stream of these events.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ChatCompletionResponseStreamChunk"
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "Inference"
+                ],
+                "parameters": [],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ChatCompletionRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                }
+            }
+        },
+        "/inference/completion": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "streamed completion response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CompletionResponseStreamChunk"
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "Inference"
+                ],
+                "parameters": [],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CompletionRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                }
+            }
+        },
         "/agentic_system/create": {
             "post": {
                 "responses": {
@@ -235,6 +442,49 @@
                 "parameters": [
                     {
                         "name": "bank_id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "required": true
+                }
+            }
+        },
+        "/agentic_system/memory_bank/detach": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "tags": [
+                    "AgenticSystem"
+                ],
+                "parameters": [
+                    {
+                        "name": "agent_id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "session_id",
                         "in": "query",
                         "required": true,
                         "schema": {
@@ -1012,6 +1262,826 @@
     "jsonSchemaDialect": "https://json-schema.org/draft/2020-12/schema",
     "components": {
         "schemas": {
+            "Attachment": {
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "$ref": "#/components/schemas/URL"
+                    },
+                    "mime_type": {
+                        "type": "string"
+                    }
+                },
+                "additionalProperties": false,
+                "required": [
+                    "url",
+                    "mime_type"
+                ]
+            },
+            "BatchChatCompletionRequest": {
+                "type": "object",
+                "properties": {
+                    "model": {
+                        "$ref": "#/components/schemas/InstructModel"
+                    },
+                    "messages_batch": {
+                        "type": "array",
+                        "items": {
+                            "type": "array",
+                            "items": {
+                                "oneOf": [
+                                    {
+                                        "$ref": "#/components/schemas/UserMessage"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/SystemMessage"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/ToolResponseMessage"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/CompletionMessage"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "sampling_params": {
+                        "$ref": "#/components/schemas/SamplingParams"
+                    },
+                    "available_tools": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ToolDefinition"
+                        }
+                    },
+                    "logprobs": {
+                        "type": "object",
+                        "properties": {
+                            "top_k": {
+                                "type": "integer"
+                            }
+                        },
+                        "additionalProperties": false
+                    },
+                    "quantization_config": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/Bf16QuantizationConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/Fp8QuantizationConfig"
+                            }
+                        ]
+                    }
+                },
+                "additionalProperties": false,
+                "required": [
+                    "model",
+                    "messages_batch"
+                ]
+            },
+            "Bf16QuantizationConfig": {
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "const": "bf16"
+                    }
+                },
+                "additionalProperties": false,
+                "required": [
+                    "type"
+                ]
+            },
+            "BuiltinTool": {
+                "type": "string",
+                "enum": [
+                    "brave_search",
+                    "wolfram_alpha",
+                    "photogen",
+                    "code_interpreter"
+                ]
+            },
+            "CompletionMessage": {
+                "type": "object",
+                "properties": {
+                    "role": {
+                        "type": "string",
+                        "const": "assistant"
+                    },
+                    "content": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "$ref": "#/components/schemas/Attachment"
+                            },
+                            {
+                                "type": "array",
+                                "items": {
+                                    "oneOf": [
+                                        {
+                                            "type": "string"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/Attachment"
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    "stop_reason": {
+                        "$ref": "#/components/schemas/StopReason"
+                    },
+                    "tool_calls": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ToolCall"
+                        }
+                    }
+                },
+                "additionalProperties": false,
+                "required": [
+                    "role",
+                    "content",
+                    "stop_reason",
+                    "tool_calls"
+                ]
+            },
+            "Fp8QuantizationConfig": {
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "const": "fp8"
+                    }
+                },
+                "additionalProperties": false,
+                "required": [
+                    "type"
+                ]
+            },
+            "InstructModel": {
+                "type": "string",
+                "enum": [
+                    "llama3_8b_chat",
+                    "llama3_70b_chat"
+                ]
+            },
+            "SamplingParams": {
+                "type": "object",
+                "properties": {
+                    "strategy": {
+                        "$ref": "#/components/schemas/SamplingStrategy"
+                    },
+                    "temperature": {
+                        "type": "number"
+                    },
+                    "top_p": {
+                        "type": "number"
+                    },
+                    "top_k": {
+                        "type": "integer"
+                    },
+                    "max_tokens": {
+                        "type": "integer"
+                    },
+                    "repetition_penalty": {
+                        "type": "number"
+                    }
+                },
+                "additionalProperties": false,
+                "required": [
+                    "strategy"
+                ]
+            },
+            "SamplingStrategy": {
+                "type": "string",
+                "enum": [
+                    "greedy",
+                    "top_p",
+                    "top_k"
+                ]
+            },
+            "StopReason": {
+                "type": "string",
+                "enum": [
+                    "end_of_turn",
+                    "end_of_message",
+                    "out_of_tokens"
+                ]
+            },
+            "SystemMessage": {
+                "type": "object",
+                "properties": {
+                    "role": {
+                        "type": "string",
+                        "const": "system"
+                    },
+                    "content": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "$ref": "#/components/schemas/Attachment"
+                            },
+                            {
+                                "type": "array",
+                                "items": {
+                                    "oneOf": [
+                                        {
+                                            "type": "string"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/Attachment"
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                },
+                "additionalProperties": false,
+                "required": [
+                    "role",
+                    "content"
+                ]
+            },
+            "ToolCall": {
+                "type": "object",
+                "properties": {
+                    "call_id": {
+                        "type": "string"
+                    },
+                    "tool_name": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/BuiltinTool"
+                            },
+                            {
+                                "type": "string"
+                            }
+                        ]
+                    },
+                    "arguments": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "oneOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "integer"
+                                },
+                                {
+                                    "type": "number"
+                                },
+                                {
+                                    "type": "boolean"
+                                },
+                                {
+                                    "type": "null"
+                                },
+                                {
+                                    "type": "array",
+                                    "items": {
+                                        "oneOf": [
+                                            {
+                                                "type": "string"
+                                            },
+                                            {
+                                                "type": "integer"
+                                            },
+                                            {
+                                                "type": "number"
+                                            },
+                                            {
+                                                "type": "boolean"
+                                            },
+                                            {
+                                                "type": "null"
+                                            }
+                                        ]
+                                    }
+                                },
+                                {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "oneOf": [
+                                            {
+                                                "type": "string"
+                                            },
+                                            {
+                                                "type": "integer"
+                                            },
+                                            {
+                                                "type": "number"
+                                            },
+                                            {
+                                                "type": "boolean"
+                                            },
+                                            {
+                                                "type": "null"
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                "additionalProperties": false,
+                "required": [
+                    "call_id",
+                    "tool_name",
+                    "arguments"
+                ]
+            },
+            "ToolDefinition": {
+                "type": "object",
+                "properties": {
+                    "tool_name": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/BuiltinTool"
+                            },
+                            {
+                                "type": "string"
+                            }
+                        ]
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "parameters": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/ToolParamDefinition"
+                        }
+                    }
+                },
+                "additionalProperties": false,
+                "required": [
+                    "tool_name"
+                ]
+            },
+            "ToolParamDefinition": {
+                "type": "object",
+                "properties": {
+                    "param_type": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "required": {
+                        "type": "boolean"
+                    }
+                },
+                "additionalProperties": false,
+                "required": [
+                    "param_type"
+                ]
+            },
+            "ToolResponseMessage": {
+                "type": "object",
+                "properties": {
+                    "role": {
+                        "type": "string",
+                        "const": "ipython"
+                    },
+                    "call_id": {
+                        "type": "string"
+                    },
+                    "tool_name": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/BuiltinTool"
+                            },
+                            {
+                                "type": "string"
+                            }
+                        ]
+                    },
+                    "content": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "$ref": "#/components/schemas/Attachment"
+                            },
+                            {
+                                "type": "array",
+                                "items": {
+                                    "oneOf": [
+                                        {
+                                            "type": "string"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/Attachment"
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                },
+                "additionalProperties": false,
+                "required": [
+                    "role",
+                    "call_id",
+                    "tool_name",
+                    "content"
+                ]
+            },
+            "URL": {
+                "type": "string",
+                "format": "uri",
+                "pattern": "^(https?://|file://|data:)"
+            },
+            "UserMessage": {
+                "type": "object",
+                "properties": {
+                    "role": {
+                        "type": "string",
+                        "const": "user"
+                    },
+                    "content": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "$ref": "#/components/schemas/Attachment"
+                            },
+                            {
+                                "type": "array",
+                                "items": {
+                                    "oneOf": [
+                                        {
+                                            "type": "string"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/Attachment"
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                },
+                "additionalProperties": false,
+                "required": [
+                    "role",
+                    "content"
+                ]
+            },
+            "BatchChatCompletionResponse": {
+                "type": "object",
+                "properties": {
+                    "completion_message_batch": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CompletionMessage"
+                        }
+                    }
+                },
+                "additionalProperties": false,
+                "required": [
+                    "completion_message_batch"
+                ]
+            },
+            "BatchCompletionRequest": {
+                "type": "object",
+                "properties": {
+                    "model": {
+                        "$ref": "#/components/schemas/PretrainedModel"
+                    },
+                    "content_batch": {
+                        "type": "array",
+                        "items": {
+                            "oneOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "$ref": "#/components/schemas/Attachment"
+                                },
+                                {
+                                    "type": "array",
+                                    "items": {
+                                        "oneOf": [
+                                            {
+                                                "type": "string"
+                                            },
+                                            {
+                                                "$ref": "#/components/schemas/Attachment"
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "sampling_params": {
+                        "$ref": "#/components/schemas/SamplingParams"
+                    },
+                    "logprobs": {
+                        "type": "object",
+                        "properties": {
+                            "top_k": {
+                                "type": "integer"
+                            }
+                        },
+                        "additionalProperties": false
+                    },
+                    "quantization_config": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/Bf16QuantizationConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/Fp8QuantizationConfig"
+                            }
+                        ]
+                    }
+                },
+                "additionalProperties": false,
+                "required": [
+                    "model",
+                    "content_batch"
+                ]
+            },
+            "PretrainedModel": {
+                "description": "The type of the model. This is used to determine the model family and SKU."
+            },
+            "BatchCompletionResponse": {
+                "type": "object",
+                "properties": {
+                    "completion_message_batch": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CompletionMessage"
+                        }
+                    }
+                },
+                "additionalProperties": false,
+                "required": [
+                    "completion_message_batch"
+                ]
+            },
+            "ChatCompletionRequest": {
+                "type": "object",
+                "properties": {
+                    "model": {
+                        "$ref": "#/components/schemas/InstructModel"
+                    },
+                    "messages": {
+                        "type": "array",
+                        "items": {
+                            "oneOf": [
+                                {
+                                    "$ref": "#/components/schemas/UserMessage"
+                                },
+                                {
+                                    "$ref": "#/components/schemas/SystemMessage"
+                                },
+                                {
+                                    "$ref": "#/components/schemas/ToolResponseMessage"
+                                },
+                                {
+                                    "$ref": "#/components/schemas/CompletionMessage"
+                                }
+                            ]
+                        }
+                    },
+                    "sampling_params": {
+                        "$ref": "#/components/schemas/SamplingParams"
+                    },
+                    "available_tools": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ToolDefinition"
+                        }
+                    },
+                    "stream": {
+                        "type": "boolean"
+                    },
+                    "logprobs": {
+                        "type": "object",
+                        "properties": {
+                            "top_k": {
+                                "type": "integer"
+                            }
+                        },
+                        "additionalProperties": false
+                    },
+                    "quantization_config": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/Bf16QuantizationConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/Fp8QuantizationConfig"
+                            }
+                        ]
+                    }
+                },
+                "additionalProperties": false,
+                "required": [
+                    "model",
+                    "messages"
+                ]
+            },
+            "ChatCompletionResponseEvent": {
+                "type": "object",
+                "properties": {
+                    "event_type": {
+                        "$ref": "#/components/schemas/ChatCompletionResponseEventType"
+                    },
+                    "delta": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "$ref": "#/components/schemas/ToolCallDelta"
+                            }
+                        ]
+                    },
+                    "logprobs": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TokenLogProbs"
+                        }
+                    },
+                    "stop_reason": {
+                        "$ref": "#/components/schemas/StopReason"
+                    }
+                },
+                "additionalProperties": false,
+                "required": [
+                    "event_type",
+                    "delta"
+                ],
+                "title": "Chat completion response event."
+            },
+            "ChatCompletionResponseEventType": {
+                "type": "string",
+                "enum": [
+                    "start",
+                    "complete",
+                    "progress"
+                ]
+            },
+            "ChatCompletionResponseStreamChunk": {
+                "type": "object",
+                "properties": {
+                    "event": {
+                        "$ref": "#/components/schemas/ChatCompletionResponseEvent"
+                    }
+                },
+                "additionalProperties": false,
+                "required": [
+                    "event"
+                ],
+                "title": "SSE-stream of these events."
+            },
+            "TokenLogProbs": {
+                "type": "object",
+                "properties": {
+                    "logprobs_by_token": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "number"
+                        }
+                    }
+                },
+                "additionalProperties": false,
+                "required": [
+                    "logprobs_by_token"
+                ]
+            },
+            "ToolCallDelta": {
+                "type": "object",
+                "properties": {
+                    "content": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "$ref": "#/components/schemas/ToolCall"
+                            }
+                        ]
+                    },
+                    "parse_status": {
+                        "$ref": "#/components/schemas/ToolCallParseStatus"
+                    }
+                },
+                "additionalProperties": false,
+                "required": [
+                    "content",
+                    "parse_status"
+                ]
+            },
+            "ToolCallParseStatus": {
+                "type": "string",
+                "enum": [
+                    "started",
+                    "in_progress",
+                    "failure",
+                    "success"
+                ]
+            },
+            "CompletionRequest": {
+                "type": "object",
+                "properties": {
+                    "model": {
+                        "$ref": "#/components/schemas/PretrainedModel"
+                    },
+                    "content": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "$ref": "#/components/schemas/Attachment"
+                            },
+                            {
+                                "type": "array",
+                                "items": {
+                                    "oneOf": [
+                                        {
+                                            "type": "string"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/Attachment"
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    "sampling_params": {
+                        "$ref": "#/components/schemas/SamplingParams"
+                    },
+                    "stream": {
+                        "type": "boolean"
+                    },
+                    "logprobs": {
+                        "type": "object",
+                        "properties": {
+                            "top_k": {
+                                "type": "integer"
+                            }
+                        },
+                        "additionalProperties": false
+                    },
+                    "quantization_config": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/Bf16QuantizationConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/Fp8QuantizationConfig"
+                            }
+                        ]
+                    }
+                },
+                "additionalProperties": false,
+                "required": [
+                    "model",
+                    "content"
+                ]
+            },
+            "CompletionResponseStreamChunk": {
+                "type": "object",
+                "properties": {
+                    "delta": {
+                        "type": "string"
+                    },
+                    "stop_reason": {
+                        "$ref": "#/components/schemas/StopReason"
+                    },
+                    "logprobs": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TokenLogProbs"
+                        }
+                    }
+                },
+                "additionalProperties": false,
+                "required": [
+                    "delta"
+                ],
+                "title": "streamed completion response."
+            },
             "AgenticSystemCreateRequest": {
                 "type": "object",
                 "properties": {
@@ -1096,13 +2166,7 @@
                     "tool_name": {
                         "oneOf": [
                             {
-                                "type": "string",
-                                "enum": [
-                                    "brave_search",
-                                    "wolfram_alpha",
-                                    "photogen",
-                                    "code_interpreter"
-                                ]
+                                "$ref": "#/components/schemas/BuiltinTool"
                             },
                             {
                                 "type": "string"
@@ -1139,35 +2203,6 @@
                     "tool_name"
                 ]
             },
-            "Attachment": {
-                "type": "object",
-                "properties": {
-                    "url": {
-                        "$ref": "#/components/schemas/URL"
-                    },
-                    "mime_type": {
-                        "type": "string"
-                    }
-                },
-                "additionalProperties": false,
-                "required": [
-                    "url",
-                    "mime_type"
-                ]
-            },
-            "Bf16QuantizationConfig": {
-                "type": "object",
-                "properties": {
-                    "type": {
-                        "type": "string",
-                        "const": "bf16"
-                    }
-                },
-                "additionalProperties": false,
-                "required": [
-                    "type"
-                ]
-            },
             "BuiltinShield": {
                 "type": "string",
                 "enum": [
@@ -1176,74 +2211,6 @@
                     "third_party_shield",
                     "injection_shield",
                     "jailbreak_shield"
-                ]
-            },
-            "CompletionMessage": {
-                "type": "object",
-                "properties": {
-                    "role": {
-                        "type": "string",
-                        "const": "assistant"
-                    },
-                    "content": {
-                        "oneOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "$ref": "#/components/schemas/Attachment"
-                            },
-                            {
-                                "type": "array",
-                                "items": {
-                                    "oneOf": [
-                                        {
-                                            "type": "string"
-                                        },
-                                        {
-                                            "$ref": "#/components/schemas/Attachment"
-                                        }
-                                    ]
-                                }
-                            }
-                        ]
-                    },
-                    "stop_reason": {
-                        "$ref": "#/components/schemas/StopReason"
-                    },
-                    "tool_calls": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/ToolCall"
-                        }
-                    }
-                },
-                "additionalProperties": false,
-                "required": [
-                    "role",
-                    "content",
-                    "stop_reason",
-                    "tool_calls"
-                ]
-            },
-            "Fp8QuantizationConfig": {
-                "type": "object",
-                "properties": {
-                    "type": {
-                        "type": "string",
-                        "const": "fp8"
-                    }
-                },
-                "additionalProperties": false,
-                "required": [
-                    "type"
-                ]
-            },
-            "InstructModel": {
-                "type": "string",
-                "enum": [
-                    "llama3_8b_chat",
-                    "llama3_70b_chat"
                 ]
             },
             "OnViolationAction": {
@@ -1297,41 +2264,6 @@
                     "DELETE"
                 ]
             },
-            "SamplingParams": {
-                "type": "object",
-                "properties": {
-                    "strategy": {
-                        "$ref": "#/components/schemas/SamplingStrategy"
-                    },
-                    "temperature": {
-                        "type": "number"
-                    },
-                    "top_p": {
-                        "type": "number"
-                    },
-                    "top_k": {
-                        "type": "integer"
-                    },
-                    "max_tokens": {
-                        "type": "integer"
-                    },
-                    "repetition_penalty": {
-                        "type": "number"
-                    }
-                },
-                "additionalProperties": false,
-                "required": [
-                    "strategy"
-                ]
-            },
-            "SamplingStrategy": {
-                "type": "string",
-                "enum": [
-                    "greedy",
-                    "top_p",
-                    "top_k"
-                ]
-            },
             "ShieldDefinition": {
                 "type": "object",
                 "properties": {
@@ -1365,265 +2297,6 @@
                 "required": [
                     "shield_type",
                     "on_violation_action"
-                ]
-            },
-            "StopReason": {
-                "type": "string",
-                "enum": [
-                    "end_of_turn",
-                    "end_of_message",
-                    "out_of_tokens"
-                ]
-            },
-            "SystemMessage": {
-                "type": "object",
-                "properties": {
-                    "role": {
-                        "type": "string",
-                        "const": "system"
-                    },
-                    "content": {
-                        "oneOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "$ref": "#/components/schemas/Attachment"
-                            },
-                            {
-                                "type": "array",
-                                "items": {
-                                    "oneOf": [
-                                        {
-                                            "type": "string"
-                                        },
-                                        {
-                                            "$ref": "#/components/schemas/Attachment"
-                                        }
-                                    ]
-                                }
-                            }
-                        ]
-                    }
-                },
-                "additionalProperties": false,
-                "required": [
-                    "role",
-                    "content"
-                ]
-            },
-            "ToolCall": {
-                "type": "object",
-                "properties": {
-                    "call_id": {
-                        "type": "string"
-                    },
-                    "tool_name": {
-                        "oneOf": [
-                            {
-                                "type": "string",
-                                "enum": [
-                                    "brave_search",
-                                    "wolfram_alpha",
-                                    "photogen",
-                                    "code_interpreter"
-                                ]
-                            },
-                            {
-                                "type": "string"
-                            }
-                        ]
-                    },
-                    "arguments": {
-                        "type": "object",
-                        "additionalProperties": {
-                            "oneOf": [
-                                {
-                                    "type": "string"
-                                },
-                                {
-                                    "type": "integer"
-                                },
-                                {
-                                    "type": "number"
-                                },
-                                {
-                                    "type": "boolean"
-                                },
-                                {
-                                    "type": "null"
-                                },
-                                {
-                                    "type": "array",
-                                    "items": {
-                                        "oneOf": [
-                                            {
-                                                "type": "string"
-                                            },
-                                            {
-                                                "type": "integer"
-                                            },
-                                            {
-                                                "type": "number"
-                                            },
-                                            {
-                                                "type": "boolean"
-                                            },
-                                            {
-                                                "type": "null"
-                                            }
-                                        ]
-                                    }
-                                },
-                                {
-                                    "type": "object",
-                                    "additionalProperties": {
-                                        "oneOf": [
-                                            {
-                                                "type": "string"
-                                            },
-                                            {
-                                                "type": "integer"
-                                            },
-                                            {
-                                                "type": "number"
-                                            },
-                                            {
-                                                "type": "boolean"
-                                            },
-                                            {
-                                                "type": "null"
-                                            }
-                                        ]
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                },
-                "additionalProperties": false,
-                "required": [
-                    "call_id",
-                    "tool_name",
-                    "arguments"
-                ]
-            },
-            "ToolParamDefinition": {
-                "type": "object",
-                "properties": {
-                    "param_type": {
-                        "type": "string"
-                    },
-                    "description": {
-                        "type": "string"
-                    },
-                    "required": {
-                        "type": "boolean"
-                    }
-                },
-                "additionalProperties": false,
-                "required": [
-                    "param_type"
-                ]
-            },
-            "ToolResponseMessage": {
-                "type": "object",
-                "properties": {
-                    "role": {
-                        "type": "string",
-                        "const": "ipython"
-                    },
-                    "call_id": {
-                        "type": "string"
-                    },
-                    "tool_name": {
-                        "oneOf": [
-                            {
-                                "type": "string",
-                                "enum": [
-                                    "brave_search",
-                                    "wolfram_alpha",
-                                    "photogen",
-                                    "code_interpreter"
-                                ]
-                            },
-                            {
-                                "type": "string"
-                            }
-                        ]
-                    },
-                    "content": {
-                        "oneOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "$ref": "#/components/schemas/Attachment"
-                            },
-                            {
-                                "type": "array",
-                                "items": {
-                                    "oneOf": [
-                                        {
-                                            "type": "string"
-                                        },
-                                        {
-                                            "$ref": "#/components/schemas/Attachment"
-                                        }
-                                    ]
-                                }
-                            }
-                        ]
-                    }
-                },
-                "additionalProperties": false,
-                "required": [
-                    "role",
-                    "call_id",
-                    "tool_name",
-                    "content"
-                ]
-            },
-            "URL": {
-                "type": "string",
-                "format": "uri",
-                "pattern": "^(https?://|file://|data:)"
-            },
-            "UserMessage": {
-                "type": "object",
-                "properties": {
-                    "role": {
-                        "type": "string",
-                        "const": "user"
-                    },
-                    "content": {
-                        "oneOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "$ref": "#/components/schemas/Attachment"
-                            },
-                            {
-                                "type": "array",
-                                "items": {
-                                    "oneOf": [
-                                        {
-                                            "type": "string"
-                                        },
-                                        {
-                                            "$ref": "#/components/schemas/Attachment"
-                                        }
-                                    ]
-                                }
-                            }
-                        ]
-                    }
-                },
-                "additionalProperties": false,
-                "required": [
-                    "role",
-                    "content"
                 ]
             },
             "AgenticSystemCreateResponse": {
@@ -2097,38 +2770,6 @@
                     "is_violation"
                 ]
             },
-            "ToolCallDelta": {
-                "type": "object",
-                "properties": {
-                    "content": {
-                        "oneOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "$ref": "#/components/schemas/ToolCall"
-                            }
-                        ]
-                    },
-                    "parse_status": {
-                        "$ref": "#/components/schemas/ToolCallParseStatus"
-                    }
-                },
-                "additionalProperties": false,
-                "required": [
-                    "content",
-                    "parse_status"
-                ]
-            },
-            "ToolCallParseStatus": {
-                "type": "string",
-                "enum": [
-                    "started",
-                    "in_progress",
-                    "failure",
-                    "success"
-                ]
-            },
             "ToolExecutionStep": {
                 "type": "object",
                 "properties": {
@@ -2181,13 +2822,7 @@
                     "tool_name": {
                         "oneOf": [
                             {
-                                "type": "string",
-                                "enum": [
-                                    "brave_search",
-                                    "wolfram_alpha",
-                                    "photogen",
-                                    "code_interpreter"
-                                ]
+                                "$ref": "#/components/schemas/BuiltinTool"
                             },
                             {
                                 "type": "string"
@@ -2455,6 +3090,9 @@
                     "memory_bank_name"
                 ]
             },
+            "Checkpoint": {
+                "description": "Checkpoint created during training runs"
+            },
             "PostTrainingJobArtifactsResponse": {
                 "type": "object",
                 "properties": {
@@ -2464,20 +3102,7 @@
                     "checkpoints": {
                         "type": "array",
                         "items": {
-                            "type": "object",
-                            "properties": {
-                                "iters": {
-                                    "type": "integer"
-                                },
-                                "path": {
-                                    "$ref": "#/components/schemas/URL"
-                                }
-                            },
-                            "additionalProperties": false,
-                            "required": [
-                                "iters",
-                                "path"
-                            ]
+                            "$ref": "#/components/schemas/Checkpoint"
                         }
                     }
                 },
@@ -2566,20 +3191,7 @@
                     "checkpoints": {
                         "type": "array",
                         "items": {
-                            "type": "object",
-                            "properties": {
-                                "iters": {
-                                    "type": "integer"
-                                },
-                                "path": {
-                                    "$ref": "#/components/schemas/URL"
-                                }
-                            },
-                            "additionalProperties": false,
-                            "required": [
-                                "iters",
-                                "path"
-                            ]
+                            "$ref": "#/components/schemas/Checkpoint"
                         }
                     }
                 },
@@ -2613,20 +3225,7 @@
                         "$ref": "#/components/schemas/TrainEvalDataset"
                     },
                     "checkpoint": {
-                        "type": "object",
-                        "properties": {
-                            "iters": {
-                                "type": "integer"
-                            },
-                            "path": {
-                                "$ref": "#/components/schemas/URL"
-                            }
-                        },
-                        "additionalProperties": false,
-                        "required": [
-                            "iters",
-                            "path"
-                        ]
+                        "$ref": "#/components/schemas/Checkpoint"
                     },
                     "sampling_params": {
                         "$ref": "#/components/schemas/SamplingParams"
@@ -2662,20 +3261,7 @@
                         "$ref": "#/components/schemas/TrainEvalDataset"
                     },
                     "checkpoint": {
-                        "type": "object",
-                        "properties": {
-                            "iters": {
-                                "type": "integer"
-                            },
-                            "path": {
-                                "$ref": "#/components/schemas/URL"
-                            }
-                        },
-                        "additionalProperties": false,
-                        "required": [
-                            "iters",
-                            "path"
-                        ]
+                        "$ref": "#/components/schemas/Checkpoint"
                     },
                     "sampling_params": {
                         "$ref": "#/components/schemas/SamplingParams"
@@ -2711,20 +3297,7 @@
                         "$ref": "#/components/schemas/TrainEvalDataset"
                     },
                     "checkpoint": {
-                        "type": "object",
-                        "properties": {
-                            "iters": {
-                                "type": "integer"
-                            },
-                            "path": {
-                                "$ref": "#/components/schemas/URL"
-                            }
-                        },
-                        "additionalProperties": false,
-                        "required": [
-                            "iters",
-                            "path"
-                        ]
+                        "$ref": "#/components/schemas/Checkpoint"
                     },
                     "sampling_params": {
                         "$ref": "#/components/schemas/SamplingParams"
@@ -3354,13 +3927,6 @@
                 ],
                 "title": "Request to finetune a model."
             },
-            "PretrainedModel": {
-                "type": "string",
-                "enum": [
-                    "llama3_8b",
-                    "llama3_70b"
-                ]
-            },
             "QLoraFinetuningConfig": {
                 "type": "object",
                 "properties": {
@@ -3402,49 +3968,44 @@
     ],
     "tags": [
         {
-            "name": "RewardScoring"
-        },
-        {
-            "name": "PostTraining"
-        },
-        {
-            "name": "AgenticSystem"
-        },
-        {
-            "name": "Datasets"
+            "name": "SyntheticDataGeneration"
         },
         {
             "name": "MemoryBanks"
         },
         {
+            "name": "AgenticSystem"
+        },
+        {
+            "name": "PostTraining"
+        },
+        {
+            "name": "Datasets"
+        },
+        {
             "name": "Evaluations"
         },
         {
-            "name": "SyntheticDataGeneration"
+            "name": "Inference"
         },
         {
-            "name": "AgenticSystemCreateRequest",
-            "description": "<SchemaDefinition schemaRef=\"#/components/schemas/AgenticSystemCreateRequest\" />"
-        },
-        {
-            "name": "AgenticSystemInstanceConfig",
-            "description": "<SchemaDefinition schemaRef=\"#/components/schemas/AgenticSystemInstanceConfig\" />"
-        },
-        {
-            "name": "AgenticSystemToolDefinition",
-            "description": "<SchemaDefinition schemaRef=\"#/components/schemas/AgenticSystemToolDefinition\" />"
+            "name": "RewardScoring"
         },
         {
             "name": "Attachment",
             "description": "<SchemaDefinition schemaRef=\"#/components/schemas/Attachment\" />"
         },
         {
+            "name": "BatchChatCompletionRequest",
+            "description": "<SchemaDefinition schemaRef=\"#/components/schemas/BatchChatCompletionRequest\" />"
+        },
+        {
             "name": "Bf16QuantizationConfig",
             "description": "<SchemaDefinition schemaRef=\"#/components/schemas/Bf16QuantizationConfig\" />"
         },
         {
-            "name": "BuiltinShield",
-            "description": "<SchemaDefinition schemaRef=\"#/components/schemas/BuiltinShield\" />"
+            "name": "BuiltinTool",
+            "description": "<SchemaDefinition schemaRef=\"#/components/schemas/BuiltinTool\" />"
         },
         {
             "name": "CompletionMessage",
@@ -3459,28 +4020,12 @@
             "description": "<SchemaDefinition schemaRef=\"#/components/schemas/InstructModel\" />"
         },
         {
-            "name": "OnViolationAction",
-            "description": "<SchemaDefinition schemaRef=\"#/components/schemas/OnViolationAction\" />"
-        },
-        {
-            "name": "RestAPIExecutionConfig",
-            "description": "<SchemaDefinition schemaRef=\"#/components/schemas/RestAPIExecutionConfig\" />"
-        },
-        {
-            "name": "RestAPIMethod",
-            "description": "<SchemaDefinition schemaRef=\"#/components/schemas/RestAPIMethod\" />"
-        },
-        {
             "name": "SamplingParams",
             "description": "<SchemaDefinition schemaRef=\"#/components/schemas/SamplingParams\" />"
         },
         {
             "name": "SamplingStrategy",
             "description": "<SchemaDefinition schemaRef=\"#/components/schemas/SamplingStrategy\" />"
-        },
-        {
-            "name": "ShieldDefinition",
-            "description": "<SchemaDefinition schemaRef=\"#/components/schemas/ShieldDefinition\" />"
         },
         {
             "name": "StopReason",
@@ -3493,6 +4038,10 @@
         {
             "name": "ToolCall",
             "description": "<SchemaDefinition schemaRef=\"#/components/schemas/ToolCall\" />"
+        },
+        {
+            "name": "ToolDefinition",
+            "description": "<SchemaDefinition schemaRef=\"#/components/schemas/ToolDefinition\" />"
         },
         {
             "name": "ToolParamDefinition",
@@ -3509,6 +4058,90 @@
         {
             "name": "UserMessage",
             "description": "<SchemaDefinition schemaRef=\"#/components/schemas/UserMessage\" />"
+        },
+        {
+            "name": "BatchChatCompletionResponse",
+            "description": "<SchemaDefinition schemaRef=\"#/components/schemas/BatchChatCompletionResponse\" />"
+        },
+        {
+            "name": "BatchCompletionRequest",
+            "description": "<SchemaDefinition schemaRef=\"#/components/schemas/BatchCompletionRequest\" />"
+        },
+        {
+            "name": "PretrainedModel",
+            "description": "The type of the model. This is used to determine the model family and SKU.\n\n<SchemaDefinition schemaRef=\"#/components/schemas/PretrainedModel\" />"
+        },
+        {
+            "name": "BatchCompletionResponse",
+            "description": "<SchemaDefinition schemaRef=\"#/components/schemas/BatchCompletionResponse\" />"
+        },
+        {
+            "name": "ChatCompletionRequest",
+            "description": "<SchemaDefinition schemaRef=\"#/components/schemas/ChatCompletionRequest\" />"
+        },
+        {
+            "name": "ChatCompletionResponseEvent",
+            "description": "Chat completion response event.\n\n<SchemaDefinition schemaRef=\"#/components/schemas/ChatCompletionResponseEvent\" />"
+        },
+        {
+            "name": "ChatCompletionResponseEventType",
+            "description": "<SchemaDefinition schemaRef=\"#/components/schemas/ChatCompletionResponseEventType\" />"
+        },
+        {
+            "name": "ChatCompletionResponseStreamChunk",
+            "description": "SSE-stream of these events.\n\n<SchemaDefinition schemaRef=\"#/components/schemas/ChatCompletionResponseStreamChunk\" />"
+        },
+        {
+            "name": "TokenLogProbs",
+            "description": "<SchemaDefinition schemaRef=\"#/components/schemas/TokenLogProbs\" />"
+        },
+        {
+            "name": "ToolCallDelta",
+            "description": "<SchemaDefinition schemaRef=\"#/components/schemas/ToolCallDelta\" />"
+        },
+        {
+            "name": "ToolCallParseStatus",
+            "description": "<SchemaDefinition schemaRef=\"#/components/schemas/ToolCallParseStatus\" />"
+        },
+        {
+            "name": "CompletionRequest",
+            "description": "<SchemaDefinition schemaRef=\"#/components/schemas/CompletionRequest\" />"
+        },
+        {
+            "name": "CompletionResponseStreamChunk",
+            "description": "streamed completion response.\n\n<SchemaDefinition schemaRef=\"#/components/schemas/CompletionResponseStreamChunk\" />"
+        },
+        {
+            "name": "AgenticSystemCreateRequest",
+            "description": "<SchemaDefinition schemaRef=\"#/components/schemas/AgenticSystemCreateRequest\" />"
+        },
+        {
+            "name": "AgenticSystemInstanceConfig",
+            "description": "<SchemaDefinition schemaRef=\"#/components/schemas/AgenticSystemInstanceConfig\" />"
+        },
+        {
+            "name": "AgenticSystemToolDefinition",
+            "description": "<SchemaDefinition schemaRef=\"#/components/schemas/AgenticSystemToolDefinition\" />"
+        },
+        {
+            "name": "BuiltinShield",
+            "description": "<SchemaDefinition schemaRef=\"#/components/schemas/BuiltinShield\" />"
+        },
+        {
+            "name": "OnViolationAction",
+            "description": "<SchemaDefinition schemaRef=\"#/components/schemas/OnViolationAction\" />"
+        },
+        {
+            "name": "RestAPIExecutionConfig",
+            "description": "<SchemaDefinition schemaRef=\"#/components/schemas/RestAPIExecutionConfig\" />"
+        },
+        {
+            "name": "RestAPIMethod",
+            "description": "<SchemaDefinition schemaRef=\"#/components/schemas/RestAPIMethod\" />"
+        },
+        {
+            "name": "ShieldDefinition",
+            "description": "<SchemaDefinition schemaRef=\"#/components/schemas/ShieldDefinition\" />"
         },
         {
             "name": "AgenticSystemCreateResponse",
@@ -3575,14 +4208,6 @@
             "description": "<SchemaDefinition schemaRef=\"#/components/schemas/ShieldResponse\" />"
         },
         {
-            "name": "ToolCallDelta",
-            "description": "<SchemaDefinition schemaRef=\"#/components/schemas/ToolCallDelta\" />"
-        },
-        {
-            "name": "ToolCallParseStatus",
-            "description": "<SchemaDefinition schemaRef=\"#/components/schemas/ToolCallParseStatus\" />"
-        },
-        {
             "name": "ToolExecutionStep",
             "description": "<SchemaDefinition schemaRef=\"#/components/schemas/ToolExecutionStep\" />"
         },
@@ -3629,6 +4254,10 @@
         {
             "name": "MemoryBank",
             "description": "<SchemaDefinition schemaRef=\"#/components/schemas/MemoryBank\" />"
+        },
+        {
+            "name": "Checkpoint",
+            "description": "Checkpoint created during training runs\n\n<SchemaDefinition schemaRef=\"#/components/schemas/Checkpoint\" />"
         },
         {
             "name": "PostTrainingJobArtifactsResponse",
@@ -3731,10 +4360,6 @@
             "description": "Request to finetune a model.\n\n<SchemaDefinition schemaRef=\"#/components/schemas/PostTrainingSFTRequest\" />"
         },
         {
-            "name": "PretrainedModel",
-            "description": "<SchemaDefinition schemaRef=\"#/components/schemas/PretrainedModel\" />"
-        },
-        {
             "name": "QLoraFinetuningConfig",
             "description": "<SchemaDefinition schemaRef=\"#/components/schemas/QLoraFinetuningConfig\" />"
         }
@@ -3746,6 +4371,7 @@
                 "AgenticSystem",
                 "Datasets",
                 "Evaluations",
+                "Inference",
                 "MemoryBanks",
                 "PostTraining",
                 "RewardScoring",
@@ -3770,9 +4396,21 @@
                 "AgenticSystemTurnResponseTurnCompletePayload",
                 "AgenticSystemTurnResponseTurnStartPayload",
                 "Attachment",
+                "BatchChatCompletionRequest",
+                "BatchChatCompletionResponse",
+                "BatchCompletionRequest",
+                "BatchCompletionResponse",
                 "Bf16QuantizationConfig",
                 "BuiltinShield",
+                "BuiltinTool",
+                "ChatCompletionRequest",
+                "ChatCompletionResponseEvent",
+                "ChatCompletionResponseEventType",
+                "ChatCompletionResponseStreamChunk",
+                "Checkpoint",
                 "CompletionMessage",
+                "CompletionRequest",
+                "CompletionResponseStreamChunk",
                 "CreateDatasetRequest",
                 "DPOAlignmentConfig",
                 "DialogGenerations",
@@ -3821,9 +4459,11 @@
                 "SyntheticDataGenerationRequest",
                 "SyntheticDataGenerationResponse",
                 "SystemMessage",
+                "TokenLogProbs",
                 "ToolCall",
                 "ToolCallDelta",
                 "ToolCallParseStatus",
+                "ToolDefinition",
                 "ToolExecutionStep",
                 "ToolParamDefinition",
                 "ToolResponse",

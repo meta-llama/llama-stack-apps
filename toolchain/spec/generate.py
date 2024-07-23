@@ -24,7 +24,7 @@ from llama_toolchain.memory.api import *  # noqa: F403
 from llama_toolchain.post_training.api import *  # noqa: F403
 from llama_toolchain.reward_scoring.api import *  # noqa: F403
 from llama_toolchain.synthetic_data_generation.api import *  # noqa: F403
-from agentic_system.api import *  # noqa: F403
+from llama_agentic_system.api import *  # noqa: F403
 
 
 class LlamaStackEndpoints(
@@ -42,7 +42,7 @@ class LlamaStackEndpoints(
 if __name__ == "__main__":
     now = str(datetime.now())
     print(
-        "Converting the spec to YAML (openapi.yaml) and HTML (openapi.html) at " + now
+        "Converting the spec to YAML and HTML at " + now
     )
     spec = Specification(
         LlamaStackEndpoints,
@@ -59,8 +59,8 @@ if __name__ == "__main__":
             ),
         ),
     )
-    with open("openapi.yaml", "w", encoding="utf-8") as fp:
+    with open("Llama-Stack-RFC/assets/llama-stack-spec.yaml", "w", encoding="utf-8") as fp:
         yaml.dump(spec.get_json(), fp, allow_unicode=True)
 
-    with open("openapi.html", "w") as fp:
+    with open("Llama-Stack-RFC/assets/llama-stack-spec.html", "w") as fp:
         spec.write_html(fp, pretty_print=True)

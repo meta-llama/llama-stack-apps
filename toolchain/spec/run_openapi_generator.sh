@@ -14,4 +14,4 @@
 
 set -x
 
-PYTHONPATH=/llama-models:/data/users/rsm/llama-toolchain:/data/users/rsm/llama-agentic-system:../../../oss-ops:../.. python -m toolchain.spec.generate
+PYTHONPATH=.:../../../llama-models:../../../llama-toolchain:../../../llama-agentic-system:../.. python -m toolchain.spec.generate
