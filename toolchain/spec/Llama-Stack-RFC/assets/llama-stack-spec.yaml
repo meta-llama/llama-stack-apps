@@ -73,6 +73,18 @@ components:
       required:
       - session_id
       type: object
+    AgenticSystemStepResponse:
+      additionalProperties: false
+      properties:
+        step:
+          oneOf:
+          - $ref: '#/components/schemas/InferenceStep'
+          - $ref: '#/components/schemas/ToolExecutionStep'
+          - $ref: '#/components/schemas/ShieldCallStep'
+          - $ref: '#/components/schemas/MemoryRetrievalStep'
+      required:
+      - step
+      type: object
     AgenticSystemToolDefinition:
       additionalProperties: false
       properties:
@@ -121,132 +133,8 @@ components:
       - session_id
       - messages
       type: object
-    AgenticSystemTurnResponseEvent:
-      additionalProperties: false
-      properties:
-        payload:
-          oneOf:
-          - $ref: '#/components/schemas/AgenticSystemTurnResponseStepStartPayload'
-          - $ref: '#/components/schemas/AgenticSystemTurnResponseStepProgressPayload'
-          - $ref: '#/components/schemas/AgenticSystemTurnResponseStepCompletePayload'
-          - $ref: '#/components/schemas/AgenticSystemTurnResponseTurnStartPayload'
-          - $ref: '#/components/schemas/AgenticSystemTurnResponseTurnCompletePayload'
-      required:
-      - payload
-      title: Streamed agent execution response.
-      type: object
-    AgenticSystemTurnResponseStepCompletePayload:
-      additionalProperties: false
-      properties:
-        event_type:
-          const: step_complete
-          type: string
-        step_details:
-          oneOf:
-          - $ref: '#/components/schemas/InferenceStep'
-          - $ref: '#/components/schemas/ToolExecutionStep'
-          - $ref: '#/components/schemas/ShieldCallStep'
-          - $ref: '#/components/schemas/MemoryRetrievalStep'
-        step_type:
-          enum:
-          - inference
-          - tool_execution
-          - shield_call
-          - memory_retrieval
-          type: string
-      required:
-      - event_type
-      - step_type
-      - step_details
-      type: object
-    AgenticSystemTurnResponseStepProgressPayload:
-      additionalProperties: false
-      properties:
-        event_type:
-          const: step_progress
-          type: string
-        model_response_text_delta:
-          type: string
-        step_id:
-          type: string
-        step_type:
-          enum:
-          - inference
-          - tool_execution
-          - shield_call
-          - memory_retrieval
-          type: string
-        tool_call_delta:
-          $ref: '#/components/schemas/ToolCallDelta'
-        tool_response_text_delta:
-          type: string
-      required:
-      - event_type
-      - step_type
-      - step_id
-      type: object
-    AgenticSystemTurnResponseStepStartPayload:
-      additionalProperties: false
-      properties:
-        event_type:
-          const: step_start
-          type: string
-        metadata:
-          additionalProperties:
-            oneOf:
-            - type: 'null'
-            - type: boolean
-            - type: number
-            - type: string
-            - type: array
-            - type: object
-          type: object
-        step_id:
-          type: string
-        step_type:
-          enum:
-          - inference
-          - tool_execution
-          - shield_call
-          - memory_retrieval
-          type: string
-      required:
-      - event_type
-      - step_type
-      - step_id
-      type: object
     AgenticSystemTurnResponseStreamChunk:
-      additionalProperties: false
-      properties:
-        event:
-          $ref: '#/components/schemas/AgenticSystemTurnResponseEvent'
-      required:
-      - event
-      type: object
-    AgenticSystemTurnResponseTurnCompletePayload:
-      additionalProperties: false
-      properties:
-        event_type:
-          const: turn_complete
-          type: string
-        turn:
-          $ref: '#/components/schemas/Turn'
-      required:
-      - event_type
-      - turn
-      type: object
-    AgenticSystemTurnResponseTurnStartPayload:
-      additionalProperties: false
-      properties:
-        event_type:
-          const: turn_start
-          type: string
-        turn_id:
-          type: string
-      required:
-      - event_type
-      - turn_id
-      type: object
+      description: Server side event (SSE) stream of these events
     Attachment:
       additionalProperties: false
       properties:
@@ -1663,7 +1551,7 @@ info:
   description: "This is the specification of the llama stack that provides\n     \
     \           a set of endpoints and their corresponding interfaces that are tailored\
     \ to\n                best leverage Llama Models. The specification is still in\
-    \ draft and subject to change.\n                Generated at 2024-07-22 23:07:00.350931"
+    \ draft and subject to change.\n                Generated at 2024-07-23 02:02:16.069876"
   title: '[DRAFT] Llama Stack Specification'
   version: 0.0.1
 jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
@@ -1770,6 +1658,24 @@ paths:
           description: OK
       tags:
       - AgenticSystem
+  /agentic_system/session/delete:
+    delete:
+      parameters:
+      - in: query
+        name: agent_id
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: session_id
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+      tags:
+      - AgenticSystem
   /agentic_system/session/get:
     post:
       parameters:
@@ -1799,6 +1705,33 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Session'
+          description: OK
+      tags:
+      - AgenticSystem
+  /agentic_system/step/get:
+    get:
+      parameters:
+      - in: query
+        name: agent_id
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: turn_id
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: step_id
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgenticSystemStepResponse'
           description: OK
       tags:
       - AgenticSystem
@@ -2405,14 +2338,14 @@ security:
 servers:
 - url: http://any-hosted-llama-stack.com
 tags:
-- name: SyntheticDataGeneration
-- name: MemoryBanks
-- name: AgenticSystem
 - name: PostTraining
+- name: MemoryBanks
+- name: RewardScoring
 - name: Datasets
 - name: Evaluations
+- name: AgenticSystem
 - name: Inference
-- name: RewardScoring
+- name: SyntheticDataGeneration
 - description: <SchemaDefinition schemaRef="#/components/schemas/Attachment" />
   name: Attachment
 - description: <SchemaDefinition schemaRef="#/components/schemas/BatchChatCompletionRequest"
@@ -2537,30 +2470,25 @@ tags:
 - description: <SchemaDefinition schemaRef="#/components/schemas/AgenticSystemTurnCreateRequest"
     />
   name: AgenticSystemTurnCreateRequest
-- description: 'Streamed agent execution response.
+- description: 'Server side event (SSE) stream of these events
 
 
-    <SchemaDefinition schemaRef="#/components/schemas/AgenticSystemTurnResponseEvent"
+    <SchemaDefinition schemaRef="#/components/schemas/AgenticSystemTurnResponseStreamChunk"
     />'
-  name: AgenticSystemTurnResponseEvent
-- description: <SchemaDefinition schemaRef="#/components/schemas/AgenticSystemTurnResponseStepCompletePayload"
-    />
-  name: AgenticSystemTurnResponseStepCompletePayload
-- description: <SchemaDefinition schemaRef="#/components/schemas/AgenticSystemTurnResponseStepProgressPayload"
-    />
-  name: AgenticSystemTurnResponseStepProgressPayload
-- description: <SchemaDefinition schemaRef="#/components/schemas/AgenticSystemTurnResponseStepStartPayload"
-    />
-  name: AgenticSystemTurnResponseStepStartPayload
-- description: <SchemaDefinition schemaRef="#/components/schemas/AgenticSystemTurnResponseStreamChunk"
-    />
   name: AgenticSystemTurnResponseStreamChunk
-- description: <SchemaDefinition schemaRef="#/components/schemas/AgenticSystemTurnResponseTurnCompletePayload"
+- description: 'Request to create a dataset.
+
+
+    <SchemaDefinition schemaRef="#/components/schemas/CreateDatasetRequest" />'
+  name: CreateDatasetRequest
+- description: 'Dataset to be used for training or evaluating language models.
+
+
+    <SchemaDefinition schemaRef="#/components/schemas/TrainEvalDataset" />'
+  name: TrainEvalDataset
+- description: <SchemaDefinition schemaRef="#/components/schemas/TrainEvalDatasetColumnType"
     />
-  name: AgenticSystemTurnResponseTurnCompletePayload
-- description: <SchemaDefinition schemaRef="#/components/schemas/AgenticSystemTurnResponseTurnStartPayload"
-    />
-  name: AgenticSystemTurnResponseTurnStartPayload
+  name: TrainEvalDatasetColumnType
 - description: <SchemaDefinition schemaRef="#/components/schemas/InferenceStep" />
   name: InferenceStep
 - description: <SchemaDefinition schemaRef="#/components/schemas/MemoryBankDocument"
@@ -2569,6 +2497,11 @@ tags:
 - description: <SchemaDefinition schemaRef="#/components/schemas/MemoryRetrievalStep"
     />
   name: MemoryRetrievalStep
+- description: 'A single session of an interaction with an Agentic System.
+
+
+    <SchemaDefinition schemaRef="#/components/schemas/Session" />'
+  name: Session
 - description: <SchemaDefinition schemaRef="#/components/schemas/ShieldCallStep" />
   name: ShieldCallStep
 - description: <SchemaDefinition schemaRef="#/components/schemas/ShieldResponse" />
@@ -2583,24 +2516,9 @@ tags:
 
     <SchemaDefinition schemaRef="#/components/schemas/Turn" />'
   name: Turn
-- description: 'Request to create a dataset.
-
-
-    <SchemaDefinition schemaRef="#/components/schemas/CreateDatasetRequest" />'
-  name: CreateDatasetRequest
-- description: 'Dataset to be used for training or evaluating language models.
-
-
-    <SchemaDefinition schemaRef="#/components/schemas/TrainEvalDataset" />'
-  name: TrainEvalDataset
-- description: <SchemaDefinition schemaRef="#/components/schemas/TrainEvalDatasetColumnType"
+- description: <SchemaDefinition schemaRef="#/components/schemas/AgenticSystemStepResponse"
     />
-  name: TrainEvalDatasetColumnType
-- description: 'A single session of an interaction with an Agentic System.
-
-
-    <SchemaDefinition schemaRef="#/components/schemas/Session" />'
-  name: Session
+  name: AgenticSystemStepResponse
 - description: 'Artifacts of a evaluation job.
 
 
@@ -2749,15 +2667,10 @@ x-tagGroups:
   - AgenticSystemInstanceConfig
   - AgenticSystemSessionCreateRequest
   - AgenticSystemSessionCreateResponse
+  - AgenticSystemStepResponse
   - AgenticSystemToolDefinition
   - AgenticSystemTurnCreateRequest
-  - AgenticSystemTurnResponseEvent
-  - AgenticSystemTurnResponseStepCompletePayload
-  - AgenticSystemTurnResponseStepProgressPayload
-  - AgenticSystemTurnResponseStepStartPayload
   - AgenticSystemTurnResponseStreamChunk
-  - AgenticSystemTurnResponseTurnCompletePayload
-  - AgenticSystemTurnResponseTurnStartPayload
   - Attachment
   - BatchChatCompletionRequest
   - BatchChatCompletionResponse
