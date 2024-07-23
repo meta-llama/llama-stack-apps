@@ -1,10 +1,11 @@
-[RFC] The Llama Stack API
+# [RFC] The Llama Stack API
 Authors:
 @raghotham
 @ashwinb
 @hjshah
 @jspisak 
-Summary
+
+## Summary
 As part of the Llama 3.1 release, Meta is releasing an RFC for ‘Llama Stack’, a comprehensive set of interfaces / API for ML developers building on top of Llama foundation models. We are looking for feedback on where the API can be improved, any corner cases we may have missed and your general thoughts on how useful this will be. Ultimately, our hope is to create a standard for working with Llama models in order to simplify the developer experience and foster innovation across the Llama ecosystem.
 Motivation
 Llama models were always intended to work as part of an overall system that can orchestrate several components, including calling external tools. Our vision is to go beyond the foundation models and give developers access to a broader system that gives them the flexibility to design and create custom offerings that align with their vision. This thinking started last year when we first introduced a system-level safety model. Meta has continued to release new components for orchestration at the system level and, most recently in Llama 3.1, we’ve introduced the Llama Guard 3 safety model that is multilingual, a prompt injection filter, Prompt Guard and refreshed v3 of our CyberSec Evals. We are also releasing a reference implementation of an agentic system to demonstrate how all the pieces fit together. 
@@ -17,7 +18,7 @@ We welcome feedback and ways to improve the proposal. We’re excited to grow th
 Design decisions
 Meta releases weights of both the pretrained and instruction fine-tuned Llama models to support several use cases. These weights can be improved  -  fine tuned and aligned - with curated datasets to then be deployed for inference to support specific applications. The curated datasets can be produced manually by humans or synthetically by other models or by leveraging human feedback by collecting usage data of the application itself. This results in a continuous improvement cycle where the model gets better over time. This is the model life cycle.
 
-Model Lifecycle
+## Model Lifecycle
 
 For each of the operations that need to be performed (e.g. fine tuning, inference, evals etc) during the model life cycle, we identified the capabilities as toolchain APIs that are needed. Some of these capabilities are primitive operations like inference while other capabilities like synthetic data generation are composed of other capabilities. The list of APIs we have identified to support the lifecycle of Llama models is below:
 
@@ -49,7 +50,7 @@ The sequence diagram that details the steps is here.
 /session - each session consists of multiple turns that the model is reasoning over
 /memory_bank - a memory bank allows for the agentic system to perform retrieval augmented generation
 
-Llama System API/CLI v1 
+## Llama System API/CLI v1 
 The API is defined in the yaml and HTML files.
 
 
