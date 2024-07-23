@@ -30,6 +30,9 @@ cd <path-to-llama-agentic-system-repo>
 conda activate $ENV
 ```
 
+Note that you can also install this simply as a python [package](https://pypi.org/project/llama-agentic-system/) by using `pip install llama-agentic-system`.
+
+
 **Running FP8**
 ---------------------------
 If you want to run with on-the-fly fp8 quantization, you need `fbgemm-gpu` package which requires torch >= 2.4.0 (currently only in nightly, but releasing shortly...). You can find the fp8_requirements in the llama-toolchain repository at https://github.com/meta-llama/llama-toolchain/blob/main/fp8_requirements.txt.

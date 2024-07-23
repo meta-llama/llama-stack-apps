@@ -16,7 +16,7 @@ def read_requirements():
 
 setup(
     name="llama_agentic_system",
-    version="0.0.0.1",
+    version="0.0.1",
     author="Meta Llama",
     author_email="llama-oss@meta.com",
     description="Llama Agentic System",

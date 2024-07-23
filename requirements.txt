@@ -10,6 +10,7 @@ httpx
 hydra-core
 hydra-zen
 json-strong-typing
+llama-toolchain
 matplotlib
 mesop
 pandas
@@ -27,5 +28,3 @@ usort==1.0.8
 uvicorn
 yfinance
 zmq
-
-llama_toolchain @ git+ssh://git@github.com/meta-llama/llama-toolchain.git
