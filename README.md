@@ -84,7 +84,7 @@ This Llama CLI will help you to do the following
 - Configure and start a inference server on your local machine
 - Configure and run apps that showcase agentic systems built using the Llama Stack APIs.
 
-Lets go step by step and finsh the setup process,
+Lets go step by step and finish the setup process,
 
 **Download Checkpoints (or use existing models)**
 ----------------------------------------------
