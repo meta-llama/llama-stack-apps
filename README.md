@@ -32,6 +32,33 @@ conda activate $ENV
 
 Note that you can also install this simply as a python [package](https://pypi.org/project/llama-agentic-system/) by using `pip install llama-agentic-system`.
 
+**Creation of simple virtual environments**
+-----------------------------
+#### In Linux
+
+```bash
+# Create and activate virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# Install the package
+pip install llama-agentic-system
+```
+
+#### For Windows
+
+```bash
+# Create and activate virtual environment
+python -m venv venv
+venv\Scripts\activate  # For Command Prompt
+# or
+.\venv\Scripts\Activate.ps1  # For PowerShell
+# or
+source venv\Scripts\activate  # For Git
+
+# Install the package
+pip install llama-agentic-system
+```
 
 **Running FP8**
 ---------------------------
