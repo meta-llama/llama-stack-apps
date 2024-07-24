@@ -252,7 +252,7 @@ Similar to this main app, you can also try other variants
 NOTE: Ensure that inference server is still running.
 
 ```bash
-cd <path-to-llama-agentic-ssytem>
+cd <path-to-llama-agentic-system>
 conda activate $ENV
 llama inference start  # If not already started
 
