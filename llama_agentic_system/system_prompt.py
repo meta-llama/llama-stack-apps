@@ -66,7 +66,7 @@ You have access to the following functions:
 
 {custom_tool_params}
 Think very carefully before calling functions.
-If a you choose to call a function ONLY reply in the following format with no prefix or suffix:
+If you choose to call a function ONLY reply in the following format with no prefix or suffix:
 
 <function=example_function_name>{{"example_name": "example_value"}}</function>
 
