@@ -6,13 +6,12 @@
 
 import mesop as me
 
-from custom_tools.ticker_data import TickerDataTool
+from examples.custom_tools.ticker_data import TickerDataTool
 from utils.chat import chat, State
 from utils.client import ClientManager
-
 from utils.common import DISABLE_SAFETY, INFERENCE_HOST, INFERENCE_PORT, on_attach
-
 from utils.transform import transform
+
 
 client_manager = ClientManager()
 client_manager.init_client(
