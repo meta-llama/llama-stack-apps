@@ -119,15 +119,15 @@ Lets go step by step and finish the setup process,
 Download the required checkpoints using the following commands:
 ```bash
 # download the 8B model, this can be run on a single GPU
-llama download llhf/Meta-Llama-3.1-8B-Instruct
+llama download meta-llama/Meta-Llama-3.1-8B-Instruct
 
 # you can also get the 70B model, this will require 8 GPUs however
-llama download llhf/Meta-Llama-3.1-70B-Instruct
+llama download meta-llama/Meta-Llama-3.1-70B-Instruct
 
 # llama-agents have safety enabled by default. For this you will need
 # safety models -- Llama-Guard and Prompt-Guard
-llama download llhf/Prompt-Guard-86M --ignore-patterns original
-llama download llhf/Llama-Guard-3-8B --ignore-patterns original
+llama download meta-llama/Prompt-Guard-86M --ignore-patterns original
+llama download meta-llama/Llama-Guard-3-8B --ignore-patterns original
 ```
 **Important:** Set your environment variable `HF_TOKEN` or pass in `--hf-token` to the command to validate your access. You can find your token at [https://huggingface.co/settings/tokens](https://huggingface.co/settings/tokens).
 
