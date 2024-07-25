@@ -24,10 +24,14 @@ One of the safety protections is provided by Llama Guard. By default, Llama Guar
 
 Create a new conda environment with the required Python version:
 ```bash
+# Create and activate virtual environment
 ENV=agentic_env
 with-proxy conda create -n $ENV python=3.10
 cd <path-to-llama-agentic-system-repo>
 conda activate $ENV
+
+# Install the package
+pip install -r requirements.txt
 ```
 
 Note that you can also install this simply as a python [package](https://pypi.org/project/llama-agentic-system/) by using `pip install llama-agentic-system`.
