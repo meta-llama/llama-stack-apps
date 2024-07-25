@@ -6,7 +6,6 @@
 
 from typing import Dict
 
-from llama_agentic_system.api.datatypes import AgenticSystemToolDefinition
 from llama_agentic_system.tools.custom import SingleMessageCustomTool
 from llama_models.llama3_1.api.datatypes import ToolParamDefinition
 
@@ -35,13 +34,6 @@ class GetBoilingPointTool(SingleMessageCustomTool):
                 required=False,
             ),
         }
-
-    def get_tool_definition(self) -> AgenticSystemToolDefinition:
-        return AgenticSystemToolDefinition(
-            tool_name=self.get_name(),
-            description=self.get_description(),
-            parameters=self.get_params_definition(),
-        )
 
     async def run_impl(self, liquid_name: str, celcius: bool = True) -> int:
         if liquid_name.lower() == "polyjuice":
