@@ -165,9 +165,13 @@ llama inference start
 ```
 This will start an inference server that runs the model on `localhost:5000` by default.
 
-> **Tip:** Inference config is in `~/.llama/configs/inference.yaml`. Feel free to increase `max_seq_len` or change checkpoint directories as needed.
+> [!NOTE]
+> Inference config is in `~/.llama/configs/inference.yaml`. Feel free to increase `max_seq_len` or change checkpoint directories as needed.
 
-Output will be of the form
+> [!IMPORTANT]
+> The inference server currently only supports CUDA. It will not work on Apple Silicon machines.
+
+You'll see the output:
 ```bash
 Loading config from : ~/.llama/configs/inference.yaml
 Yaml config:
@@ -203,7 +207,8 @@ INFO:     Uvicorn running on http://[::]:5000 (Press CTRL+C to quit)
 ```
 This server is running a Llama model locally.
 
-> **Tip** You might need to use the flag `--disable-ipv6` to  Disable IPv6 support
+> [!TIP]
+> You might need to use the flag `--disable-ipv6` to  Disable IPv6 support
 
 Now that the inference server is setup, the next thing would be to run an agentic app using the llama-agentic-system APIs.
 
