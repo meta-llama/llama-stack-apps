@@ -8,7 +8,7 @@ This repo allows you to run Llama 3.1 as a system capable of performing "agentic
   - built-in: the model has built-in knowledge of tools like search or code interpreter
   - zero-shot: the model can learn to call tools using previously unseen, in-context tool definitions
 
-Additionally, we would like to shift safety evaluation from the model-level to the overall system level. This allows the underlying model to remain broadly steerable and adaptable to use cases which need varying levels of safety protection.
+Additionally, we would like to shift safety evaluation from the model level to the overall system level. This allows the underlying model to remain broadly steerable and adaptable to use cases which need varying levels of safety protection.
 
 One of the safety protections is provided by Llama Guard. By default, Llama Guard is used for both input and output filtering. However, the system can be configured to modify this default setting. For example, it is recommended to use Llama Guard for output filtering in situations where refusals to benign prompts are frequently observed, as long as safety requirements are met for your use case.
 
@@ -16,7 +16,7 @@ One of the safety protections is provided by Llama Guard. By default, Llama Guar
 > The API is still evolving and may change. Feel free to build and experiment, but please don't rely on its stability just yet!
 
 
-**LLama Agentic System Installation and Setup Guide**
+**Llama Agentic System Installation and Setup Guide**
 =============================================
 
 **Create a Conda Environment**
@@ -100,7 +100,7 @@ This should print the CLI help message.
 ```bash
 usage: llama [-h] {download,inference,model,agentic_system} ...
 
-Welcome to the LLama cli
+Welcome to the Llama cli
 
 options:
   -h, --help            show this help message and exit
@@ -115,7 +115,7 @@ This Llama CLI will help you to do the following
 - Configure and start a inference server on your local machine
 - Configure and run apps that showcase agentic systems built using the Llama Stack APIs.
 
-Lets go step by step and finish the setup process,
+Let's go step by step and finish the setup process,
 
 **Download Checkpoints (or use existing models)**
 ----------------------------------------------
@@ -207,7 +207,7 @@ This server is running a Llama model locally.
 
 Now that the inference server is setup, the next thing would be to run an agentic app using the llama-agentic-system APIs.
 
-We have build sample scripts, notebooks and a UI chat interface ( using [Mesop]([url](https://google.github.io/mesop/)) ! ) to help you get started.
+We have built sample scripts, notebooks and a UI chat interface ( using [Mesop]([url](https://google.github.io/mesop/)) ! ) to help you get started.
 
 **Configure Agentic System**
 ---------------------------
@@ -295,7 +295,7 @@ You should see outputs to stdout of the form --
 Environment: ipython
 Tools: brave_search, wolfram_alpha, photogen
 
-Cutting Knowledge Date: December 2023
+Knowledge Cutoff Date: December 2023
 Today Date: 23 July 2024
 
 
