@@ -8,7 +8,7 @@ This repo allows you to run Llama 3.1 as a system capable of performing "agentic
   - built-in: the model has built-in knowledge of tools like search or code interpreter
   - zero-shot: the model can learn to call tools using previously unseen, in-context tool definitions
 
-Additionally, we would like to shift safety evaluation from the model-level to the overall system level. This allows the underlying model to remain broadly steerable and adaptable to use cases which need varying levels of safety protection.
+Additionally, we would like to shift safety evaluation from the model level to the overall system level. This allows the underlying model to remain broadly steerable and adaptable to use cases that need varying levels of safety protection.
 
 One of the safety protections is provided by Llama Guard. By default, Llama Guard is used for both input and output filtering. However, the system can be configured to modify this default setting. For example, it is recommended to use Llama Guard for output filtering in situations where refusals to benign prompts are frequently observed, as long as safety requirements are met for your use case.
 
@@ -24,7 +24,7 @@ One of the safety protections is provided by Llama Guard. By default, Llama Guar
 
 Create a new conda environment with the required Python version:
 ```bash
-# Create and activate virtual environment
+# Create and activate a virtual environment
 ENV=agentic_env
 with-proxy conda create -n $ENV python=3.10
 cd <path-to-llama-agentic-system-repo>
@@ -41,7 +41,7 @@ Note that you can also install this simply as a python [package](https://pypi.or
 #### In Linux
 
 ```bash
-# Create and activate virtual environment
+# Create and activate a virtual environment
 python3 -m venv venv
 source venv/bin/activate
 
@@ -52,7 +52,7 @@ pip install llama-agentic-system
 #### For Windows
 
 ```bash
-# Create and activate virtual environment
+# Create and activate a virtual environment
 python -m venv venv
 venv\Scripts\activate  # For Command Prompt
 # or
@@ -112,7 +112,7 @@ subcommands:
 This Llama CLI will help you to do the following
 
 - Download the latest Llama3.1 models from HuggingFace
-- Configure and start a inference server on your local machine
+- Configure and start an inference server on your local machine
 - Configure and run apps that showcase agentic systems built using the Llama Stack APIs.
 
 Lets go step by step and finish the setup process,
@@ -125,17 +125,17 @@ Download the required checkpoints using the following commands:
 # download the 8B model, this can be run on a single GPU
 llama download meta-llama/Meta-Llama-3.1-8B-Instruct
 
-# you can also get the 70B model, this will require 8 GPUs however
+# You can also get the 70B model, this will require 8 GPUs however
 llama download meta-llama/Meta-Llama-3.1-70B-Instruct
 
-# llama-agents have safety enabled by default. For this you will need
+# llama-agents have safety enabled by default. For this, you will need
 # safety models -- Llama-Guard and Prompt-Guard
 llama download meta-llama/Prompt-Guard-86M --ignore-patterns original
 llama download meta-llama/Llama-Guard-3-8B --ignore-patterns original
 ```
 **Important:** Set your environment variable `HF_TOKEN` or pass in `--hf-token` to the command to validate your access. You can find your token at [https://huggingface.co/settings/tokens](https://huggingface.co/settings/tokens).
 
-> **Tip:** Default for `llama download` is to run with `--ignore-patterns *.safetensors` since we use the `.pth` files in the `original` folder. For Llama Guard and Prompt Guard, however, we need safetensors. Hence, please make sure to run with `--ignore-patterns original` so that safetensors are downloaded and `.pth` files are ignored.
+> **Tip:** Default for `llama download` is to run with `--ignore-patterns *.safetensors` since we use the `.pth` files in the `original` folder. For Llama Guard and Prompt Guard, however, we need safetensors. Hence, please run with `--ignore-patterns original` so that safetensors are downloaded and `.pth` files are ignored.
 
 
 **Configure Inference Server Config**
