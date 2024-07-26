@@ -12,7 +12,7 @@ import asyncio
 import fire
 
 from llama_models.llama3_1.api.datatypes import *  # noqa: F403
-from custom_tools.ticker_data import TickerDataTool
+from examples.custom_tools.ticker_data import TickerDataTool
 
 from multi_turn import prompt_to_message, run_main
 

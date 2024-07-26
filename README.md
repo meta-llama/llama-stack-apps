@@ -271,8 +271,8 @@ This will start a mesop app and you can go to `localhost:32123` to play with the
 <img src="demo.png" alt="Chat App" width="600"/>
 
 Similar to this main app, you can also try other variants
-- `mesop app/chat_with_custom_tools.py`  to showcase how custom tools are integrated
-- `mesop app/chat_moderation_with_llama_guard.py`  to showcase how the app is modified to act as a chat moderator for safety
+- `PYTHONPATH=. mesop app/chat_with_custom_tools.py`  to showcase how custom tools are integrated
+- `PYTHONPATH=. mesop app/chat_moderation_with_llama_guard.py`  to showcase how the app is modified to act as a chat moderator for safety
 
 > **Tip** Keep the inference server running in the background for faster iteration cycle
 
@@ -287,7 +287,7 @@ cd <path-to-llama-agentic-system>
 conda activate $ENV
 llama inference start  # If not already started
 
-python examples/scripts/vacation.py localhost 5000
+PYTHONPATH=. python examples/scripts/vacation.py localhost 5000
 ```
 
 You should see outputs to stdout of the form --

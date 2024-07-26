@@ -7,7 +7,7 @@
 from typing import Dict
 
 import yfinance as yf
-from custom_tools.base import SingleMessageCustomTool
+from llama_agentic_system.tools.custom import SingleMessageCustomTool
 from llama_models.llama3_1.api.datatypes import ToolParamDefinition
 
 

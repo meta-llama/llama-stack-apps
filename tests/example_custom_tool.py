@@ -6,8 +6,8 @@
 
 from typing import Dict
 
-from custom_tools.base import SingleMessageCustomTool
-from llama_models.llama3_1.api.datatypes import ToolDefinition, ToolParamDefinition
+from llama_agentic_system.tools.custom import SingleMessageCustomTool
+from llama_models.llama3_1.api.datatypes import ToolParamDefinition
 
 
 class GetBoilingPointTool(SingleMessageCustomTool):
@@ -21,7 +21,7 @@ class GetBoilingPointTool(SingleMessageCustomTool):
         return "get_boiling_point"
 
     def get_description(self) -> str:
-        return "Get the boiling point of a liquid (eg. water)"
+        return "Get the boiling point of a imaginary liquids (eg. polyjuice)"
 
     def get_params_definition(self) -> Dict[str, ToolParamDefinition]:
         return {
@@ -35,18 +35,11 @@ class GetBoilingPointTool(SingleMessageCustomTool):
             ),
         }
 
-    def get_tool_definition(self) -> ToolDefinition:
-        return ToolDefinition(
-            tool_name=self.get_name(),
-            description=self.get_description(),
-            parameters=self.get_params_definition(),
-        )
-
     async def run_impl(self, liquid_name: str, celcius: bool = True) -> int:
-        if liquid_name == "water":
+        if liquid_name.lower() == "polyjuice":
             if celcius:
-                return 100
+                return -100
             else:
-                return 212
+                return -212
         else:
             return -1

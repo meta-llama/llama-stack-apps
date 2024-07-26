@@ -6,15 +6,14 @@
 
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # This software may be used and distributed in accordance with the terms of the Llama 3 Community License Agreement.
-import time
 from typing import List, Optional
-
-from custom_tools.base import CustomTool
 
 from dotenv import load_dotenv
 
 from llama_agentic_system.client import execute_with_custom_tools
 from llama_agentic_system.event_logger import EventLogger
+
+from llama_agentic_system.tools.custom import CustomTool
 from llama_agentic_system.utils import get_agent_system_instance
 
 from llama_models.llama3_1.api.datatypes import *  # noqa: F403
