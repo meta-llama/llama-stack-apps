@@ -312,3 +312,4 @@ StepType.inference> Switzerland is a beautiful country with a rich history, cult
 
 
 Feel free to reach out if you have questions.
+I am planning a trip to Pakistan, what are the top 3 places to visit?
