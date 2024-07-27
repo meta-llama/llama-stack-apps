@@ -212,7 +212,7 @@ This server is running a Llama model locally.
 
 Now that the inference server is setup, the next thing would be to run an agentic app using the llama-agentic-system APIs.
 
-We have build sample scripts, notebooks and a UI chat interface ( using [Mesop]([url](https://google.github.io/mesop/)) ! ) to help you get started.
+We have built sample scripts, notebooks and a UI chat interface ( using [Mesop]([url](https://google.github.io/mesop/)) ! ) to help you get started.
 
 **Configure Agentic System**
 ---------------------------
@@ -282,7 +282,7 @@ Similar to this main app, you can also try other variants
 > **Tip** Keep the inference server running in the background for faster iteration cycle
 
 
-**Start a script that can create a agent and interact with the inference server**
+**Start a script that can create an agent and interact with the inference server**
 ---------------------------------------------
 
 NOTE: Ensure that inference server is still running.
