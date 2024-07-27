@@ -1,7 +1,7 @@
 # llama-agentic-system
 
-![PyPI - Downloads](https://img.shields.io/pypi/dm/llama-agentic-system) 
-![Discord](https://img.shields.io/discord/1257833999603335178)
+[![PyPI - Downloads](https://img.shields.io/pypi/dm/llama-agentic-system)](https://pypi.org/project/llama-agentic-system/)
+[![Discord](https://img.shields.io/discord/1257833999603335178)](https://discord.gg/TZAAYNVtrU)
 
 This repo allows you to run Llama 3.1 as a system capable of performing "agentic" tasks like:
 
