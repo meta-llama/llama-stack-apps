@@ -6,6 +6,7 @@
 
 import asyncio
 import signal
+from contextlib import asynccontextmanager
 
 import fire
 
@@ -41,11 +42,8 @@ def handle_sigint(*args, **kwargs):
     loop.stop()
 
 
-app = FastAPI()
-
-
-@app.on_event("startup")
-async def startup():
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
     global AgenticSystemApiInstance
 
     config = get_config()
@@ -76,6 +74,11 @@ async def startup():
         shield_cfg = safety_config.prompt_guard_shield
         if shield_cfg is not None:
             _ = PromptGuardShield.instance(shield_cfg.model_dir)
+
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 
 
 @app.post(
