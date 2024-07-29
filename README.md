@@ -48,7 +48,7 @@ python3 -m venv venv
 source venv/bin/activate
 
 # Install the package
-pip install llama-agentic-system
+python3 -m pip install llama-agentic-system
 ```
 
 #### For Windows
