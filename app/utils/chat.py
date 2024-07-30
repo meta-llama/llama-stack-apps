@@ -342,7 +342,7 @@ def chat(
                 stdout = stdout_match.group(1)
                 with me.box(style=_make_chat_bubble_style(op, Role.assistant.value)):
                     if len(stdout) > STDOUT_CUTOFF_LENGTH:
-                        codeblock(stdout[STDOUT_CUTOFF_LENGTH:])
+                        codeblock(stdout[:STDOUT_CUTOFF_LENGTH])
                         me.text(
                             f"(remaining {len(stdout) - STDOUT_CUTOFF_LENGTH} characters omitted)",
                             type="subtitle-2",
