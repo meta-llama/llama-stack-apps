@@ -34,8 +34,9 @@ _SPECIAL_STDOUT_DELIMITER = "[stdout]"
 
 _COLOR_BACKGROUND = "#f0f4f8"
 _COLOR_CHAT_BUBBLE_YOU = "#f2f2f2"
-_COLOR_CHAT_BUBBLE_BOT = "#afc0e4"
-_COLOR_CHAT_BUBBLE_TOOL = "#dfe6f4"
+_COLOR_CHAT_BUBBLE_BOT = "#e8f3ff"
+_COLOR_CHAT_BUBBLE_TOOL = "#d0dae5"
+_COLOR_BUTTON = "#1d65c1"
 
 _DEFAULT_PADDING = me.Padding.all(20)
 _DEFAULT_BORDER_SIDE = me.BorderSide(width="1px", style="solid", color="#ececec")
@@ -80,7 +81,10 @@ _STYLE_CHAT_INPUT = me.Style(width="100%")
 _STYLE_CHAT_INPUT_BOX = me.Style(
     padding=me.Padding(top=30), display="flex", flex_direction="row"
 )
-_STYLE_CHAT_BUTTON = me.Style(margin=me.Margin(top=8, left=8))
+_STYLE_CHAT_BUTTON = me.Style(
+    margin=me.Margin(top=8, left=8),
+    background=_COLOR_BUTTON,
+)
 _STYLE_CHAT_BUBBLE_PLAINTEXT = me.Style(margin=me.Margin.symmetric(vertical=15))
 
 
@@ -425,6 +429,9 @@ def chat(
                     label="Upload",
                     on_upload=on_attach,
                     key=f"{len(state.output)}",
+                    style=me.Style(
+                        color=_COLOR_BUTTON,
+                    )
                 )
 
                 me.slide_toggle(label="Debug Mode", on_change=on_debug_mode_change)
