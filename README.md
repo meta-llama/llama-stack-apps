@@ -1,5 +1,6 @@
 # llama-agentic-system
 
+[![PyPI](https://img.shields.io/pypi/v/llama-agentic-system)](https://pypi.org/project/llama-agentic-system/)
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/llama-agentic-system)](https://pypi.org/project/llama-agentic-system/)
 [![Discord](https://img.shields.io/discord/1257833999603335178)](https://discord.gg/TZAAYNVtrU)
 
