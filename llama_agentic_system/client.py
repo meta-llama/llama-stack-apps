@@ -11,12 +11,7 @@ from typing import Any, AsyncGenerator, List
 import fire
 
 import httpx
-from llama_models.llama3_1.api.datatypes import (
-    BuiltinTool,
-    InstructModel,
-    SamplingParams,
-    StopReason,
-)
+from llama_models.llama3_1.api.datatypes import BuiltinTool, SamplingParams, StopReason
 
 from llama_toolchain.inference.api import Message
 
@@ -187,7 +182,7 @@ async def run_main(host: str, port: int):
     ]
 
     create_request = AgenticSystemCreateRequest(
-        model=InstructModel.llama3_8b_chat,
+        model="Meta-Llama-3.1-8B-Instruct",
         instance_config=AgenticSystemInstanceConfig(
             instructions="You are a helpful assistant",
             sampling_params=SamplingParams(),

@@ -15,7 +15,7 @@ from strong_typing.schema import json_schema_type
 
 @json_schema_type
 class AgenticSystemCreateRequest(BaseModel):
-    model: InstructModel
+    model: str
     instance_config: AgenticSystemInstanceConfig
 
 

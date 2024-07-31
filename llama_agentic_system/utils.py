@@ -10,7 +10,6 @@ from typing import Any, List, Optional
 
 from llama_models.llama3_1.api.datatypes import (
     BuiltinTool,
-    InstructModel,
     Message,
     SamplingParams,
 )
@@ -86,6 +85,7 @@ async def get_agent_system_instance(
     port: int = 5000,
     custom_tools: Optional[List[Any]] = None,
     disable_safety: bool = False,
+    model: str = "Meta-Llama-3.1-8B-Instruct",
 ) -> AgenticSystemClientWrapper:
     custom_tools = custom_tools or []
 
@@ -147,7 +147,7 @@ async def get_agent_system_instance(
             ]
 
     create_request = AgenticSystemCreateRequest(
-        model=InstructModel.llama3_8b_chat,
+        model=model,
         instance_config=AgenticSystemInstanceConfig(
             instructions="You are a helpful assistant",
             available_tools=tool_definitions,
