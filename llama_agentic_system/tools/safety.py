@@ -7,8 +7,10 @@
 from typing import List
 
 from llama_toolchain.inference.api import Message
-from llama_toolchain.safety.shields import ShieldBase, ShieldRunnerMixin
+from llama_toolchain.safety.api.datatypes import ShieldDefinition
+from llama_toolchain.safety.api.endpoints import Safety
 
+from llama_agentic_system.safety import ShieldRunnerMixin
 from .builtin import BaseTool
 
 
@@ -18,12 +20,13 @@ class SafeTool(BaseTool, ShieldRunnerMixin):
     def __init__(
         self,
         tool: BaseTool,
-        input_shields: List[ShieldBase] = None,
-        output_shields: List[ShieldBase] = None,
+        safety_api: Safety,
+        input_shields: List[ShieldDefinition] = None,
+        output_shields: List[ShieldDefinition] = None,
     ):
         self._tool = tool
         ShieldRunnerMixin.__init__(
-            self, input_shields=input_shields, output_shields=output_shields
+            self, safety_api, input_shields=input_shields, output_shields=output_shields
         )
 
     def get_name(self) -> str:
@@ -43,11 +46,13 @@ class SafeTool(BaseTool, ShieldRunnerMixin):
 
 def with_safety(
     tool: BaseTool,
-    input_shields: List[ShieldBase] = None,
-    output_shields: List[ShieldBase] = None,
+    safety_api: Safety,
+    input_shields: List[ShieldDefinition] = None,
+    output_shields: List[ShieldDefinition] = None,
 ) -> SafeTool:
     return SafeTool(
         tool,
+        safety_api,
         input_shields=input_shields,
         output_shields=output_shields,
     )

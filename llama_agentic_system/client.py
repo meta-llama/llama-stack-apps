@@ -16,7 +16,6 @@ from llama_models.llama3_1.api.datatypes import BuiltinTool, SamplingParams, Sto
 from llama_toolchain.inference.api import Message
 
 from llama_agentic_system.api_instance import get_agentic_system_api_instance
-from .api.config import AgenticSystemConfig, RemoteImplConfig
 
 from .api.datatypes import (
     AgenticSystemInstanceConfig,
@@ -31,6 +30,7 @@ from .api.endpoints import (
     AgenticSystemSessionCreateResponse,
     AgenticSystemTurnCreateRequest,
 )
+from .config import AgenticSystemConfig
 
 
 class AgenticSystemClient(AgenticSystem):
@@ -160,9 +160,7 @@ async def run_main(host: str, port: int):
     # client to test remote impl of agentic system
     api = await get_agentic_system_api_instance(
         AgenticSystemConfig(
-            # get me a remote agentic system
-            impl_config=RemoteImplConfig(url=f"http://{host}:{port}"),
-            safety_config=None,
+            llama_distribution_url=f"http://{host}:{port}",
         )
     )
 

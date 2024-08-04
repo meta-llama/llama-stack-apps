@@ -4,21 +4,23 @@
 # This source code is licensed under the terms described in the LICENSE file in
 # the root directory of this source tree.
 
-from .api.config import AgenticSystemConfig, ImplType
+from llama_toolchain.inference.client import InferenceClient
+from llama_toolchain.safety.client import SafetyClient
+
+from .agentic_system import AgenticSystemImpl
 from .api.endpoints import AgenticSystem
+from .config import AgenticSystemConfig
 
 
 async def get_agentic_system_api_instance(config: AgenticSystemConfig) -> AgenticSystem:
-    if config.impl_config.impl_type == ImplType.inline.value:
-        from llama_toolchain.inference.api_instance import get_inference_api_instance
+    distro_url = config.llama_distribution_url
 
-        from .agentic_system import AgenticSystemImpl
+    inference_api = InferenceClient(distro_url)
+    safety_api = SafetyClient(distro_url)
 
-        inference_api = await get_inference_api_instance(
-            config.impl_config.inference_config
-        )
-        return AgenticSystemImpl(config.safety_config, inference_api)
+    return AgenticSystemImpl(inference_api, safety_api)
 
-    from .client import AgenticSystemClient
-
-    return AgenticSystemClient(config.impl_config.url)
+    # soon-to-arrive only the below will be valid
+    #
+    # from .client import AgenticSystemClient
+    # return AgenticSystemClient(config.impl_config.url)

@@ -4,23 +4,14 @@
 # This source code is licensed under the terms described in the LICENSE file in
 # the root directory of this source tree.
 
-import os
 import uuid
 from typing import Any, List, Optional
 
-from llama_models.llama3_1.api.datatypes import (
-    BuiltinTool,
-    Message,
-    SamplingParams,
-)
-from llama_toolchain.inference.api.config import InferenceConfig, RemoteImplConfig
-from llama_toolchain.safety.api.config import SafetyConfig
+import yaml
+
+from llama_models.llama3_1.api.datatypes import BuiltinTool, Message, SamplingParams
 from llama_toolchain.safety.api.datatypes import BuiltinShield, ShieldDefinition
 
-from llama_toolchain.utils import DEFAULT_DUMP_DIR, parse_config
-from omegaconf import OmegaConf
-
-from llama_agentic_system.api.config import AgenticSystemConfig, InlineImplConfig
 from llama_agentic_system.api.datatypes import (
     AgenticSystemInstanceConfig,
     AgenticSystemToolDefinition,
@@ -34,17 +25,7 @@ from llama_agentic_system.api_instance import get_agentic_system_api_instance
 
 from llama_agentic_system.client import execute_with_custom_tools
 
-
-def get_root_directory():
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    while os.path.isfile(os.path.join(current_dir, "__init__.py")):
-        current_dir = os.path.dirname(current_dir)
-
-    return current_dir
-
-
-def get_config_dir():
-    return os.path.join(DEFAULT_DUMP_DIR, "configs", "agentic_system")
+from llama_agentic_system.config import AgenticSystemConfig
 
 
 class AgenticSystemClientWrapper:
@@ -81,47 +62,30 @@ class AgenticSystemClientWrapper:
 
 
 async def get_agent_system_instance(
-    host: str = "localhost",
-    port: int = 5000,
+    host: Optional[str] = None,
+    port: Optional[int] = None,
     custom_tools: Optional[List[Any]] = None,
     disable_safety: bool = False,
-    model: str = "Meta-Llama-3.1-8B-Instruct",
+    model: str = "Meta-Llama3.1-8B-Instruct",
 ) -> AgenticSystemClientWrapper:
     custom_tools = custom_tools or []
 
-    config_dir = get_config_dir()
-    config = parse_config(config_dir, "inline")
+    from llama_toolchain.common.config_dirs import LLAMA_STACK_CONFIG_DIR
 
-    safety_config = None
-    if config.agentic_system_config.safety_config is not None:
-        safety_config = SafetyConfig(
-            **OmegaConf.to_container(
-                config.agentic_system_config.safety_config,
-                resolve=True,
-            )
+    config = LLAMA_STACK_CONFIG_DIR / "agentic_system/config.yaml"
+    if not config.exists():
+        raise ValueError(
+            f"File `{config}` does not exist; please run `llama agentic_system configure`"
         )
 
-    sampling_params = SamplingParams()
-    if config.sampling_params is not None:
-        sampling_params = SamplingParams(
-            **OmegaConf.to_container(
-                config.sampling_params,
-                resolve=True,
-            )
-        )
+    content = yaml.safe_load(config.read_text())
+    config = AgenticSystemConfig(**content)
 
-    api = await get_agentic_system_api_instance(
-        AgenticSystemConfig(
-            # get me an inline agentic system (i.e., agentic system runs locally)
-            impl_config=InlineImplConfig(
-                inference_config=InferenceConfig(
-                    # but make sure it points to inference which is remote
-                    impl_config=RemoteImplConfig(url=f"http://{host}:{port}")
-                )
-            ),
-            safety_config=safety_config,
-        )
-    )
+    # this override is kind of clowny but let's roll with it for a bit
+    if host and port:
+        config.llama_distribution_url = f"http://{host}:{port}"
+
+    api = await get_agentic_system_api_instance(config)
 
     tool_definitions = [
         AgenticSystemToolDefinition(
@@ -166,7 +130,7 @@ async def get_agent_system_instance(
                     ShieldDefinition(shield_type=BuiltinShield.llama_guard),
                 ]
             ),
-            sampling_params=sampling_params,
+            sampling_params=SamplingParams(),
         ),
     )
     create_response = await api.create_agentic_system(create_request)

@@ -10,6 +10,8 @@ import uuid
 from datetime import datetime
 from typing import AsyncGenerator, Dict, List, Optional
 
+from llama_toolchain.inference.api import ChatCompletionRequest, Inference
+
 from llama_toolchain.inference.api.datatypes import (
     Attachment,
     BuiltinTool,
@@ -26,22 +28,11 @@ from llama_toolchain.inference.api.datatypes import (
     ToolResponseMessage,
     URL,
 )
-from llama_toolchain.inference.api.endpoints import ChatCompletionRequest, Inference
-from llama_toolchain.safety.api.config import SafetyConfig
+from llama_toolchain.safety.api import Safety
 from llama_toolchain.safety.api.datatypes import (
     BuiltinShield,
     ShieldDefinition,
     ShieldResponse,
-)
-from llama_toolchain.safety.shields import (
-    CodeScannerShield,
-    InjectionShield,
-    JailbreakShield,
-    LlamaGuardShield,
-    SafetyException,
-    ShieldBase,
-    ShieldRunnerMixin,
-    ThirdPartyShield,
 )
 
 from termcolor import cprint
@@ -71,6 +62,7 @@ from .api.endpoints import (
     AgenticSystemTurnCreateRequest,
     AgenticSystemTurnResponseStreamChunk,
 )
+from .safety import SafetyException, ShieldRunnerMixin
 
 from .system_prompt import get_agentic_prefix_messages
 from .tools.base import BaseTool
@@ -130,34 +122,6 @@ def print_dialog(messages: List[Message]):
 AGENT_INSTANCES_BY_ID = {}
 
 
-def shield_config_to_shield(
-    sc: ShieldDefinition, safety_config: SafetyConfig
-) -> ShieldBase:
-    if sc.shield_type == BuiltinShield.llama_guard:
-        assert (
-            safety_config.llama_guard_shield is not None
-        ), "Cannot use LlamaGuardShield since not present in config"
-        return LlamaGuardShield.instance(
-            model_dir=safety_config.llama_guard_shield.model_dir
-        )
-    elif sc.shield_type == BuiltinShield.jailbreak_shield:
-        assert (
-            safety_config.prompt_guard_shield is not None
-        ), "Cannot use Jailbreak Shield since Prompt Guard not present in config"
-        return JailbreakShield.instance(safety_config.prompt_guard_shield.model_dir)
-    elif sc.shield_type == BuiltinShield.injection_shield:
-        assert (
-            safety_config.prompt_guard_shield is not None
-        ), "Cannot use PromptGuardShield since not present in config"
-        return InjectionShield.instance(safety_config.prompt_guard_shield.model_dir)
-    elif sc.shield_type == BuiltinShield.code_scanner_guard:
-        return CodeScannerShield.instance()
-    elif sc.shield_type == BuiltinShield.third_party_shield:
-        return ThirdPartyShield.instance()
-    else:
-        raise ValueError(f"Unknown shield type: {sc.shield_type}")
-
-
 class AgentInstance(ShieldRunnerMixin):
     def __init__(
         self,
@@ -165,10 +129,11 @@ class AgentInstance(ShieldRunnerMixin):
         instance_config: AgenticSystemInstanceConfig,
         model: str,
         inference_api: Inference,
+        safety_api: Safety,
         builtin_tools: List[SingleMessageBuiltinTool],
         custom_tool_definitions: List[ToolDefinition],
-        input_shields: List[ShieldBase],
-        output_shields: List[ShieldBase],
+        input_shields: List[ShieldDefinition],
+        output_shields: List[ShieldDefinition],
         max_infer_iters: int = 10,
         prefix_messages: Optional[List[Message]] = None,
     ):
@@ -177,6 +142,7 @@ class AgentInstance(ShieldRunnerMixin):
 
         self.model = model
         self.inference_api = inference_api
+        self.safety_api = safety_api
 
         if prefix_messages is not None and len(prefix_messages) > 0:
             self.prefix_messages = prefix_messages
@@ -195,6 +161,7 @@ class AgentInstance(ShieldRunnerMixin):
 
         ShieldRunnerMixin.__init__(
             self,
+            safety_api,
             input_shields=input_shields,
             output_shields=output_shields,
         )
@@ -320,7 +287,7 @@ class AgentInstance(ShieldRunnerMixin):
         self,
         turn_id: str,
         messages: List[Message],
-        shields: List[ShieldBase],
+        shields: List[ShieldDefinition],
         touchpoint: str,
     ) -> AsyncGenerator:
         if len(shields) == 0:
@@ -672,9 +639,9 @@ class AgentInstance(ShieldRunnerMixin):
 
 
 class AgenticSystemImpl(AgenticSystem):
-    def __init__(self, safety_config: SafetyConfig, inference_api: Inference):
-        self.safety_config = safety_config
+    def __init__(self, inference_api: Inference, safety_api: Safety):
         self.inference_api = inference_api
+        self.safety_api = safety_api
 
     async def create_agentic_system(
         self,
@@ -700,24 +667,13 @@ class AgenticSystemImpl(AgenticSystem):
                 else:
                     raise ValueError(f"Unknown builtin tool: {dfn.tool_name}")
 
-                input_shields = [
-                    shield_config_to_shield(c, self.safety_config)
-                    for c in dfn.input_shields
-                ]
-                output_shields = [
-                    shield_config_to_shield(c, self.safety_config)
-                    for c in dfn.output_shields
-                ]
-                builtin_tools.append(with_safety(tool, input_shields, output_shields))
+                builtin_tools.append(
+                    with_safety(
+                        tool, self.safety_api, dfn.input_shields, dfn.output_shields
+                    )
+                )
             else:
                 custom_tool_definitions.append(dfn)
-
-        input_shields = [
-            shield_config_to_shield(c, self.safety_config) for c in cfg.input_shields
-        ]
-        output_shields = [
-            shield_config_to_shield(c, self.safety_config) for c in cfg.output_shields
-        ]
 
         AGENT_INSTANCES_BY_ID[system_id] = AgentInstance(
             system_id=system_id,
@@ -726,8 +682,9 @@ class AgenticSystemImpl(AgenticSystem):
             inference_api=self.inference_api,
             builtin_tools=builtin_tools,
             custom_tool_definitions=custom_tool_definitions,
-            input_shields=input_shields,
-            output_shields=output_shields,
+            safety_api=self.safety_api,
+            input_shields=cfg.input_shields,
+            output_shields=cfg.output_shields,
             prefix_messages=cfg.debug_prefix_messages,
         )
 
