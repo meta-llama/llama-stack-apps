@@ -6,8 +6,8 @@
 
 from typing import Dict
 
-from llama_agentic_system.tools.custom import SingleMessageCustomTool
 from llama_models.llama3_1.api.datatypes import ToolParamDefinition
+from llama_toolchain.agentic_system.tools.custom import SingleMessageCustomTool
 
 
 class GetBoilingPointTool(SingleMessageCustomTool):

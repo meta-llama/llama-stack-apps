@@ -6,7 +6,6 @@
 
 import unittest
 
-from llama_agentic_system.tools.builtin import CodeInterpreterTool
 from llama_models.llama3_1.api.datatypes import (
     Attachment,
     BuiltinTool,
@@ -14,6 +13,7 @@ from llama_models.llama3_1.api.datatypes import (
     StopReason,
     ToolCall,
 )
+from llama_toolchain.agentic_system.tools.builtin import CodeInterpreterTool
 
 
 class TestCodeInterpreter(unittest.IsolatedAsyncioTestCase):
