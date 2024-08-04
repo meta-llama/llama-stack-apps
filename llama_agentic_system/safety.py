@@ -44,7 +44,7 @@ class ShieldRunnerMixin:
             # is no longer appropriate
             messages[0].role = Role.user.value
 
-        res = await self.safety_api.run_shield(
+        res = await self.safety_api.run_shields(
             RunShieldRequest(
                 messages=messages,
                 shields=shields,
