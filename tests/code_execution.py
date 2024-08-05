@@ -13,7 +13,11 @@ from llama_models.llama3_1.api.datatypes import (
     StopReason,
     ToolCall,
 )
-from llama_toolchain.agentic_system.tools.builtin import CodeInterpreterTool
+
+# this test should just move to toolchain and inside meta_reference
+from llama_toolchain.agentic_system.meta_reference.tools.builtin import (
+    CodeInterpreterTool,
+)
 
 
 class TestCodeInterpreter(unittest.IsolatedAsyncioTestCase):

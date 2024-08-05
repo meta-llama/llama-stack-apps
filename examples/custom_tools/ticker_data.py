@@ -8,7 +8,9 @@ from typing import Dict
 
 import yfinance as yf
 from llama_models.llama3_1.api.datatypes import ToolParamDefinition
-from llama_toolchain.agentic_system.tools.custom import SingleMessageCustomTool
+from llama_toolchain.agentic_system.tools.custom.datatypes import (
+    SingleMessageCustomTool,
+)
 
 
 class TickerDataTool(SingleMessageCustomTool):
