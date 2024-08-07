@@ -298,7 +298,7 @@ Similar to this main app, you can also try other variants
 - `PYTHONPATH=. mesop app/chat_with_custom_tools.py`  to showcase how custom tools are integrated
 - `PYTHONPATH=. mesop app/chat_moderation_with_llama_guard.py`  to showcase how the app is modified to act as a chat moderator for safety
 
-**Start a script that can create an agent and interact with the Distribution server**
+**Create agentic systems and interact with the Distribution server**
 ---------------------------------------------
 
 NOTE: Ensure that Distribution server is still running.
