@@ -192,15 +192,23 @@ Enter value for torch_seed (optional):
 Enter value for max_seq_len (required): 4096
 Enter value for max_batch_size (default: 1): 1
 Configuring API surface: safety
-Do you want to configure llama_guard_shield? (y/n): n
-Do you want to configure prompt_guard_shield? (y/n): n
+Do you want to configure llama_guard_shield? (y/n): y
+Entering sub-configuration for llama_guard_shield:
+Enter value for model (required): Llama-Guard-3-8B
+Enter value for excluded_categories (required): []
+Enter value for disable_input_check (default: False):
+Enter value for disable_output_check (default: False):
+Do you want to configure prompt_guard_shield? (y/n): y
+Entering sub-configuration for prompt_guard_shield:
+Enter value for model (required): Prompt-Guard-86M
 Configuring API surface: agentic_system
-
-YAML configuration has been written to ~/.llama/distributions/inline-llama-8b/config.yaml
+YAML configuration has been written to /home/ashwin/.llama/distributions/i0/config.yaml
 ```
 
-As you can see, we did basic configuration above and configured inference to run on model Meta-Llama3.1-8B-Instruct ( obtained from the llama model list command ).
-For this initial setup we did not set up safety.
+As you can see, we did basic configuration above and configured:
+- inference to run on model `Meta-Llama3.1-8B-Instruct` (obtained from `llama model list`)
+- Llama Guard safety shield with model `Llama-Guard-3-8B`
+- Prompt Guard safety shield with model `Prompt-Guard-86M`
 
 For how these configurations are stored as yaml, checkout the file printed at the end of the configuration.
 
