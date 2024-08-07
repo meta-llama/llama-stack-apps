@@ -327,19 +327,6 @@ StepType.inference> Switzerland is a beautiful country with a rich history, cult
 Feel free to reach out if you have questions.
 
 
-**Running FP8**
----------------------------
-If you want to run with on-the-fly fp8 quantization, you need `fbgemm-gpu` package which requires torch >= 2.4.0 (currently only in nightly, but releasing shortly...). You can find the fp8_requirements in the llama-toolchain repository at https://github.com/meta-llama/llama-toolchain/blob/main/fp8_requirements.txt.
-
-```bash
-ENV=fp8_env
-conda create -n $ENV python=3.10
-conda activate $ENV
-
-pip3 install -r fp8_requirements.txt
-```
-
-
 **Using VirtualEnv instead of Conda**
 -----------------------------
 #### In Linux
