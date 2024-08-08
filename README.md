@@ -20,29 +20,33 @@ One of the safety protections is provided by Llama Guard. By default, Llama Guar
 
 **Getting started with the Llama Stack**
 ========================================
-As noted above, making an agentic app work needs a few components:
+
+An agentic app requires a few components:
 - ability to run inference on the underlying Llama series of models
 - ability to run safety checks using the Llama-Guard series of models
 - ability to execute tools, including a code execution environment, and loop using the model's multi-step reasoning process
 
 The [Llama Stack](https://github.com/meta-llama/llama-toolchain/pull/8) defines and standardizes these components and many others that are needed to make building Generative AI applications smoother. Various implementations of these APIs are then conveniently assembled together via a Llama Stack **Distribution**.
 
-To get started with Distributions, you need to:
+To get started with Distributions, you'll need to:
 
-- install the `llama-toolchain` python package which provides the core `llama` command line utility.
-- (optionally) download llama models using the `llama download` command.
-- install and configure a "distribution" using `llama distribution install`
-- finally, start up a distribution server serving all the necessary APIs using `llama distribution start`.
+1. Install any prerequisites
+2. Setup the toolchain which provides the core `llama` CLI
+3. Download the models
+4. Install the distribution
+5. Start the distribution server
 
 Once started, you can then point your agentic app to the URL for this server (e.g. `http://localhost:5000`) and make magic happen.
 
 Let's go through these steps in detail now:
 
 
-**Create a Conda Environment**
+**Install Prerequisites**
 -----------------------------
 
-It is best to install python packages in isolated Conda environments. You can use `virtualenv` also (see section at the end of this document), but we recommend Conda since it has better isolation mechanisms.
+**Python Packages**
+
+We recommend creating an isolated conda Python environment. You can also use `virtualenv` (see footer).
 
 ```bash
 # Create and activate a virtual environment
@@ -55,19 +59,7 @@ conda activate $ENV
 pip install -r requirements.txt
 ```
 
-At this point, you should have `llama-toolchain` package and the `llama` CLI utility available.
-
-You will also need `bwrap` to run the code executor as a tool as part of the agentic system. This utility might be present already on your system. If not, consult https://github.com/containers/bubblewrap for installation instructions.
-
-
-**Test Installation**
---------------------
-
-Test the installation by running the following command:
-```bash
-llama --help
-```
-This should print the CLI help message.
+You should now be able to run `llama --help`:
 
 ```bash
 usage: llama [-h] {download,distribution,model} ...
@@ -81,15 +73,32 @@ subcommands:
   {download,distribution,model}
 ```
 
-**Download Checkpoints (or use existing models)**
+**bubblewrap**
+
+The code execution environment uses [bubblewrap](https://github.com/containers/bubblewrap) for isolation. This may already be installed on your system; if not, it's likely in your OS's package repository.
+
+**Ollama (optional)**
+
+If you plan to use Ollama for inference, you'll need to install the server [via these instructions](https://ollama.com/download).
+
+
+**Download Checkpoints**
 ----------------------------------------------
 
-Llama Stack supports the `ollama-inline` distribution which can use your local [`ollama`](https://ollama.com/) server. In that case, please consult ollama documentation for downloading necessary models.
 
-Otherwise, you will need to download required checkpoints from either [Meta](https://llama.meta.com/llama-downloads/) or [Huggingface](https://huggingface.co/meta-llama).
+#### Downloading via ollama
 
+If you're using the `ollama-inline` distribution, you'll download and manage your models using Ollama.
 
-#### Downloading from Meta
+```
+ollama pull llama3.1:8b-instruct-fp16
+ollama pull llama3.1:70b-instruct-fp16
+```
+
+> [!NOTE]
+> Only the above two models are currently supported.
+
+#### Downloading from [Meta](https://llama.meta.com/llama-downloads/)
 
 Download the required checkpoints using the following commands:
 ```bash
@@ -107,7 +116,7 @@ llama download --source meta --model-id Llama-Guard-3-8B --meta-url META_URL
 
 For all the above, you will need to provide a URL (META_URL) which can be obtained from https://llama.meta.com/llama-downloads/ after signing an agreement.
 
-#### Downloading from Huggingface
+#### Downloading from [Huggingface](https://huggingface.co/meta-llama)
 
 Essentially, the same commands above work, just replace `--source meta` with `--source huggingface`.
 
@@ -158,9 +167,9 @@ $ llama distribution list
 
 As you can see above, each “spec” details the “providers” that make up that spec. For eg. The inline uses the “meta-reference” provider for inference while the ollama-inline relies on a different provider ( ollama ) for inference.
 
-At this point, we don't recommend using the `remote` distribution since there are no remote providers supporting the Llama Stack APIs. We hope this changes imminently.
+At this point, we don't recommend using the `remote` distribution since there are no remote providers supporting the Llama Stack APIs yet.
 
-To install a distro, we run a simple command providing 2 inputs –
+To install a distro, we run a simple command providing 2 inputs:
 - **Spec Id** of the distribution that we want to install ( as obtained from the list command )
 - A **Name** by which this installation will be known locally.
 
@@ -219,38 +228,28 @@ For how these configurations are stored as yaml, checkout the file printed at th
 
 Note that all configurations as well as models are stored in `~/.llama`
 
-**Installing and Configuring `ollama-inline` Distributions**
+**Installing and Configuring `ollama-inline` Distribution**
 ----------------------------------------------
-
-Install ollama using instructions provided [here](https://ollama.com/download/linux)
 
 On one terminal, start ollama server using
 ```
 ollama serve
 ```
 
-In a separate terminal, pull the 8B or 70B model packages using
-```
-ollama pull llama3.1:8b-instruct-fp16
-ollama pull llama3.1:70b-instruct-fp16
-```
 > [!NOTE]
 > In the server logs, you should see messages of the form `msg="llama runner started in xx seconds"` suggesting that the models are ready for inference.
-
-> [!NOTE]
-> Currently we only support the two models mentioned above. More to come soon.
 
 You can test your ollama setup via
 ```
 ollama run llama3.1:8b-instruct-fp16
 ```
 
-Once ollama setup is done, lets install the llama stack distribution using similar command as above
+Now, install the llama stack distribution:
 ```
 $ llama distribution install --spec ollama-inline --name ollama
 ```
 
-**Starting a Distribution and Testing it**
+**Installing and Configuring `inline` Distribution**
 ----------------------------------------------
 
 Now let’s start the distribution using the CLI.
