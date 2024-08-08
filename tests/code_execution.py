@@ -6,13 +6,17 @@
 
 import unittest
 
-from llama_agentic_system.tools.builtin import CodeInterpreterTool
 from llama_models.llama3_1.api.datatypes import (
     Attachment,
     BuiltinTool,
     CompletionMessage,
     StopReason,
     ToolCall,
+)
+
+# this test should just move to toolchain and inside meta_reference
+from llama_toolchain.agentic_system.meta_reference.tools.builtin import (
+    CodeInterpreterTool,
 )
 
 

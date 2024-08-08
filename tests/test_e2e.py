@@ -12,12 +12,12 @@ import os
 import unittest
 
 from dotenv import load_dotenv
-from llama_agentic_system.utils import get_agent_system_instance
+from llama_toolchain.agentic_system.event_logger import EventLogger, LogEvent
+from llama_toolchain.agentic_system.utils import get_agent_system_instance
 
 from llama_models.llama3_1.api.datatypes import *  # noqa: F403
-from llama_agentic_system.api.datatypes import StepType
-from llama_agentic_system.event_logger import EventLogger, LogEvent
-from llama_agentic_system.tools.custom import CustomTool
+from llama_toolchain.agentic_system.api.datatypes import StepType
+from llama_toolchain.agentic_system.tools.custom.datatypes import CustomTool
 
 from tests.example_custom_tool import GetBoilingPointTool
 
@@ -35,7 +35,7 @@ async def run_client(client, dialog):
 class TestE2E(unittest.IsolatedAsyncioTestCase):
 
     HOST = "localhost"
-    PORT = os.environ.get("INFERENCE_PORT", 5000)
+    PORT = os.environ.get("DISTRIBUTION_PORT", 5000)
 
     @staticmethod
     def prompt_to_message(content: str) -> Message:
@@ -59,6 +59,7 @@ class TestE2E(unittest.IsolatedAsyncioTestCase):
             host=TestE2E.HOST,
             port=TestE2E.PORT,
             custom_tools=custom_tools,
+            # model="Meta-Llama3.1-70B-Instruct",  # Defaults to 8B
         )
         await client.create_session(__file__)
         return client
@@ -108,7 +109,9 @@ class TestE2E(unittest.IsolatedAsyncioTestCase):
         client = await self.initialize()
         dialog = [
             TestE2E.prompt_to_message(
-                "Write code and tell me what is the 100th prime number"
+                "Write code to answer the question: "
+                "What is the 100th prime number? "
+                "Do not return the code, just the answer"
             ),
         ]
 

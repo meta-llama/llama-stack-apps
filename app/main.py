@@ -8,14 +8,14 @@ import mesop as me
 
 from utils.chat import chat, State
 from utils.client import ClientManager
-from utils.common import DISABLE_SAFETY, INFERENCE_HOST, INFERENCE_PORT, on_attach
+from utils.common import DISABLE_SAFETY, DISTRIBUTION_HOST, DISTRIBUTION_PORT, on_attach
 from utils.transform import transform
 
 
 client_manager = ClientManager()
 client_manager.init_client(
-    inference_port=INFERENCE_PORT,
-    host=INFERENCE_HOST,
+    inference_port=DISTRIBUTION_PORT,
+    host=DISTRIBUTION_HOST,
     custom_tools=[],
     disable_safety=DISABLE_SAFETY,
 )

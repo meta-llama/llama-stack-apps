@@ -17,7 +17,7 @@ from mesop.components.uploader.uploader import UploadEvent
 
 from llama_toolchain.inference.api import *  # noqa: F403
 from dotenv import load_dotenv
-from llama_agentic_system.api.datatypes import StepType
+from llama_toolchain.agentic_system.api.datatypes import StepType
 from llama_toolchain.safety.api.datatypes import ShieldResponse
 
 MAX_VIOLATIONS = 3
@@ -431,7 +431,7 @@ def chat(
                     key=f"{len(state.output)}",
                     style=me.Style(
                         color=_COLOR_BUTTON,
-                    )
+                    ),
                 )
 
                 me.slide_toggle(label="Debug Mode", on_change=on_debug_mode_change)
