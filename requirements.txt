@@ -1,14 +1,9 @@
-black==24.4.2
 fastapi
 fire
-flake8
 httpx
 llama-toolchain
 mesop
-pre-commit
 python-dotenv
 setuptools
-ufmt==2.7.0
-usort==1.0.8
 uvicorn
 yfinance
