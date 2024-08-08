@@ -86,7 +86,7 @@ subcommands:
 
 Llama Stack supports the `ollama-inline` distribution which can use your local [`ollama`](https://ollama.com/) server. In that case, please consult ollama documentation for downloading necessary models.
 
-Otherwise, you will need to download required checkpoints from either [Meta](https://llama.meta.com/llama-downloads/) or Huggingface.
+Otherwise, you will need to download required checkpoints from either [Meta](https://llama.meta.com/llama-downloads/) or [Huggingface](https://huggingface.co/meta-llama).
 
 
 #### Downloading from Meta
@@ -94,26 +94,31 @@ Otherwise, you will need to download required checkpoints from either [Meta](htt
 Download the required checkpoints using the following commands:
 ```bash
 # download the 8B model, this can be run on a single GPU
-llama download --source meta --model-id Meta-Llama3.1-8B-Instruct
+llama download --source meta --model-id Meta-Llama3.1-8B-Instruct --meta-url META_URL
 
 # you can also get the 70B model, this will require 8 GPUs however
-llama download --source meta --model-id Meta-Llama3.1-70B-Instruct
+llama download --source meta --model-id Meta-Llama3.1-70B-Instruct --meta-url META_URL
 
 # llama-agents have safety enabled by default. For this, you will need
 # safety models -- Llama-Guard and Prompt-Guard
-llama download --source meta --model-id Prompt-Guard-86M
-llama download --source meta --model-id Llama-Guard-3-8B
+llama download --source meta --model-id Prompt-Guard-86M --meta-url META_URL
+llama download --source meta --model-id Llama-Guard-3-8B --meta-url META_URL
 ```
 
-For all the above, you will need to provide a URL which can be obtained from https://llama.meta.com/llama-downloads/ after signing an agreement.
+For all the above, you will need to provide a URL (META_URL) which can be obtained from https://llama.meta.com/llama-downloads/ after signing an agreement.
 
 #### Downloading from Huggingface
 
-```bash
-llama download --source huggingface --model-id Meta-Llama3.1-8B-Instruct
-```
-
 Essentially, the same commands above work, just replace `--source meta` with `--source huggingface`.
+
+```bash
+llama download --source huggingface --model-id  Meta-Llama3.1-8B-Instruct --hf-token <HF_TOKEN>
+
+llama download --source huggingface --model-id Meta-Llama3.1-70B-Instruct --hf-token <HF_TOKEN>
+
+llama download --source huggingface --model-id Llama-Guard-3-8B --ignore-patterns *original*
+llama download --source huggingface --model-id Prompt-Guard-86M --ignore-patterns *original*
+```
 
 **Important:** Set your environment variable `HF_TOKEN` or pass in `--hf-token` to the command to validate your access. You can find your token at [https://huggingface.co/settings/tokens](https://huggingface.co/settings/tokens).
 
@@ -214,10 +219,42 @@ For how these configurations are stored as yaml, checkout the file printed at th
 
 Note that all configurations as well as models are stored in `~/.llama`
 
+**Installing and Configuring `ollama-inline` Distributions**
+----------------------------------------------
+
+Install ollama using instructions provided [here](https://ollama.com/download/linux)
+
+On one terminal, start ollama server using
+```
+ollama serve
+```
+
+In a separate terminal, pull the 8B or 70B model packages using
+```
+ollama pull llama3.1:8b-instruct-fp16
+ollama pull llama3.1:70b-instruct-fp16
+```
+> [!NOTE]
+> In the server logs, you should see messages of the form `msg="llama runner started in xx seconds"` suggesting that the models are ready for inference.
+
+> [!NOTE]
+> Currently we only support the two models mentioned above. More to come soon.
+
+You can test your ollama setup via
+```
+ollama run llama3.1:8b-instruct-fp16
+```
+
+Once ollama setup is done, lets install the llama stack distribution using similar command as above
+```
+$ llama distribution install --spec ollama-inline --name ollama
+```
+
 **Starting a Distribution and Testing it**
 ----------------------------------------------
 
 Now let’s start the distribution using the CLI.
+You will require the name of the distribution that was used for installation / configuration.
 ```
 llama distribution start --name inline-llama-8b --port 5000
 ```
