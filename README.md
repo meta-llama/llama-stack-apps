@@ -88,7 +88,7 @@ If you plan to use Ollama for inference, you'll need to install the server [via 
 
 #### Downloading via ollama
 
-If you're using the `ollama-inline` distribution, you'll download and manage your models using Ollama.
+If you're using the `ollama-local` distribution, you'll download and manage your models using Ollama.
 
 ```
 ollama pull llama3.1:8b-instruct-fp16
@@ -144,7 +144,7 @@ $ llama distribution list
 +---------------+---------------------------------------------+----------------------------------------------------------------------+
 | Spec ID       | ProviderSpecs                               | Description                                                          |
 +---------------+---------------------------------------------+----------------------------------------------------------------------+
-| inline        | {                                           | Use code from `llama_toolchain` itself to serve all llama stack APIs |
+| local         | {                                           | Use code from `llama_toolchain` itself to serve all llama stack APIs |
 |               |   "inference": "meta-reference",            |                                                                      |
 |               |   "safety": "meta-reference",               |                                                                      |
 |               |   "agentic_system": "meta-reference"        |                                                                      |
@@ -156,7 +156,7 @@ $ llama distribution list
 |               |   "agentic_system": "agentic_system-remote" |                                                                      |
 |               | }                                           |                                                                      |
 +---------------+---------------------------------------------+----------------------------------------------------------------------+
-| ollama-inline | {                                           | Like local-source, but use ollama for running LLM inference          |
+| ollama-local  | {                                           | Like local-source, but use ollama for running LLM inference          |
 |               |   "inference": "meta-ollama",               |                                                                      |
 |               |   "safety": "meta-reference",               |                                                                      |
 |               |   "agentic_system": "meta-reference"        |                                                                      |
@@ -165,7 +165,7 @@ $ llama distribution list
 
 ```
 
-As you can see above, each “spec” details the “providers” that make up that spec. For eg. The inline uses the “meta-reference” provider for inference while the ollama-inline relies on a different provider ( ollama ) for inference.
+As you can see above, each “spec” details the “providers” that make up that spec. For eg. The local uses the “meta-reference” provider for inference while the ollama-local relies on a different provider (Ollama) for inference.
 
 At this point, we don't recommend using the `remote` distribution since there are no remote providers supporting the Llama Stack APIs yet.
 
@@ -173,31 +173,31 @@ To install a distro, we run a simple command providing 2 inputs:
 - **Spec Id** of the distribution that we want to install ( as obtained from the list command )
 - A **Name** by which this installation will be known locally.
 
-Let's imagine you are working with a 8B-Instruct model, so we will name our local installation as `inline-llama-8b`. The following command will both install _and_ configure the distribution. As part of the configuration, you will be asked for some inputs (model_id, max_seq_len, etc.)
+Let's imagine you are working with a 8B-Instruct model, so we will name our local installation as `local-llama-8b`. The following command will both install _and_ configure the distribution. As part of the configuration, you will be asked for some inputs (model_id, max_seq_len, etc.)
 
 ```
-llama distribution install --spec inline --name inline-llama-8b
+llama distribution install --spec local --name local-llama-8b
 ```
 
 Once it runs successfully , you should see some outputs in the form:
 
 ```
-$ llama distribution install --spec inline --name inline-llama-8b
+$ llama distribution install --spec local --name local-llama-8b
 ....
 ....
 Successfully installed cfgv-3.4.0 distlib-0.3.8 identify-2.6.0 libcst-1.4.0 llama_toolchain-0.0.2 moreorless-0.4.0 nodeenv-1.9.1 pre-commit-3.8.0 stdlibs-2024.5.15 toml-0.10.2 tomlkit-0.13.0 trailrunner-1.4.0 ufmt-2.7.0 usort-1.0.8 virtualenv-20.26.3
 
-Distribution `inline-llama-8b` (with spec inline) has been installed successfully!
+Distribution `local-llama-8b` (with spec local) has been installed successfully!
 ```
 
 You can re-configure this distribution by running:
 ```
-llama distribution configure --name inline-llama-8b
+llama distribution configure --name local-llama-8b
 ```
 
 Here is an example run of how the CLI will guide you to fill the configuration
 ```
-$ llama distribution configure --name inline-llama-8b
+$ llama distribution configure --name local-llama-8b
 
 Configuring API surface: inference
 Enter value for model (required): Meta-Llama3.1-8B-Instruct
@@ -228,7 +228,7 @@ For how these configurations are stored as yaml, checkout the file printed at th
 
 Note that all configurations as well as models are stored in `~/.llama`
 
-**Installing and Configuring `ollama-inline` Distribution**
+**Installing and Configuring `ollama-local` Distribution**
 ----------------------------------------------
 
 On one terminal, start ollama server using
@@ -246,21 +246,21 @@ ollama run llama3.1:8b-instruct-fp16
 
 Now, install the llama stack distribution:
 ```
-$ llama distribution install --spec ollama-inline --name ollama
+$ llama distribution install --spec ollama-local --name ollama
 ```
 
-**Installing and Configuring `inline` Distribution**
+**Installing and Configuring `local` Distribution**
 ----------------------------------------------
 
 Now let’s start the distribution using the CLI.
 You will require the name of the distribution that was used for installation / configuration.
 ```
-llama distribution start --name inline-llama-8b --port 5000
+llama distribution start --name local-llama-8b --port 5000
 ```
 You should see the distribution start and print the APIs that it is supporting,
 
 ```
-$ llama distribution start --name inline-llama-8b --port 5000
+$ llama distribution start --name local-llama-8b --port 5000
 
 > initializing model parallel with size 1
 > initializing ddp with size 1
@@ -292,10 +292,10 @@ INFO:     Uvicorn running on http://[::]:5000 (Press CTRL+C to quit)
 
 
 > [!NOTE]
-> Configuration is in `~/.llama/distributions/inline-llama-8b/config.yaml`. Feel free to increase `max_seq_len`.
+> Configuration is in `~/.llama/distributions/local-llama-8b/config.yaml`. Feel free to increase `max_seq_len`.
 
 > [!IMPORTANT]
-> The "inline" distribution inference server currently only supports CUDA. It will not work on Apple Silicon machines.
+> The "local" distribution inference server currently only supports CUDA. It will not work on Apple Silicon machines.
 
 This server is running a Llama model locally.
 
@@ -322,7 +322,7 @@ Tools that the model supports and which need API Keys --
 **Start an App and Interact with the Server**
 ---------------------------------------------
 
-Start an app (inline) and interact with it by running the following command:
+Start an app (local) and interact with it by running the following command:
 ```bash
 mesop app/main.py
 ```
@@ -342,7 +342,7 @@ NOTE: Ensure that Distribution server is still running.
 ```bash
 cd <path-to-llama-agentic-system>
 conda activate $ENV
-llama distribution start --name inline-llama-8b --port 5000 # If not already started
+llama distribution start --name local-llama-8b --port 5000 # If not already started
 
 PYTHONPATH=. python examples/scripts/vacation.py localhost 5000
 ```
