@@ -245,7 +245,7 @@ ollama run llama3.1:8b-instruct-fp16
 
 Now, install the llama stack distribution:
 ```
-$ llama distribution install --spec ollama-local --name ollama
+llama distribution install --spec local-ollama --name ollama
 ```
 
 **Installing and Configuring `local` Distribution**
