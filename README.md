@@ -376,6 +376,9 @@ Feel free to reach out if you have questions.
 
 **Using VirtualEnv instead of Conda**
 -----------------------------
+> [!NOTE]
+> While you can run the apps using `venv`, installation of a distribution requires conda.
+
 #### In Linux
 
 ```bash
