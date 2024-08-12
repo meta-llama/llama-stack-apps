@@ -329,6 +329,10 @@ This will start a mesop app and you can go to `localhost:32123` to play with the
 
 <img src="demo.png" alt="Chat App" width="600"/>
 
+Optionally, you can setup API keys for custom tools:
+- [WolframAlpha](https://developer.wolframalpha.com/): store in `WOLFRAM_ALPHA_API_KEY` environment variable
+- [Brave Search](https://brave.com/search/api/): store in `BRAVE_SEARCH_API_KEY` environment variable
+
 Similar to this main app, you can also try other variants
 - `PYTHONPATH=. mesop app/chat_with_custom_tools.py`  to showcase how custom tools are integrated
 - `PYTHONPATH=. mesop app/chat_moderation_with_llama_guard.py`  to showcase how the app is modified to act as a chat moderator for safety
