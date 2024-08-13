@@ -42,11 +42,10 @@ Let's go through these steps in detail now:
 
 
 **Install Prerequisites**
------------------------------
-
+----------------------------- 
 **Python Packages**
 
-We recommend creating an isolated conda Python environment. You can also use `virtualenv` (see footer).
+We recommend creating an isolated conda Python environment.
 
 ```bash
 # Create and activate a virtual environment
@@ -135,6 +134,11 @@ ollama pull llama3.1:70b-instruct-fp16
 
 **Installing and Configuring Distributions**
 ------------------------------------
+
+> [!NOTE]
+> `local` distribution has only been tested on linux as of now.
+> For other platforms (ubuntu, mac) try using the `ollama-local` distro and install platform specific ollama.
+
 
 Let’s start with listing available distributions
 ```
