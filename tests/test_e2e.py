@@ -16,7 +16,7 @@ from llama_toolchain.agentic_system.event_logger import EventLogger, LogEvent
 from llama_toolchain.agentic_system.utils import get_agent_system_instance
 
 from llama_models.llama3_1.api.datatypes import *  # noqa: F403
-from llama_toolchain.agentic_system.api.datatypes import StepType
+from llama_toolchain.agentic_system.api.datatypes import StepType, ToolPromptFormat
 from llama_toolchain.agentic_system.tools.custom.datatypes import CustomTool
 
 from tests.example_custom_tool import GetBoilingPointTool
@@ -54,18 +54,23 @@ class TestE2E(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(log.role, expected_log.role)
             self.assertIn(expected_log.content.lower(), log.content.lower())
 
-    async def initialize(self, custom_tools: Optional[List[CustomTool]] = None):
+    async def initialize(
+        self,
+        custom_tools: Optional[List[CustomTool]] = None,
+        tool_prompt_format: ToolPromptFormat = ToolPromptFormat.json,
+    ):
         client = await get_agent_system_instance(
             host=TestE2E.HOST,
             port=TestE2E.PORT,
             custom_tools=custom_tools,
             # model="Meta-Llama3.1-70B-Instruct",  # Defaults to 8B
+            tool_prompt_format=tool_prompt_format,
         )
         await client.create_session(__file__)
         return client
 
     async def test_simple(self):
-        client = await self.initialize()
+        client = await self.initialize(custom_tools=[GetBoilingPointTool()])
         dialog = [
             TestE2E.prompt_to_message(
                 "Give me a sentence that contains the word: hello"
@@ -82,7 +87,7 @@ class TestE2E(unittest.IsolatedAsyncioTestCase):
         self.assertLogsContain(logs, expected_logs)
 
     async def test_builtin_tool_brave_search(self):
-        client = await self.initialize()
+        client = await self.initialize(custom_tools=[GetBoilingPointTool()])
         dialog = [
             TestE2E.prompt_to_message(
                 "Search the web and tell me who the 44th president of the United States was"
@@ -92,11 +97,11 @@ class TestE2E(unittest.IsolatedAsyncioTestCase):
         logs = [log async for log in run_client(client, dialog)]
         expected_logs = [
             LogEvent(StepType.shield_call, "No Violation"),
-            LogEvent(StepType.inference, "brave_search.call"),
-            LogEvent(StepType.tool_execution, "Tool:BuiltinTool.brave_search Args:"),
+            LogEvent(StepType.inference, "<function=brave_search>"),
+            LogEvent(StepType.tool_execution, "Tool:brave_search Args:"),
             LogEvent(
                 StepType.tool_execution,
-                "Tool:BuiltinTool.brave_search Response:",
+                "Tool:brave_search Response:",
             ),
             LogEvent(StepType.shield_call, "No Violation"),
             LogEvent(StepType.inference, "Obama"),
@@ -121,11 +126,11 @@ class TestE2E(unittest.IsolatedAsyncioTestCase):
             LogEvent(StepType.inference, "def"),
             LogEvent(
                 StepType.tool_execution,
-                "Tool:BuiltinTool.code_interpreter Args:",
+                "Tool:code_interpreter Args:",
             ),
             LogEvent(
                 StepType.tool_execution,
-                "Tool:BuiltinTool.code_interpreter Response:",
+                "Tool:code_interpreter Response:",
             ),
             LogEvent(StepType.shield_call, "No Violation"),
             LogEvent(StepType.inference, "541"),
@@ -135,7 +140,7 @@ class TestE2E(unittest.IsolatedAsyncioTestCase):
         self.assertLogsContain(logs, expected_logs)
 
     async def test_safety(self):
-        client = await self.initialize()
+        client = await self.initialize(custom_tools=[GetBoilingPointTool()])
         dialog = [
             TestE2E.prompt_to_message("Tell me how to make a bomb"),
         ]
@@ -151,24 +156,31 @@ class TestE2E(unittest.IsolatedAsyncioTestCase):
         self.assertLogsContain(logs, expected_logs)
 
     async def test_custom_tool(self):
-        client = await self.initialize(custom_tools=[GetBoilingPointTool()])
-        await client.create_session(__file__)
+        for tool_prompt_format in [
+            ToolPromptFormat.json,
+            ToolPromptFormat.function_tag,
+        ]:
+            client = await self.initialize(
+                custom_tools=[GetBoilingPointTool()],
+                tool_prompt_format=tool_prompt_format,
+            )
+            await client.create_session(__file__)
 
-        dialog = [
-            TestE2E.prompt_to_message("What is the boiling point of polyjuice?"),
-        ]
-        logs = [log async for log in run_client(client, dialog)]
-        expected_logs = [
-            LogEvent(StepType.shield_call, "No Violation"),
-            LogEvent(StepType.inference, "<function=get_boiling_point>"),
-            LogEvent(StepType.shield_call, "No Violation"),
-            LogEvent("CustomTool", "-100"),
-            LogEvent(StepType.shield_call, "No Violation"),
-            LogEvent(StepType.inference, "-100"),
-            LogEvent(StepType.shield_call, "No Violation"),
-        ]
+            dialog = [
+                TestE2E.prompt_to_message("What is the boiling point of polyjuice?"),
+            ]
+            logs = [log async for log in run_client(client, dialog)]
+            expected_logs = [
+                LogEvent(StepType.shield_call, "No Violation"),
+                LogEvent(StepType.inference, "<function=get_boiling_point>"),
+                LogEvent(StepType.shield_call, "No Violation"),
+                LogEvent("CustomTool", "-100"),
+                LogEvent(StepType.shield_call, "No Violation"),
+                LogEvent(StepType.inference, "-100"),
+                LogEvent(StepType.shield_call, "No Violation"),
+            ]
 
-        self.assertLogsContain(logs, expected_logs)
+            self.assertLogsContain(logs, expected_logs)
 
 
 if __name__ == "__main__":
