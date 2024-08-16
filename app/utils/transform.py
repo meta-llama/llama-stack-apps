@@ -8,8 +8,8 @@ import asyncio
 import uuid
 
 import mesop as me
-from llama_agentic_system.api.datatypes import (
-    AgenticSystemTurnResponseEventType,
+from llama_toolchain.agentic_system.api import (
+    AgenticSystemTurnResponseEventType as EventType,
     StepType,
 )
 
@@ -22,9 +22,6 @@ from llama_toolchain.inference.api import *  # noqa: F403
 
 
 EVENT_LOOP = asyncio.new_event_loop()
-
-
-EventType = AgenticSystemTurnResponseEventType
 
 
 def transform(content: InterleavedTextAttachment):

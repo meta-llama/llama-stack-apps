@@ -22,8 +22,8 @@ load_dotenv()
 
 UPLOADS_DIR = "app/uploads/"
 CHUNK_SIZE = 1024
-INFERENCE_PORT = os.environ.get("INFERENCE_PORT", 5000)
-INFERENCE_HOST = os.environ.get("INFERENCE_HOST", "localhost")
+DISTRIBUTION_PORT = os.environ.get("DISTRIBUTION_PORT", 5000)
+DISTRIBUTION_HOST = os.environ.get("DISTRIBUTION_HOST", "localhost")
 DISABLE_SAFETY = bool(int(os.environ.get("DISABLE_SAFETY", "0")))
 
 

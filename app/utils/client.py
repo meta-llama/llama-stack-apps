@@ -6,7 +6,7 @@
 
 import asyncio
 
-from llama_agentic_system.utils import get_agent_system_instance
+from llama_toolchain.agentic_system.utils import get_agent_system_instance
 
 global CLIENT
 CLIENT = None

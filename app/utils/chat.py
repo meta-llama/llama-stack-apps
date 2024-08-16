@@ -17,7 +17,7 @@ from mesop.components.uploader.uploader import UploadEvent
 
 from llama_toolchain.inference.api import *  # noqa: F403
 from dotenv import load_dotenv
-from llama_agentic_system.api.datatypes import StepType
+from llama_toolchain.agentic_system.api.datatypes import StepType
 from llama_toolchain.safety.api.datatypes import ShieldResponse
 
 MAX_VIOLATIONS = 3
@@ -34,8 +34,9 @@ _SPECIAL_STDOUT_DELIMITER = "[stdout]"
 
 _COLOR_BACKGROUND = "#f0f4f8"
 _COLOR_CHAT_BUBBLE_YOU = "#f2f2f2"
-_COLOR_CHAT_BUBBLE_BOT = "#afc0e4"
-_COLOR_CHAT_BUBBLE_TOOL = "#dfe6f4"
+_COLOR_CHAT_BUBBLE_BOT = "#e8f3ff"
+_COLOR_CHAT_BUBBLE_TOOL = "#d0dae5"
+_COLOR_BUTTON = "#1d65c1"
 
 _DEFAULT_PADDING = me.Padding.all(20)
 _DEFAULT_BORDER_SIDE = me.BorderSide(width="1px", style="solid", color="#ececec")
@@ -80,7 +81,10 @@ _STYLE_CHAT_INPUT = me.Style(width="100%")
 _STYLE_CHAT_INPUT_BOX = me.Style(
     padding=me.Padding(top=30), display="flex", flex_direction="row"
 )
-_STYLE_CHAT_BUTTON = me.Style(margin=me.Margin(top=8, left=8))
+_STYLE_CHAT_BUTTON = me.Style(
+    margin=me.Margin(top=8, left=8),
+    background=_COLOR_BUTTON,
+)
 _STYLE_CHAT_BUBBLE_PLAINTEXT = me.Style(margin=me.Margin.symmetric(vertical=15))
 
 
@@ -338,7 +342,7 @@ def chat(
                 stdout = stdout_match.group(1)
                 with me.box(style=_make_chat_bubble_style(op, Role.assistant.value)):
                     if len(stdout) > STDOUT_CUTOFF_LENGTH:
-                        codeblock(stdout[STDOUT_CUTOFF_LENGTH:])
+                        codeblock(stdout[:STDOUT_CUTOFF_LENGTH])
                         me.text(
                             f"(remaining {len(stdout) - STDOUT_CUTOFF_LENGTH} characters omitted)",
                             type="subtitle-2",
@@ -425,6 +429,9 @@ def chat(
                     label="Upload",
                     on_upload=on_attach,
                     key=f"{len(state.output)}",
+                    style=me.Style(
+                        color=_COLOR_BUTTON,
+                    ),
                 )
 
                 me.slide_toggle(label="Debug Mode", on_change=on_debug_mode_change)
