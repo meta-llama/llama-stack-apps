@@ -357,7 +357,7 @@ You should see outputs to stdout of the form --
 Environment: ipython
 Tools: brave_search, wolfram_alpha, photogen
 
-Knowledge Cutoff Date: December 2023
+Cutting Knowledge Date: December 2023
 Today Date: 23 July 2024
 
 
