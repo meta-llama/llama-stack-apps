@@ -121,7 +121,7 @@ llama download --source huggingface --model-id Prompt-Guard-86M --ignore-pattern
 
 #### Downloading via ollama
 
-If you're already using ollama, we also have a supported distribuiton `ollama-local` and you can continue to use ollama for managing model downloads.
+If you're already using ollama, we also have a supported distribuiton `local-ollama` and you can continue to use ollama for managing model downloads.
 
 ```
 ollama pull llama3.1:8b-instruct-fp16
@@ -137,7 +137,7 @@ ollama pull llama3.1:70b-instruct-fp16
 
 > [!NOTE]
 > `local` distribution has only been tested on linux as of now.
-> For other platforms (ubuntu, mac) try using the `ollama-local` distro and install platform specific ollama.
+> For other platforms (ubuntu, mac) try using the `local-ollama` distro and install platform specific ollama.
 
 
 Let’s start with listing available distributions
@@ -159,7 +159,7 @@ $ llama distribution list
 |               |   "agentic_system": "agentic_system-remote" |                                                                      |
 |               | }                                           |                                                                      |
 +---------------+---------------------------------------------+----------------------------------------------------------------------+
-| ollama-local  | {                                           | Like local-source, but use ollama for running LLM inference          |
+| local-ollama  | {                                           | Like local-source, but use ollama for running LLM inference          |
 |               |   "inference": "meta-ollama",               |                                                                      |
 |               |   "safety": "meta-reference",               |                                                                      |
 |               |   "agentic_system": "meta-reference"        |                                                                      |
@@ -168,7 +168,7 @@ $ llama distribution list
 
 ```
 
-As you can see above, each “spec” details the “providers” that make up that spec. For eg. The local uses the “meta-reference” provider for inference while the ollama-local relies on a different provider (Ollama) for inference.
+As you can see above, each “spec” details the “providers” that make up that spec. For eg. The local uses the “meta-reference” provider for inference while the local-ollama relies on a different provider (Ollama) for inference.
 
 At this point, we don't recommend using the `remote` distribution since there are no remote providers supporting the Llama Stack APIs yet.
 
@@ -231,7 +231,7 @@ For how these configurations are stored as yaml, checkout the file printed at th
 
 Note that all configurations as well as models are stored in `~/.llama`
 
-**Installing and Configuring `ollama-local` Distribution**
+**Installing and Configuring `local-ollama` Distribution**
 ----------------------------------------------
 
 On one terminal, start ollama server using
