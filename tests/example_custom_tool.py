@@ -6,7 +6,7 @@
 
 from typing import Dict
 
-from llama_models.llama3_1.api.datatypes import ToolParamDefinition
+from llama_models.llama3.api.datatypes import ToolParamDefinition
 from llama_toolchain.agentic_system.tools.custom.datatypes import (
     SingleMessageCustomTool,
 )

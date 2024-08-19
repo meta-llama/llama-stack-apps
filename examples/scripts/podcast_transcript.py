@@ -10,7 +10,7 @@
 import asyncio
 
 import fire
-from llama_models.llama3_1.api.datatypes import Attachment, URL, UserMessage
+from llama_models.llama3.api.datatypes import Attachment, URL, UserMessage
 
 from multi_turn import prompt_to_message, run_main
 

@@ -10,7 +10,7 @@ from typing import List, Optional
 
 from dotenv import load_dotenv
 
-from llama_models.llama3_1.api.datatypes import *  # noqa: F403
+from llama_models.llama3.api.datatypes import *  # noqa: F403
 
 from llama_toolchain.agentic_system.event_logger import EventLogger
 from llama_toolchain.agentic_system.tools.custom.datatypes import CustomTool
