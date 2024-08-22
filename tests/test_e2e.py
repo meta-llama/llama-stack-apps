@@ -17,7 +17,7 @@ from llama_toolchain.agentic_system.utils import get_agent_system_instance
 
 from llama_models.llama3.api.datatypes import *  # noqa: F403
 from llama_toolchain.agentic_system.api.datatypes import StepType, ToolPromptFormat
-from llama_toolchain.agentic_system.tools.custom.datatypes import CustomTool
+from llama_toolchain.tools.custom.datatypes import CustomTool
 
 from tests.example_custom_tool import GetBoilingPointTool
 
