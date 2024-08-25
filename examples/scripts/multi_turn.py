@@ -49,7 +49,7 @@ async def run_main(
         message = user_messages.pop(0)
         iterator = execute_with_custom_tools(
             client.api,
-            client.system_id,
+            client.agent_id,
             client.session_id,
             [message],
             custom_tools,
