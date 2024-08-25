@@ -8,44 +8,55 @@
 # This software may be used and distributed in accordance with the terms of the Llama 3 Community License Agreement.
 
 import asyncio
+from pathlib import Path
 
 import fire
-
-from llama_models.llama3.api.datatypes import *  # noqa: F403
+from llama_toolchain.agentic_system.api import *  # noqa: F403
+from llama_toolchain.agentic_system.utils import *  # noqa: F403
 from examples.custom_tools.ticker_data import TickerDataTool
 
-from multi_turn import prompt_to_message, run_main
+from multi_turn import execute_turns, prompt_to_turn
+
+SCRIPTS = Path(__file__).parent
+EXAMPLES = SCRIPTS.parent
 
 
 def main(host: str, port: int, disable_safety: bool = False):
+    tool_config = QuickToolConfig(
+        attachment_behavior=AttachmentBehavior.code_interpreter,
+        custom_tools=[TickerDataTool()],
+    )
+    inflation_path = EXAMPLES / "resources/inflation.csv"
     asyncio.run(
-        run_main(
+        execute_turns(
             [
-                UserMessage(
-                    content=[
-                        "Here is a csv, can you describe it ?",
+                prompt_to_turn(
+                    "Here is a csv, can you describe it ?",
+                    attachments=[
                         Attachment(
-                            url=URL(uri="file://examples/resources/inflation.csv"),
+                            content=URL(
+                                uri=f"file://{str(inflation_path.resolve())}",
+                            ),
                             mime_type="text/csv",
                         ),
                     ],
                 ),
-                prompt_to_message("Which year ended with the highest inflation ?"),
-                prompt_to_message(
+                prompt_to_turn("Which year ended with the highest inflation ?"),
+                prompt_to_turn(
                     "What macro economic situations that led to such high inflation in that period?"
                 ),
-                prompt_to_message("Plot average yearly inflation as a time series"),
-                prompt_to_message(
+                prompt_to_turn("Plot average yearly inflation as a time series"),
+                prompt_to_turn(
                     "Using provided functions, get ticker data for META for the past 10 years ? plot percentage year over year growth"
                 ),
-                prompt_to_message(
+                prompt_to_turn(
                     "Can you take Meta's year over year growth data and put it in the same inflation timeseries as above ?"
                 ),
             ],
             host=host,
             port=port,
             disable_safety=disable_safety,
-            custom_tools=[TickerDataTool()],
+            tool_config=tool_config,
         )
     )
 

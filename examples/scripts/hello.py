@@ -11,15 +11,15 @@ import asyncio
 
 import fire
 
-from multi_turn import prompt_to_message, run_main
+from multi_turn import execute_turns, prompt_to_turn
 
 
 def main(host: str, port: int, disable_safety: bool = False):
     asyncio.run(
-        run_main(
+        execute_turns(
             [
-                prompt_to_message("Hello"),
-                prompt_to_message(
+                prompt_to_turn("Hello"),
+                prompt_to_turn(
                     "Which players played in the winning team of the NBA western conference semifinals of 2024, please use tools"
                 ),
             ],

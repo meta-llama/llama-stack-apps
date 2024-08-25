@@ -11,19 +11,19 @@ import asyncio
 
 import fire
 
-from multi_turn import prompt_to_message, run_main
+from multi_turn import execute_turns, prompt_to_turn
 
 
 def main(host: str, port: int, disable_safety: bool = False):
     asyncio.run(
-        run_main(
+        execute_turns(
             [
-                prompt_to_message(
+                prompt_to_turn(
                     "I am planning a trip to Switzerland, what are the top 3 places to visit?"
                 ),
-                prompt_to_message("What is so special about #1?"),
-                prompt_to_message("What other countries should I consider to club?"),
-                prompt_to_message("How many days should I plan for in each country?"),
+                prompt_to_turn("What is so special about #1?"),
+                prompt_to_turn("What other countries should I consider to club?"),
+                prompt_to_turn("How many days should I plan for in each country?"),
             ],
             host=host,
             port=port,

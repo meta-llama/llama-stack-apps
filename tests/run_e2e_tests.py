@@ -15,7 +15,10 @@ import time
 
 import fire
 
-from llama_toolchain.agentic_system.utils import get_agent_system_instance
+from llama_toolchain.agentic_system.utils import (
+    get_agent_with_custom_tools,
+    make_agent_config_with_custom_tools,
+)
 
 
 class CleanChildProcesses:
@@ -49,7 +52,13 @@ async def run_main(host: str, port: int):
 
         while True:
             try:
-                client = await get_agent_system_instance(host=host, port=port)
+                agent_config = await make_agent_config_with_custom_tools()
+                agent = await get_agent_with_custom_tools(
+                    host=host,
+                    port=port,
+                    agent_config=agent_config,
+                    custom_tools=[],
+                )
                 break
             except Exception:
                 print("Waiting for server to be ready...")
