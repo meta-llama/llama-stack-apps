@@ -9,14 +9,20 @@
 # Note: Make sure the agentic system server is running before running this test
 
 import os
+import sys
 import unittest
 
-from dotenv import load_dotenv
-from llama_toolchain.agentic_system.event_logger import EventLogger, LogEvent
-from llama_toolchain.agentic_system.utils import (
+THIS_DIR = os.path.dirname(__file__)
+
+sys.path += os.path.abspath(THIS_DIR + "../")
+
+from common.client_utils import (
     get_agent_with_custom_tools,
     make_agent_config_with_custom_tools,
+    QuickToolConfig,
 )
+from dotenv import load_dotenv
+from llama_toolchain.agentic_system.event_logger import EventLogger, LogEvent
 
 from llama_models.llama3.api.datatypes import *  # noqa: F403
 from llama_toolchain.agentic_system.api import *  # noqa: F403
@@ -29,7 +35,7 @@ load_dotenv()
 
 
 async def run_agent(agent, dialog):
-    iterator = agent.run(dialog, stream=False)
+    iterator = agent.execute_turn(dialog, stream=False)
     async for _event, log in EventLogger().log(iterator, stream=False):
         if log is not None:
             yield log
@@ -38,7 +44,7 @@ async def run_agent(agent, dialog):
 class TestE2E(unittest.IsolatedAsyncioTestCase):
 
     HOST = "localhost"
-    PORT = os.environ.get("DISTRIBUTION_PORT", 5000)
+    PORT = os.environ.get("AGENTIC_SYSTEM_PORT", 5000)
 
     @staticmethod
     def prompt_to_message(content: str) -> Message:
@@ -63,8 +69,10 @@ class TestE2E(unittest.IsolatedAsyncioTestCase):
         tool_prompt_format: ToolPromptFormat = ToolPromptFormat.json,
     ):
         agent_config = await make_agent_config_with_custom_tools(
-            custom_tools=custom_tools,
-            tool_prompt_format=tool_prompt_format,
+            tool_config=QuickToolConfig(
+                custom_tools=custom_tools,
+                prompt_format=tool_prompt_format,
+            ),
         )
         return await get_agent_with_custom_tools(
             host=TestE2E.HOST,

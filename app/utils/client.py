@@ -12,8 +12,10 @@ THIS_DIR = os.path.dirname(__file__)
 sys.path += os.path.abspath(THIS_DIR + "../../")
 
 from common.client_utils import (
+    default_builtins,
     get_agent_with_custom_tools,
     make_agent_config_with_custom_tools,
+    QuickToolConfig,
 )
 
 global CLIENT
@@ -37,7 +39,10 @@ class ClientManager:
         if self.client is None:
             agent_config = asyncio.run(
                 make_agent_config_with_custom_tools(
-                    custom_tools=custom_tools,
+                    tool_config=QuickToolConfig(
+                        custom_tools=custom_tools,
+                        builtin_tools=default_builtins(),
+                    ),
                     disable_safety=disable_safety,
                 )
             )
