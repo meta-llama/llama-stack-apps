@@ -41,7 +41,7 @@ def main(host: str, port: int, disable_safety: bool = False):
     ]
     # now run the agentic system pointing it to the pre-populated memory bank
     agent_config = asyncio.run(
-        await make_agent_config_with_custom_tools(
+        make_agent_config_with_custom_tools(
             tool_config=QuickToolConfig(
                 builtin_tools=[],
                 attachment_behavior=AttachmentBehavior.rag,

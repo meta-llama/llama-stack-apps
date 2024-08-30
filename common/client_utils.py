@@ -54,6 +54,15 @@ class QuickToolConfig(BaseModel):
         arbitrary_types_allowed = True
 
 
+def enable_memory_tool(cfg: QuickToolConfig) -> bool:
+    if cfg.memory_bank_id:
+        return True
+    return (
+        cfg.attachment_behavior
+        and cfg.attachment_behavior != AttachmentBehavior.code_interpreter
+    )
+
+
 # This is a utility function; it does not provide all bells and whistles
 # you can get from the underlying AgenticSystem API. Any limitations should
 # ideally be resolved by making another well-scoped utility function instead
@@ -84,11 +93,7 @@ async def make_agent_config_with_custom_tools(
         elif t == BuiltinTool.code_interpreter:
             tool_definitions.append(CodeInterpreterToolDefinition())
 
-    # enable memory unless we are specifically disabling it
-    if (
-        tool_config.attachment_behavior
-        and tool_config.attachment_behavior != AttachmentBehavior.code_interpreter
-    ):
+    if enable_memory_tool(tool_config):
         bank_configs = []
         if tool_config.memory_bank_id:
             bank_configs.append(
