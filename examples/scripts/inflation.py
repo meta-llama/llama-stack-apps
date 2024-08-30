@@ -8,34 +8,47 @@
 # This software may be used and distributed in accordance with the terms of the Llama 3 Community License Agreement.
 
 import asyncio
-from pathlib import Path
 
 import fire
 from llama_toolchain.agentic_system.api import *  # noqa: F403
-from llama_toolchain.agentic_system.utils import *  # noqa: F403
 from examples.custom_tools.ticker_data import TickerDataTool
 
-from multi_turn import execute_turns, prompt_to_turn
-
-SCRIPTS = Path(__file__).parent
-EXAMPLES = SCRIPTS.parent
+from multi_turn import (
+    AttachmentBehavior,
+    BuiltinTool,
+    execute_turns,
+    make_agent_config_with_custom_tools,
+    prompt_to_turn,
+    QuickToolConfig,
+)
 
 
 def main(host: str, port: int, disable_safety: bool = False):
-    tool_config = QuickToolConfig(
-        attachment_behavior=AttachmentBehavior.code_interpreter,
-        custom_tools=[TickerDataTool()],
+    custom_tools = [TickerDataTool()]
+    agent_config = asyncio.run(
+        make_agent_config_with_custom_tools(
+            tool_config=QuickToolConfig(
+                builtin_tools=[
+                    BuiltinTool.brave_search,
+                    BuiltinTool.wolfram_alpha,
+                ],
+                attachment_behavior=AttachmentBehavior.code_interpreter,
+                custom_tools=custom_tools,
+            ),
+            disable_safety=disable_safety,
+        )
     )
-    inflation_path = EXAMPLES / "resources/inflation.csv"
     asyncio.run(
         execute_turns(
-            [
+            agent_config=agent_config,
+            custom_tools=custom_tools,
+            turn_inputs=[
                 prompt_to_turn(
                     "Here is a csv, can you describe it ?",
                     attachments=[
                         Attachment(
                             content=URL(
-                                uri=f"file://{str(inflation_path.resolve())}",
+                                uri="https://raw.githubusercontent.com/meta-llama/llama-agentic-system/main/examples/resources/inflation.csv",
                             ),
                             mime_type="text/csv",
                         ),
@@ -55,8 +68,6 @@ def main(host: str, port: int, disable_safety: bool = False):
             ],
             host=host,
             port=port,
-            disable_safety=disable_safety,
-            tool_config=tool_config,
         )
     )
 

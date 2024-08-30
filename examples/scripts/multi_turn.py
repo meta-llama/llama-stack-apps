@@ -6,20 +6,22 @@
 
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # This software may be used and distributed in accordance with the terms of the Llama 3 Community License Agreement.
+import os
+import sys
+
+THIS_DIR = os.path.dirname(__file__)
+
+sys.path += os.path.abspath(THIS_DIR + "../../")
+
 from typing import List, Optional
 
 from dotenv import load_dotenv
 from pydantic import BaseModel
 
+from common.client_utils import *  # noqa: F403
+
 from llama_models.llama3.api.datatypes import *  # noqa: F403
-
 from llama_toolchain.agentic_system.event_logger import EventLogger
-
-from llama_toolchain.agentic_system.utils import (
-    get_agent_with_custom_tools,
-    make_agent_config_with_custom_tools,
-    QuickToolConfig,
-)
 from llama_toolchain.agentic_system.api import *  # noqa: F403
 
 from termcolor import cprint
@@ -39,21 +41,18 @@ def prompt_to_turn(
 
 
 async def execute_turns(
+    *,
+    agent_config: AgentConfig,
+    custom_tools: List[CustomTool],
     turn_inputs: List[UserTurnInput],
     host: str = "localhost",
     port: int = 5000,
-    disable_safety: bool = False,
-    tool_config: QuickToolConfig = QuickToolConfig(),
 ):
-    agent_config = await make_agent_config_with_custom_tools(
-        disable_safety=disable_safety,
-        tool_config=tool_config,
-    )
     agent = await get_agent_with_custom_tools(
         host=host,
         port=port,
         agent_config=agent_config,
-        custom_tools=tool_config.custom_tools,
+        custom_tools=custom_tools,
     )
     while len(turn_inputs) > 0:
         turn = turn_inputs.pop(0)

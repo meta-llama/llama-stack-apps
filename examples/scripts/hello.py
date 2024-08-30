@@ -11,13 +11,32 @@ import asyncio
 
 import fire
 
-from multi_turn import execute_turns, prompt_to_turn
+from multi_turn import (
+    BuiltinTool,
+    execute_turns,
+    make_agent_config_with_custom_tools,
+    prompt_to_turn,
+    QuickToolConfig,
+)
 
 
 def main(host: str, port: int, disable_safety: bool = False):
+    custom_tools = []
+    agent_config = asyncio.run(
+        make_agent_config_with_custom_tools(
+            tool_config=QuickToolConfig(
+                builtin_tools=[
+                    BuiltinTool.brave_search,
+                ],
+            ),
+            disable_safety=disable_safety,
+        )
+    )
     asyncio.run(
         execute_turns(
-            [
+            agent_config=agent_config,
+            custom_tools=[],
+            turn_inputs=[
                 prompt_to_turn("Hello"),
                 prompt_to_turn(
                     "Which players played in the winning team of the NBA western conference semifinals of 2024, please use tools"
@@ -25,7 +44,6 @@ def main(host: str, port: int, disable_safety: bool = False):
             ],
             host=host,
             port=port,
-            disable_safety=disable_safety,
         )
     )
 

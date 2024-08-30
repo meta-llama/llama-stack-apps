@@ -8,32 +8,45 @@
 # This software may be used and distributed in accordance with the terms of the Llama 3 Community License Agreement.
 
 import asyncio
-from pathlib import Path
 
 import fire
 from llama_toolchain.agentic_system.api import *  # noqa: F403
-from llama_toolchain.agentic_system.utils import *  # noqa: F403
 
-from multi_turn import execute_turns, prompt_to_turn
-
-SCRIPTS = Path(__file__).parent
-EXAMPLES = SCRIPTS.parent
+from multi_turn import (
+    AttachmentBehavior,
+    BuiltinTool,
+    execute_turns,
+    make_agent_config_with_custom_tools,
+    prompt_to_turn,
+    QuickToolConfig,
+)
 
 
 def main(host: str, port: int, disable_safety: bool = False):
-    tool_config = QuickToolConfig(
-        attachment_behavior=AttachmentBehavior.code_interpreter,
+    agent_config = asyncio.run(
+        make_agent_config_with_custom_tools(
+            tool_config=QuickToolConfig(
+                builtin_tools=[
+                    BuiltinTool.brave_search,
+                    BuiltinTool.wolfram_alpha,
+                ],
+                attachment_behavior=AttachmentBehavior.code_interpreter,
+            ),
+            disable_safety=disable_safety,
+        )
     )
-    transcript_path = EXAMPLES / "resources/transcript_shorter.txt"
+    transcript_path = "https://raw.githubusercontent.com/meta-llama/llama-agentic-system/main/examples/resources/transcript_shorter.txt"
     asyncio.run(
         execute_turns(
-            [
+            agent_config=agent_config,
+            custom_tools=[],
+            turn_inputs=[
                 prompt_to_turn(
                     "here is a podcast transcript, can you summarize it",
                     attachments=[
                         Attachment(
                             content=URL(
-                                uri=f"file://{str(transcript_path.resolve())}",
+                                uri=transcript_path,
                             ),
                             mime_type="text/plain",
                         ),
@@ -53,8 +66,6 @@ def main(host: str, port: int, disable_safety: bool = False):
             ],
             host=host,
             port=port,
-            disable_safety=disable_safety,
-            tool_config=tool_config,
         )
     )
 

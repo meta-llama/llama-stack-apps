@@ -5,8 +5,13 @@
 # the root directory of this source tree.
 
 import asyncio
+import os
+import sys
 
-from llama_toolchain.agentic_system.utils import (
+THIS_DIR = os.path.dirname(__file__)
+sys.path += os.path.abspath(THIS_DIR + "../../")
+
+from common.client_utils import (
     get_agent_with_custom_tools,
     make_agent_config_with_custom_tools,
 )
