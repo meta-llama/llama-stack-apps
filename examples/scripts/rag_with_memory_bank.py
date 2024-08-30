@@ -11,11 +11,15 @@ import asyncio
 
 import fire
 from llama_toolchain.agentic_system.api import *  # noqa: F403
-from llama_toolchain.agentic_system.utils import *  # noqa: F403
 from llama_toolchain.memory.api import *  # noqa: F403
 from llama_toolchain.memory.client import MemoryClient
 
-from multi_turn import execute_turns, prompt_to_turn
+from multi_turn import (
+    execute_turns,
+    make_agent_config_with_custom_tools,
+    prompt_to_turn,
+    QuickToolConfig,
+)
 
 
 async def run_main(host: str, port: int, disable_safety: bool = False):
@@ -56,11 +60,17 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
     )
 
     # now run the agentic system pointing it to the pre-populated memory bank
-    tool_config = QuickToolConfig(
-        memory_bank_id=bank.bank_id,
+    agent_config = await make_agent_config_with_custom_tools(
+        tool_config=QuickToolConfig(
+            memory_bank_id=bank.bank_id,
+            builtin_tools=[],
+        ),
+        disable_safety=disable_safety,
     )
     await execute_turns(
-        [
+        agent_config=agent_config,
+        custom_tools=[],
+        turn_inputs=[
             prompt_to_turn(
                 "What are the top 5 topics that were explained in the documentation? Only list succinct bullet points.",
             ),
@@ -74,8 +84,6 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
         ],
         host=host,
         port=port,
-        disable_safety=disable_safety,
-        tool_config=tool_config,
     )
 
 

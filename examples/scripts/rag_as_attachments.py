@@ -11,15 +11,17 @@ import asyncio
 
 import fire
 from llama_toolchain.agentic_system.api import *  # noqa: F403
-from llama_toolchain.agentic_system.utils import *  # noqa: F403
 
-from multi_turn import execute_turns, prompt_to_turn
+from multi_turn import (
+    AttachmentBehavior,
+    execute_turns,
+    make_agent_config_with_custom_tools,
+    prompt_to_turn,
+    QuickToolConfig,
+)
 
 
 def main(host: str, port: int, disable_safety: bool = False):
-    tool_config = QuickToolConfig(
-        attachment_behavior=AttachmentBehavior.rag,
-    )
     urls = [
         "memory_optimizations.rst",
         "chat.rst",
@@ -37,9 +39,21 @@ def main(host: str, port: int, disable_safety: bool = False):
         )
         for i, url in enumerate(urls)
     ]
+    # now run the agentic system pointing it to the pre-populated memory bank
+    agent_config = asyncio.run(
+        await make_agent_config_with_custom_tools(
+            tool_config=QuickToolConfig(
+                builtin_tools=[],
+                attachment_behavior=AttachmentBehavior.rag,
+            ),
+            disable_safety=disable_safety,
+        )
+    )
     asyncio.run(
         execute_turns(
-            [
+            agent_config=agent_config,
+            custom_tools=[],
+            turn_inputs=[
                 prompt_to_turn(
                     "I am attaching some documentation for Torchtune. Help me answer questions I will ask next.",
                     attachments=attachments,
@@ -59,8 +73,6 @@ def main(host: str, port: int, disable_safety: bool = False):
             ],
             host=host,
             port=port,
-            disable_safety=disable_safety,
-            tool_config=tool_config,
         )
     )
 
