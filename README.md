@@ -281,12 +281,12 @@ You need the YAML configuration file which was written out at the end by the `ll
 
 
 ```
-llama stack start local-ollama --name 8b --port 5000
+llama stack run local-ollama --name 8b --port 5000
 ```
 You should see the Stack server start and print the APIs that it is supporting,
 
 ```
-$ llama stack start local-ollama --name 8b --port 5000
+$ llama stack run local-ollama --name 8b --port 5000
 
 > initializing model parallel with size 1
 > initializing ddp with size 1
@@ -372,7 +372,7 @@ NOTE: Ensure that Stack server is still running.
 ```bash
 cd <path-to-llama-agentic-system>
 conda activate $ENV
-llama stack start local-ollama --name 8b --port 5000 # If not already started
+llama stack run local-ollama --name 8b --port 5000 # If not already started
 
 PYTHONPATH=. python examples/scripts/vacation.py localhost 5000
 ```
