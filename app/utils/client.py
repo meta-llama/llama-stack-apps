@@ -5,8 +5,18 @@
 # the root directory of this source tree.
 
 import asyncio
+import os
+import sys
 
-from llama_toolchain.agentic_system.utils import get_agent_system_instance
+THIS_DIR = os.path.dirname(__file__)
+sys.path += os.path.abspath(THIS_DIR + "../../")
+
+from common.client_utils import (
+    default_builtins,
+    get_agent_with_custom_tools,
+    make_agent_config_with_custom_tools,
+    QuickToolConfig,
+)
 
 global CLIENT
 CLIENT = None
@@ -18,22 +28,32 @@ class ClientManager:
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(ClientManager, cls).__new__(cls)
-            cls._instance.client = None
         return cls._instance
+
+    def __init__(self):
+        self.client = None
 
     def init_client(
         self, inference_port, host, custom_tools=None, disable_safety=False
     ):
         if self.client is None:
-            self.client = asyncio.run(
-                get_agent_system_instance(
-                    host=host,
-                    port=inference_port,
-                    custom_tools=custom_tools,
+            agent_config = asyncio.run(
+                make_agent_config_with_custom_tools(
+                    tool_config=QuickToolConfig(
+                        custom_tools=custom_tools,
+                        builtin_tools=default_builtins(),
+                    ),
                     disable_safety=disable_safety,
                 )
             )
-            asyncio.run(self.client.create_session(__file__))
+            self.client = asyncio.run(
+                get_agent_with_custom_tools(
+                    host=host,
+                    port=inference_port,
+                    agent_config=agent_config,
+                    custom_tools=custom_tools or [],
+                )
+            )
 
     def get_client(self):
         if self.client is None:

@@ -14,7 +14,6 @@ from llama_toolchain.agentic_system.api import *  # noqa: F403
 
 from multi_turn import (
     AttachmentBehavior,
-    BuiltinTool,
     execute_turns,
     make_agent_config_with_custom_tools,
     prompt_to_turn,
@@ -23,46 +22,54 @@ from multi_turn import (
 
 
 def main(host: str, port: int, disable_safety: bool = False):
+    urls = [
+        "memory_optimizations.rst",
+        "chat.rst",
+        "llama3.rst",
+        "datasets.rst",
+        "qat_finetune.rst",
+        "lora_finetune.rst",
+    ]
+    attachments = [
+        Attachment(
+            content=URL(
+                uri=f"https://raw.githubusercontent.com/pytorch/torchtune/main/docs/source/tutorials/{url}"
+            ),
+            mime_type="text/plain",
+        )
+        for i, url in enumerate(urls)
+    ]
+    # now run the agentic system pointing it to the pre-populated memory bank
     agent_config = asyncio.run(
         make_agent_config_with_custom_tools(
             tool_config=QuickToolConfig(
-                builtin_tools=[
-                    BuiltinTool.brave_search,
-                    BuiltinTool.wolfram_alpha,
-                ],
-                attachment_behavior=AttachmentBehavior.code_interpreter,
+                builtin_tools=[],
+                attachment_behavior=AttachmentBehavior.rag,
             ),
             disable_safety=disable_safety,
         )
     )
-    transcript_path = "https://raw.githubusercontent.com/meta-llama/llama-agentic-system/main/examples/resources/transcript_shorter.txt"
     asyncio.run(
         execute_turns(
             agent_config=agent_config,
             custom_tools=[],
             turn_inputs=[
                 prompt_to_turn(
-                    "here is a podcast transcript, can you summarize it",
-                    attachments=[
-                        Attachment(
-                            content=URL(
-                                uri=transcript_path,
-                            ),
-                            mime_type="text/plain",
-                        ),
-                    ],
+                    "I am attaching some documentation for Torchtune. Help me answer questions I will ask next.",
+                    attachments=attachments,
                 ),
                 prompt_to_turn(
-                    "What are the top 3 salient topics that were discussed ?"
-                ),
-                prompt_to_turn("Was anything related to 'H100' discussed ?"),
-                prompt_to_turn(
-                    "While this podcast happened in April, 2024 can you provide an update from the web on what were the key developments that have happened in the last 3 months since then ?"
+                    "What are the top 5 topics that were explained? Only list succinct bullet points.",
                 ),
                 prompt_to_turn(
-                    "Imagine these people meet again in 1 year, what might be three good follow ups to discuss ?"
+                    "Was anything related to 'Llama3' discussed, if so what?"
                 ),
-                prompt_to_turn("Can you rewrite these followups in hindi ?"),
+                prompt_to_turn(
+                    "Tell me how to use LoRA",
+                ),
+                prompt_to_turn(
+                    "What about Quantization?",
+                ),
             ],
             host=host,
             port=port,

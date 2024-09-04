@@ -11,7 +11,7 @@ import asyncio
 
 import fire
 
-from multi_turn import prompt_to_message, run_main
+from multi_turn import execute_turns, prompt_to_turn
 
 
 def main(host: str, port: int, disable_safety: bool = False):
@@ -36,8 +36,8 @@ def main(host: str, port: int, disable_safety: bool = False):
     ]
 
     asyncio.run(
-        run_main(
-            [prompt_to_message(x) for x in unsafe_examples],
+        execute_turns(
+            [prompt_to_turn(x) for x in unsafe_examples],
             host=host,
             port=port,
             disable_safety=disable_safety,
@@ -45,8 +45,8 @@ def main(host: str, port: int, disable_safety: bool = False):
     )
 
     asyncio.run(
-        run_main(
-            [prompt_to_message(x) for x in safe_examples],
+        execute_turns(
+            [prompt_to_turn(x) for x in safe_examples],
             host=host,
             port=port,
             disable_safety=disable_safety,

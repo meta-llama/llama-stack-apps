@@ -32,7 +32,9 @@ def transform(content: InterleavedTextAttachment):
     client_manager = ClientManager()
     client = client_manager.get_client()
 
-    generator = sync_generator(EVENT_LOOP, client.run([input_message]))
+    generator = sync_generator(
+        EVENT_LOOP, client.execute_turn(messages=[input_message])
+    )
     for chunk in generator:
         if not hasattr(chunk, "event"):
             # Need to check for custom tool first

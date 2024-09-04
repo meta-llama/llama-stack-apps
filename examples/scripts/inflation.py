@@ -10,42 +10,64 @@
 import asyncio
 
 import fire
-
-from llama_models.llama3.api.datatypes import *  # noqa: F403
+from llama_toolchain.agentic_system.api import *  # noqa: F403
 from examples.custom_tools.ticker_data import TickerDataTool
 
-from multi_turn import prompt_to_message, run_main
+from multi_turn import (
+    AttachmentBehavior,
+    BuiltinTool,
+    execute_turns,
+    make_agent_config_with_custom_tools,
+    prompt_to_turn,
+    QuickToolConfig,
+)
 
 
 def main(host: str, port: int, disable_safety: bool = False):
+    custom_tools = [TickerDataTool()]
+    agent_config = asyncio.run(
+        make_agent_config_with_custom_tools(
+            tool_config=QuickToolConfig(
+                builtin_tools=[
+                    BuiltinTool.brave_search,
+                    BuiltinTool.wolfram_alpha,
+                ],
+                attachment_behavior=AttachmentBehavior.code_interpreter,
+                custom_tools=custom_tools,
+            ),
+            disable_safety=disable_safety,
+        )
+    )
     asyncio.run(
-        run_main(
-            [
-                UserMessage(
-                    content=[
-                        "Here is a csv, can you describe it ?",
+        execute_turns(
+            agent_config=agent_config,
+            custom_tools=custom_tools,
+            turn_inputs=[
+                prompt_to_turn(
+                    "Here is a csv, can you describe it ?",
+                    attachments=[
                         Attachment(
-                            url=URL(uri="file://examples/resources/inflation.csv"),
+                            content=URL(
+                                uri="https://raw.githubusercontent.com/meta-llama/llama-agentic-system/main/examples/resources/inflation.csv",
+                            ),
                             mime_type="text/csv",
                         ),
                     ],
                 ),
-                prompt_to_message("Which year ended with the highest inflation ?"),
-                prompt_to_message(
+                prompt_to_turn("Which year ended with the highest inflation ?"),
+                prompt_to_turn(
                     "What macro economic situations that led to such high inflation in that period?"
                 ),
-                prompt_to_message("Plot average yearly inflation as a time series"),
-                prompt_to_message(
+                prompt_to_turn("Plot average yearly inflation as a time series"),
+                prompt_to_turn(
                     "Using provided functions, get ticker data for META for the past 10 years ? plot percentage year over year growth"
                 ),
-                prompt_to_message(
+                prompt_to_turn(
                     "Can you take Meta's year over year growth data and put it in the same inflation timeseries as above ?"
                 ),
             ],
             host=host,
             port=port,
-            disable_safety=disable_safety,
-            custom_tools=[TickerDataTool()],
         )
     )
 
