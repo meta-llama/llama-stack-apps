@@ -1,47 +1,41 @@
-# llama-agentic-system
+# llama-stack-apps
 
-[![PyPI - Downloads](https://img.shields.io/pypi/dm/llama-agentic-system)](https://pypi.org/project/llama-agentic-system/)
 [![Discord](https://img.shields.io/discord/1257833999603335178)](https://discord.gg/TZAAYNVtrU)
 
-This repo allows you to run Llama 3.1 as a system capable of performing "agentic" tasks like:
+This repo shows examples of applications built on top of [Llama Stack](https://github.com/meta-llama/llama-stack). Starting Llama 3.1 you can build agentic applications capable of:
 
-- Breaking a task down and performing multi-step reasoning.
-- Ability to use tools
+- breaking a task down and performing multi-step reasoning.
+- using tools to perform some actions
   - built-in: the model has built-in knowledge of tools like search or code interpreter
   - zero-shot: the model can learn to call tools using previously unseen, in-context tool definitions
-
-Additionally, we would like to shift safety evaluation from the model level to the overall system level. This allows the underlying model to remain broadly steerable and adaptable to use cases which need varying levels of safety protection.
-
-One of the safety protections is provided by Llama Guard. By default, Llama Guard is used for both input and output filtering. However, the system can be configured to modify this default setting. For example, it is recommended to use Llama Guard for output filtering in situations where refusals to benign prompts are frequently observed, as long as safety requirements are met for your use case.
+- providing system level safety protections using models like Llama Guard.
 
 > [!NOTE]
-> The API is still evolving and may change. Feel free to build and experiment, but please don't rely on its stability just yet!
+> The Llama Stack API is still evolving and may change. Feel free to build and experiment, but please don't rely on its stability just yet!
 
-
-**Getting started with the Llama Stack**
-========================================
 
 An agentic app requires a few components:
 - ability to run inference on the underlying Llama series of models
-- ability to run safety checks using the Llama-Guard series of models
+- ability to run safety checks using the Llama Guard series of models
 - ability to execute tools, including a code execution environment, and loop using the model's multi-step reasoning process
 
-The [Llama Stack](https://github.com/meta-llama/llama-toolchain/pull/8) defines and standardizes these components and many others that are needed to make building Generative AI applications smoother. Various implementations of these APIs are then conveniently assembled together via a Llama Stack **Distribution**.
+All of these components are now offered by a single Llama Stack Distribution. The [Llama Stack](https://github.com/meta-llama/llama-stack) defines and standardizes these components and many others that are needed to make building Generative AI applications smoother. Various implementations of these APIs are then assembled together via a **Llama Stack Distribution**.
 
-To get started with Distributions, you'll need to:
+**Getting started with the Llama Stack Distributions**
+========================================
 
-1. Install any prerequisites
+To get started with Llama Stack Distributions, you'll need to:
+
+1. Install prerequisites
 2. Setup the toolchain which provides the core `llama` CLI
 3. Download the models
-4. Build a package for Llama Stack based on a distribution
+4. Build a Llama Stack Distribution image
 5. Start the Llama Stack server
 
-Once started, you can then point your agentic app to the URL for this server (e.g. `http://localhost:5000`) and make magic happen.
-
-Let's go through these steps in detail now:
+Once started, you can then just point your agentic app to the URL for this server (e.g. `http://localhost:5000`).
 
 
-**Install Prerequisites**
+**1. Install Prerequisites**
 -----------------------------
 **Python Packages**
 
@@ -49,9 +43,9 @@ We recommend creating an isolated conda Python environment.
 
 ```bash
 # Create and activate a virtual environment
-ENV=agentic_env
+ENV=app_env
 conda create -n $ENV python=3.10
-cd <path-to-llama-agentic-system-repo>
+cd <path-to-llama-stack-apps-repo>
 conda activate $ENV
 
 # Install dependencies
@@ -119,7 +113,7 @@ llama download --source huggingface --model-id Prompt-Guard-86M --ignore-pattern
 
 > **Tip:** Default for `llama download` is to run with `--ignore-patterns *.safetensors` since we use the `.pth` files in the `original` folder. For Llama Guard and Prompt Guard, however, we need safetensors. Hence, please run with `--ignore-patterns original` so that safetensors are downloaded and `.pth` files are ignored.
 
-#### Downloading via ollama
+#### Downloading via Ollama
 
 If you're already using ollama, we also have a supported Llama Stack distribution `local-ollama` and you can continue to use ollama for managing model downloads.
 
@@ -129,7 +123,7 @@ ollama pull llama3.1:70b-instruct-fp16
 ```
 
 > [!NOTE]
-> Only the above two models are currently supported.
+> Only the above two models are currently supported by Ollama.
 
 
 **Installing and Configuring Distributions**
