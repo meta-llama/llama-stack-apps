@@ -10,15 +10,11 @@ import sys
 
 import mesop as me
 
-from dotenv import load_dotenv
-
 from .chat import State
 
 if sys.version_info < (3, 10):
     raise Exception("Demo requires Python 3.10+")
 sys.path += [f'{os.path.expanduser("~/llama-agent-system")}']
-
-load_dotenv()
 
 UPLOADS_DIR = "app/uploads/"
 CHUNK_SIZE = 1024

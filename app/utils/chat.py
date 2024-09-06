@@ -16,13 +16,11 @@ import mesop as me
 from mesop.components.uploader.uploader import UploadEvent
 
 from llama_toolchain.inference.api import *  # noqa: F403
-from dotenv import load_dotenv
 from llama_toolchain.agentic_system.api.datatypes import StepType
 from llama_toolchain.safety.api.datatypes import ShieldResponse
 
 MAX_VIOLATIONS = 3
 
-load_dotenv()
 
 STDOUT_CUTOFF_LENGTH = 200
 

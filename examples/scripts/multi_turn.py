@@ -15,7 +15,6 @@ sys.path += os.path.abspath(THIS_DIR + "../../")
 
 from typing import List, Optional
 
-from dotenv import load_dotenv
 from pydantic import BaseModel
 
 from common.client_utils import *  # noqa: F403
@@ -25,8 +24,6 @@ from llama_toolchain.agentic_system.event_logger import EventLogger
 from llama_toolchain.agentic_system.api import *  # noqa: F403
 
 from termcolor import cprint
-
-load_dotenv()
 
 
 class UserTurnInput(BaseModel):
