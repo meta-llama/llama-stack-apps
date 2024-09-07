@@ -89,7 +89,7 @@ _STYLE_CHAT_BUBBLE_PLAINTEXT = me.Style(margin=me.Margin.symmetric(vertical=15))
 @dataclass
 class StepStatus:
     step_type: StepType
-    content: Union[InterleavedTextAttachment, ShieldResponse]
+    content: Union[InterleavedTextMedia, ShieldResponse]
     show_tool_response: bool = False
 
 

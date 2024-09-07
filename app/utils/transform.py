@@ -24,7 +24,7 @@ from llama_toolchain.inference.api import *  # noqa: F403
 EVENT_LOOP = asyncio.new_event_loop()
 
 
-def transform(content: InterleavedTextAttachment):
+def transform(content: InterleavedTextMedia):
     state = me.state(State)
 
     input_message = UserMessage(content=content)
