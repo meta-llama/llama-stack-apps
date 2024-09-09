@@ -18,20 +18,15 @@ from common.client_utils import (
     QuickToolConfig,
 )
 
-global CLIENT
-CLIENT = None
-
 
 class ClientManager:
     _instance = None
+    client = None
 
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(ClientManager, cls).__new__(cls)
         return cls._instance
-
-    def __init__(self):
-        self.client = None
 
     def init_client(
         self, inference_port, host, custom_tools=None, disable_safety=False
@@ -57,5 +52,5 @@ class ClientManager:
 
     def get_client(self):
         if self.client is None:
-            raise Exception("CLIENT is not initialized. Please initialize it first.")
+            raise Exception("client is not initialized. Please initialize it first.")
         return self.client
