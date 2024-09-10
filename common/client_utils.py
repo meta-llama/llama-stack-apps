@@ -85,7 +85,7 @@ async def make_agent_config_with_custom_tools(
 
     for t in builtin_tools:
         if t == BuiltinTool.brave_search:
-            tool_definitions.append(BraveSearchToolDefinition())
+            tool_definitions.append(SearchToolDefinition(engine=SearchEngineType.brave))
         elif t == BuiltinTool.wolfram_alpha:
             tool_definitions.append(WolframAlphaToolDefinition())
         elif t == BuiltinTool.photogen:
