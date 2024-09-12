@@ -1,6 +1,7 @@
 import fire
 from llama_stack import LlamaStack
-from llama_stack.types import UserMessage
+from llama_stack.types import SamplingParams, UserMessage
+
 
 def main(host: str, port: int):
     client = LlamaStack(
@@ -21,19 +22,17 @@ def main(host: str, port: int):
     )
     print(agentic_system_create_session_response)
 
-    # TODO(xiyan): remove request wrapper
     response = client.agentic_system.turns.create(
-        request={
-            "agent_id": agentic_system_create_response.agent_id,
-            "session_id": agentic_system_create_session_response.session_id,
-            "messages": [
-                UserMessage(content="What is the capital of France?", role="user"),
-            ],
-            "stream": False,
-        }
+        agent_id=agentic_system_create_response.agent_id,
+        session_id=agentic_system_create_session_response.session_id,
+        messages=[
+            UserMessage(content="What is the capital of France?", role="user"),
+        ],
+        stream=True,
     )
 
-    print(response)
+    for chunk in response:
+        print(chunk)
 
 
 if __name__ == "__main__":
