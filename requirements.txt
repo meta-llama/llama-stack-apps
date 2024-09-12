@@ -8,3 +8,8 @@ setuptools
 uvicorn
 yfinance
 llama-stack>=0.0.19
+llama-stack
+# requirements for AgentStore
+gradio
+pypdf
+fpdf
