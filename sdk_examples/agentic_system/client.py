@@ -1,6 +1,11 @@
 import fire
 from llama_stack import LlamaStack
 from llama_stack.types import SamplingParams, UserMessage
+from llama_stack.types.agentic_system_create_params import (
+    AgentConfig,
+    AgentConfigToolSearchToolDefinition,
+    AgentConfigToolWolframAlphaToolDefinition,
+)
 
 
 def main(host: str, port: int):
@@ -8,11 +13,17 @@ def main(host: str, port: int):
         base_url=f"http://{host}:{port}",
     )
 
+    tool_definitions = [
+        AgentConfigToolSearchToolDefinition(type="brave_search"),
+        AgentConfigToolWolframAlphaToolDefinition(type="wolfram_alpha"),
+    ]
+
     agentic_system_create_response = client.agentic_system.create(
-        agent_config={
-            "instructions": "You are a helpful assistant",
-            "model": "Meta-Llama3.1-8B-Instruct",
-        },
+        agent_config=AgentConfig(
+            model="Meta-Llama3.1-8B-Instruct",
+            instructions="You are a helpful assistant",
+            tools=tool_definitions,
+        )
     )
     print(agentic_system_create_response)
 
