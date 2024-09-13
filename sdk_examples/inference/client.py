@@ -4,8 +4,8 @@ import fire
 
 from llama_stack import LlamaStack
 from llama_stack.types import (
-    ChatCompletionResponse,
     ChatCompletionStreamChunk,
+    InferenceChatCompletionResponse,
     UserMessage,
 )
 from termcolor import cprint
@@ -37,7 +37,7 @@ class EventLogger:
                     yield LogEvent(event.delta, color="yellow", end="")
                 elif event.event_type == "complete":
                     yield LogEvent("")
-            elif isinstance(chunk, ChatCompletionResponse):
+            elif isinstance(chunk, InferenceChatCompletionResponse):
                 yield LogEvent("Assistant> ", color="cyan", end="")
                 yield LogEvent(chunk.completion_message.content, color="yellow")
             else:
