@@ -8,10 +8,13 @@ from llama_toolchain.memory.common.file_utils import data_url_from_file
 
 from common.client_utils import *  # noqa: F403
 
+from .tools import SearchAndBrowse
+
 
 class AgentChoice(Enum):
     SimpleAgent = "SimpleAgent"
     AgentWithMemory = "AgentWithMemory"
+    AgentWithSearchAndBrowse = "AgentWithSearchAndBrowse"
 
 
 class AgentStore:
@@ -25,7 +28,12 @@ class AgentStore:
         self.agents[AgentChoice.AgentWithMemory] = await self.get_agent_with_rag(
             bank_ids
         )
-        self.agents[AgentChoice.SimpleAgent] = await self.get_agent()
+        self.agents[AgentChoice.SimpleAgent] = await self.get_agent(
+            agent_type=AgentChoice.SimpleAgent
+        )
+        self.agents[AgentChoice.AgentWithSearchAndBrowse] = await self.get_agent(
+            agent_type=AgentChoice.AgentWithSearchAndBrowse
+        )
 
     async def get_agent_with_rag(self, bank_ids: List[str]):
         agent_config = AgentConfig(
@@ -52,25 +60,36 @@ class AgentStore:
 
         return agent
 
-    async def get_agent(self):
-        agent_config = AgentConfig(
-            model=self.model,
-            instructions="",
-            sampling_params=SamplingParams(temperature=0.0, top_p=0.95),
-            tools=[
-                SearchToolDefinition(engine=SearchEngineType.bing),
-                MemoryToolDefinition(
-                    memory_bank_configs=[],
-                    query_generator_config=DefaultMemoryQueryGeneratorConfig(),
-                ),
-            ],
-        )
+    async def get_agent(self, agent_type: AgentChoice):
+        if agent_type == AgentChoice.SimpleAgent:
+            agent_config = AgentConfig(
+                model=self.model,
+                instructions="",
+                sampling_params=SamplingParams(temperature=0.0, top_p=0.95),
+                tools=[
+                    SearchToolDefinition(engine=SearchEngineType.bing),
+                    MemoryToolDefinition(
+                        memory_bank_configs=[],
+                        query_generator_config=DefaultMemoryQueryGeneratorConfig(),
+                    ),
+                ],
+            )
+            custom_tools = []
+        elif agent_type == AgentChoice.AgentWithSearchAndBrowse:
+            search_and_browse = SearchAndBrowse()
+            agent_config = AgentConfig(
+                model=self.model,
+                instructions="",
+                sampling_params=SamplingParams(temperature=0.0, top_p=0.95),
+                tools=[search_and_browse.get_tool_definition()],
+            )
+            custom_tools = [search_and_browse]
 
         agent = await get_agent_with_custom_tools(
             self.host,
             self.port,
             agent_config,
-            [],
+            custom_tools,
         )
 
         return agent
