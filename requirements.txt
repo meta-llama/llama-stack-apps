@@ -1,7 +1,7 @@
 fastapi
 fire
 httpx
-llama-toolchain>=0.0.15
+llama-toolchain>=0.0.16
 mesop
 setuptools
 uvicorn
