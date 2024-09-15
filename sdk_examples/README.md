@@ -23,6 +23,4 @@ python -m sdk_examples.agentic_system.client localhost 5000
 
 You should be able to see stdout of the form ---
 
-
-https://github.com/user-attachments/assets/113fa3ee-d8cb-4dc3-ae0a-8a8064f7a622
-
+<img width="1727" alt="image" src="https://github.com/user-attachments/assets/939dc2c0-3b26-4980-aa45-f2c65ed78a50">
