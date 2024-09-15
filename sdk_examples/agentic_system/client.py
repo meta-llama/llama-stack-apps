@@ -93,6 +93,23 @@ class EventLogger:
                     else:
                         # step complete
                         yield LogEvent(role=None, content="")
+
+                # handle tool_execution
+                if step_type == "tool_execution" and event_type == "step_complete":
+                    details = event.payload.step_details
+                    for t in details.tool_calls:
+                        yield LogEvent(
+                            role=step_type,
+                            content=f"Tool:{t.tool_name} Args:{t.arguments}",
+                            color="green",
+                        )
+
+                    for r in details.tool_responses:
+                        yield LogEvent(
+                            role=step_type,
+                            content=f"Tool:{r.tool_name} Response:{r.content}",
+                            color="green",
+                        )
             else:
                 yield LogEvent(chunk, color="yellow")
 
