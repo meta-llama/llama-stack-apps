@@ -3,6 +3,7 @@ fire
 httpx
 llama-toolchain>=0.0.16
 mesop
+python-dotenv
 setuptools
 uvicorn
 yfinance

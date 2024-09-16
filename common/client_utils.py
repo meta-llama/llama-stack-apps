@@ -4,6 +4,7 @@
 # This source code is licensed under the terms described in the LICENSE file in
 # the root directory of this source tree.
 
+import os
 import uuid
 from enum import Enum
 from typing import List, Optional
@@ -18,7 +19,11 @@ from llama_toolchain.agentic_system.execute_with_custom_tools import (
 )
 from llama_toolchain.memory.api import *  # noqa: F403
 from llama_toolchain.safety.api import *  # noqa: F403
+from dotenv import load_dotenv
 from llama_toolchain.tools.custom.datatypes import CustomTool
+
+
+load_dotenv()
 
 
 class AttachmentBehavior(Enum):
@@ -27,12 +32,36 @@ class AttachmentBehavior(Enum):
     auto = "auto"
 
 
-def default_builtins() -> List[BuiltinTool]:
+class ApiKeys(BaseModel):
+    wolfram_alpha: Optional[str] = None
+    brave: Optional[str] = None
+    bing: Optional[str] = None
+
+
+def load_api_keys_from_env() -> ApiKeys:
+    return ApiKeys(
+        bing=os.getenv("BING_SEARCH_API_KEY"),
+        brave=os.getenv("BRAVE_SEARCH_API_KEY"),
+        wolfram_alpha=os.getenv("WOLFRAM_ALPHA_API_KEY"),
+    )
+
+
+def search_tool_defn(api_keys: ApiKeys) -> SearchToolDefinition:
+    if not api_keys.brave and not api_keys.bing:
+        raise ValueError("You must specify either Brave or Bing search API key")
+
+    return SearchToolDefinition(
+        engine=SearchEngineType.bing if api_keys.bing else SearchEngineType.brave,
+        api_key=api_keys.bing if api_keys.bing else api_keys.brave,
+    )
+
+
+def default_builtins(api_keys: ApiKeys) -> List[ToolDefinitionCommon]:
     return [
-        BuiltinTool.brave_search,
-        BuiltinTool.wolfram_alpha,
-        BuiltinTool.photogen,
-        BuiltinTool.code_interpreter,
+        search_tool_defn(api_keys),
+        WolframAlphaToolDefinition(api_key=api_keys.wolfram_lpha),
+        PhotogenToolDefinition(),
+        CodeInterpreterToolDefinition(),
     ]
 
 
@@ -45,7 +74,7 @@ class QuickToolConfig(BaseModel):
     # process them, or you want to "RAG" them beforehand
     attachment_behavior: Optional[AttachmentBehavior] = None
 
-    builtin_tools: List[BuiltinTool] = Field(default_factory=default_builtins)
+    builtin_tools: List[ToolDefinitionCommon] = Field(default_factory=list)
 
     # if you have a memory bank already pre-populated, specify it here
     memory_bank_id: Optional[str] = None
@@ -78,20 +107,12 @@ async def make_agent_config_with_custom_tools(
     builtin_tools = tool_config.builtin_tools
     tool_choice = ToolChoice.auto
     if tool_config.attachment_behavior == AttachmentBehavior.code_interpreter:
-        if BuiltinTool.code_interpreter not in builtin_tools:
-            builtin_tools.append(BuiltinTool.code_interpreter)
+        if not any(isinstance(t, CodeInterpreterToolDefinition) for t in builtin_tools):
+            builtin_tools.append(CodeInterpreterToolDefinition())
 
         tool_choice = ToolChoice.required
 
-    for t in builtin_tools:
-        if t == BuiltinTool.brave_search:
-            tool_definitions.append(SearchToolDefinition(engine=SearchEngineType.brave))
-        elif t == BuiltinTool.wolfram_alpha:
-            tool_definitions.append(WolframAlphaToolDefinition())
-        elif t == BuiltinTool.photogen:
-            tool_definitions.append(PhotogenToolDefinition())
-        elif t == BuiltinTool.code_interpreter:
-            tool_definitions.append(CodeInterpreterToolDefinition())
+    tool_definitions = [*builtin_tools]
 
     if enable_memory_tool(tool_config):
         bank_configs = []

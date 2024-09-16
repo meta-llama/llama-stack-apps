@@ -14,6 +14,7 @@ sys.path += os.path.abspath(THIS_DIR + "../../")
 from common.client_utils import (
     default_builtins,
     get_agent_with_custom_tools,
+    load_api_keys_from_env,
     make_agent_config_with_custom_tools,
     QuickToolConfig,
 )
@@ -36,7 +37,7 @@ class ClientManager:
                 make_agent_config_with_custom_tools(
                     tool_config=QuickToolConfig(
                         custom_tools=custom_tools,
-                        builtin_tools=default_builtins(),
+                        builtin_tools=default_builtins(load_api_keys_from_env()),
                     ),
                     disable_safety=disable_safety,
                 )

@@ -15,22 +15,25 @@ from examples.custom_tools.ticker_data import TickerDataTool
 
 from multi_turn import (
     AttachmentBehavior,
-    BuiltinTool,
     execute_turns,
+    load_api_keys_from_env,
     make_agent_config_with_custom_tools,
     prompt_to_turn,
     QuickToolConfig,
+    search_tool_defn,
+    WolframAlphaToolDefinition,
 )
 
 
 def main(host: str, port: int, disable_safety: bool = False):
+    api_keys = load_api_keys_from_env()
     custom_tools = [TickerDataTool()]
     agent_config = asyncio.run(
         make_agent_config_with_custom_tools(
             tool_config=QuickToolConfig(
                 builtin_tools=[
-                    BuiltinTool.brave_search,
-                    BuiltinTool.wolfram_alpha,
+                    search_tool_defn(api_keys),
+                    WolframAlphaToolDefinition(api_key=api_keys.wolfram_alpha),
                 ],
                 attachment_behavior=AttachmentBehavior.code_interpreter,
                 custom_tools=custom_tools,
