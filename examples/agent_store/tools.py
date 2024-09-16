@@ -74,11 +74,6 @@ def fetch_url_content(urls: List[str]) -> List[str]:
     return results
 
 
-async def fetch_url(session: aiohttp.ClientSession, url: str) -> str:
-    async with session.get(url) as response:
-        return await response.text()
-
-
 def extract_main_text(html_content: str) -> str:
     soup = BeautifulSoup(html_content, "html.parser")
 
@@ -99,19 +94,3 @@ def extract_main_text(html_content: str) -> str:
     text = "\n".join(chunk for chunk in chunks if chunk)
 
     return text
-
-
-async def fetch_and_extract_all_urls(urls: List[str]) -> Dict[str, str]:
-    async with aiohttp.ClientSession() as session:
-        tasks = [fetch_url(session, url) for url in urls]
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-
-    # Process results and extract main text
-    processed_results = {}
-    for url, result in zip(urls, results):
-        if isinstance(result, str):
-            processed_results[url] = extract_main_text(result)
-        else:
-            processed_results[url] = f"Error: {str(result)}"
-
-    return processed_results

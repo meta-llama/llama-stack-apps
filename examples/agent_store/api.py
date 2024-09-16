@@ -41,7 +41,6 @@ class AgentStore:
             instructions="",
             sampling_params=SamplingParams(temperature=0.0, top_p=0.95),
             tools=[
-                SearchToolDefinition(engine=SearchEngineType.bing),
                 MemoryToolDefinition(
                     memory_bank_configs=[
                         AgenticSystemVectorMemoryBankConfig(bank_id=bank_id)
@@ -67,7 +66,7 @@ class AgentStore:
                 instructions="",
                 sampling_params=SamplingParams(temperature=0.0, top_p=0.95),
                 tools=[
-                    SearchToolDefinition(engine=SearchEngineType.bing),
+                    SearchToolDefinition(engine=SearchEngineType.brave),
                     MemoryToolDefinition(
                         memory_bank_configs=[],
                         query_generator_config=DefaultMemoryQueryGeneratorConfig(),
@@ -166,3 +165,12 @@ class AgentStore:
                 inserted_context = "\n".join([tr.content for tr in step.tool_responses])
 
         return turn.output_message.content, inserted_context
+
+    async def append_to_memory_bank(self, bank_id: str, text: str) -> None:
+        client = MemoryClient(f"http://{self.host}:{self.port}")
+        document = MemoryBankDocument(
+            document_id=uuid.uuid4().hex,
+            content=text,
+        )
+        # insert some documents
+        await client.insert_documents(bank_id=bank_id, documents=[document])

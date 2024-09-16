@@ -43,6 +43,16 @@ def agent_selection(agent_choice):
     return "", [], None, None
 
 
+def like_button_handler(chat_history, context):
+    text = ""
+    for q, a in chat_history:
+        text += f"User> {q}\n"
+        text += f"AI> {a}\n"
+
+    text += f"Additional Context: {context} \n"
+    asyncio.run(CHATBOT.append_to_memory_bank(BANK_ID, text))
+
+
 with gr.Blocks(
     theme=gr.themes.Soft(),
     css="""
@@ -72,6 +82,9 @@ with gr.Blocks(
             file_count="multiple",
         )
         submit_button = gr.Button("Submit")
+    with gr.Row():
+        like_butoon = gr.Button("👍")
+        dislike_button = gr.Button("👎")
 
     # initialize the dropdown
     agent_selection(dropdown.value)
@@ -91,6 +104,7 @@ with gr.Blocks(
         inputs=dropdown,
         outputs=[prompt, chatbot, file_input, data],
     )
+    like_butoon.click(like_button_handler, inputs=[chatbot, data])
 
 initialize()
 demo.launch(server_name="0.0.0.0", server_port=7860)
