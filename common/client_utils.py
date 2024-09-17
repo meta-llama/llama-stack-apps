@@ -14,14 +14,12 @@ from pydantic import BaseModel, Field
 from llama_models.llama3.api.datatypes import *  # noqa: F403
 from llama_stack.apis.agents import *  # noqa: F403
 from llama_stack.apis.agents.client import AgentsClient
-from llama_stack.providers.utils.agents.execute_with_custom_tools import (
-    AgentWithCustomToolExecutor,
-)
 from llama_stack.apis.memory import *  # noqa: F403
 from llama_stack.apis.safety import *  # noqa: F403
 from dotenv import load_dotenv
-from llama_stack.tools.custom.datatypes import CustomTool
 
+from .custom_tools import CustomTool
+from .execute_with_custom_tools import AgentWithCustomToolExecutor
 
 load_dotenv()
 

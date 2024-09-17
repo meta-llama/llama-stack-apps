@@ -14,7 +14,6 @@ from .chat import State
 
 if sys.version_info < (3, 10):
     raise Exception("Demo requires Python 3.10+")
-sys.path += [f'{os.path.expanduser("~/llama-agent-system")}']
 
 UPLOADS_DIR = "app/uploads/"
 CHUNK_SIZE = 1024
