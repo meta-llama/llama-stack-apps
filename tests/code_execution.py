@@ -15,7 +15,7 @@ from llama_models.llama3.api.datatypes import (
 )
 
 # this test should just move to toolchain and inside meta_reference
-from llama_toolchain.tools.builtin import CodeInterpreterTool
+from llama_stack.tools.builtin import CodeInterpreterTool
 
 
 class TestCodeInterpreter(unittest.IsolatedAsyncioTestCase):

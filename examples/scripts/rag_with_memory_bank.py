@@ -10,9 +10,9 @@
 import asyncio
 
 import fire
-from llama_toolchain.agentic_system.api import *  # noqa: F403
-from llama_toolchain.memory.api import *  # noqa: F403
-from llama_toolchain.memory.client import MemoryClient
+from llama_stack.apis.agents import *  # noqa: F403
+from llama_stack.apis.memory import *  # noqa: F403
+from llama_stack.apis.memory.client import MemoryClient
 
 from multi_turn import (
     execute_turns,

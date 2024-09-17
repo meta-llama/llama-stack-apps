@@ -8,17 +8,14 @@ import asyncio
 import uuid
 
 import mesop as me
-from llama_toolchain.agentic_system.api import (
-    AgenticSystemTurnResponseEventType as EventType,
-    StepType,
-)
+from llama_stack.apis.agents import AgentTurnResponseEventType as EventType, StepType
 
 from .chat import KEY_TO_OUTPUTS, MAX_VIOLATIONS, State, StepStatus
 
 from .client import ClientManager
 from .common import sync_generator
 
-from llama_toolchain.inference.api import *  # noqa: F403
+from llama_stack.apis.inference import *  # noqa: F403
 
 
 EVENT_LOOP = asyncio.new_event_loop()

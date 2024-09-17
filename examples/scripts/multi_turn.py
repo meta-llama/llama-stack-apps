@@ -20,8 +20,8 @@ from pydantic import BaseModel
 from common.client_utils import *  # noqa: F403
 
 from llama_models.llama3.api.datatypes import *  # noqa: F403
-from llama_toolchain.agentic_system.event_logger import EventLogger
-from llama_toolchain.agentic_system.api import *  # noqa: F403
+from llama_stack.providers.utils.agents.event_logger import EventLogger
+from llama_stack.apis.agents import *  # noqa: F403
 
 from termcolor import cprint
 
