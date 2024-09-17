@@ -12,9 +12,8 @@ from .tools import SearchAndBrowse
 
 
 class AgentChoice(Enum):
-    SimpleAgent = "SimpleAgent"
-    AgentWithMemory = "AgentWithMemory"
-    AgentWithSearchAndBrowse = "AgentWithSearchAndBrowse"
+    WebSearch = "WebSearch"
+    Memory = "Memory"
 
 
 class AgentStore:
@@ -25,17 +24,14 @@ class AgentStore:
         self.agents = {}
 
     async def initialize_agents(self, bank_ids: str) -> None:
-        self.agents[AgentChoice.AgentWithMemory] = await self.get_agent_with_rag(
+        self.agents[AgentChoice.Memory] = await self.get_agent_with_memory(
             bank_ids
         )
-        self.agents[AgentChoice.SimpleAgent] = await self.get_agent(
-            agent_type=AgentChoice.SimpleAgent
-        )
-        self.agents[AgentChoice.AgentWithSearchAndBrowse] = await self.get_agent(
-            agent_type=AgentChoice.AgentWithSearchAndBrowse
+        self.agents[AgentChoice.WebSearch] = await self.get_agent(
+            agent_type=AgentChoice.WebSearch
         )
 
-    async def get_agent_with_rag(self, bank_ids: List[str]):
+    async def get_agent_with_memory(self, bank_ids: List[str]):
         agent_config = AgentConfig(
             model=self.model,
             instructions="",
@@ -60,7 +56,7 @@ class AgentStore:
         return agent
 
     async def get_agent(self, agent_type: AgentChoice):
-        if agent_type == AgentChoice.SimpleAgent:
+        if agent_type == AgentChoice.WebSearch:
             agent_config = AgentConfig(
                 model=self.model,
                 instructions="",

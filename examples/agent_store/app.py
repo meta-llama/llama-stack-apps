@@ -38,6 +38,7 @@ def respond(message, attachments, chat_history):
 
 def agent_selection(agent_choice):
     global SELECTED_AGENT
+    initialize()
     SELECTED_AGENT = AgentChoice[agent_choice]
     print(f"Selected Agent: {SELECTED_AGENT}")
     return "", [], None, None
@@ -61,9 +62,8 @@ with gr.Blocks(
 ) as demo:
     with gr.Row():
         choices = [
-            AgentChoice.SimpleAgent.value,
-            AgentChoice.AgentWithMemory.value,
-            AgentChoice.AgentWithSearchAndBrowse.value,
+            AgentChoice.WebSearch.value,
+            AgentChoice.Memory.value,
         ]
         dropdown = gr.Dropdown(
             choices=choices,
