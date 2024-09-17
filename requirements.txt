@@ -6,4 +6,4 @@ mesop
 setuptools
 uvicorn
 yfinance
-llama-stack
+llama-stack-client
