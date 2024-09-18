@@ -1,10 +1,16 @@
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+# All rights reserved.
+#
+# This source code is licensed under the terms described in the LICENSE file in
+# the root directory of this source tree.
+
 import asyncio
 from typing import Optional
 
 import fire
 from llama_stack import LlamaStack
 from llama_stack.types import SamplingParams, UserMessage
-from llama_stack.types.agentic_system import AgenticSystemTurnStreamChunk
+from llama_stack.types.agentic_system import AgentTurnStreamChunk
 from llama_stack.types.agentic_system_create_params import (
     AgentConfig,
     AgentConfigToolCodeInterpreterToolDefinition,
@@ -45,7 +51,7 @@ class EventLogger:
         previous_step_type = None
 
         for chunk in event_generator:
-            if isinstance(chunk, AgenticSystemTurnStreamChunk):
+            if isinstance(chunk, AgentTurnStreamChunk):
                 event = chunk.event
                 event_type = chunk.event.payload.event_type
 

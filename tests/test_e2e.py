@@ -13,7 +13,6 @@ import sys
 import unittest
 
 THIS_DIR = os.path.dirname(__file__)
-
 sys.path += os.path.abspath(THIS_DIR + "../")
 
 from common.client_utils import (
@@ -21,11 +20,11 @@ from common.client_utils import (
     make_agent_config_with_custom_tools,
     QuickToolConfig,
 )
-from llama_toolchain.agentic_system.event_logger import EventLogger, LogEvent
+from common.custom_tools import CustomTool
+from common.event_logger import EventLogger, LogEvent
 
 from llama_models.llama3.api.datatypes import *  # noqa: F403
-from llama_toolchain.agentic_system.api import *  # noqa: F403
-from llama_toolchain.tools.custom.datatypes import CustomTool
+from llama_stack.apis.agents import *  # noqa: F403
 
 from tests.example_custom_tool import GetBoilingPointTool
 

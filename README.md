@@ -141,16 +141,16 @@ The following command and specifications allows you to get started with building
 ```
 llama stack build <path/to/config>
 ```
-- You will be required to pass in a file path to the build.config file (e.g. `./llama_toolchain/configs/distributions/conda/local-conda-example-build.yaml`). We provide some example build config files for configuring different types of distributions in the `./llama_toolchain/configs/distributions/` folder.
+- You will be required to pass in a file path to the build.config file (e.g. `./llama_stack/configs/distributions/conda/local-conda-example-build.yaml`). We provide some example build config files for configuring different types of distributions in the `./llama_stack/configs/distributions/` folder.
 
 The file will be of the contents
 ```
-$ cat ./llama_toolchain/configs/distributions/conda/local-conda-example-build.yaml
+$ cat ./llama_stack/configs/distributions/conda/local-conda-example-build.yaml
 
 name: 8b-instruct
 distribution_spec:
   distribution_type: local
-  description: Use code from `llama_toolchain` itself to serve all llama stack APIs
+  description: Use code from `llama_stack` itself to serve all llama stack APIs
   docker_image: null
   providers:
     inference: meta-reference
@@ -176,7 +176,7 @@ After this step is complete, a file named `8b-instruct-build.yaml` will be gener
 To specify a different API provider, we can change the `distribution_spec` in our `<name>-build.yaml` config. For example, the following build spec allows you to build a distribution using TGI as the inference API provider.
 
 ```
-$ cat ./llama_toolchain/configs/distributions/conda/local-tgi-conda-example-build.yaml
+$ cat ./llama_stack/configs/distributions/conda/local-tgi-conda-example-build.yaml
 
 name: local-tgi-conda-example
 distribution_spec:
@@ -193,7 +193,7 @@ image_type: conda
 
 The following command allows you to build a distribution with TGI as the inference API provider, with the name `tgi`.
 ```
-llama stack build --config ./llama_toolchain/configs/distributions/conda/local-tgi-conda-example-build.yaml --name tgi
+llama stack build --config ./llama_stack/configs/distributions/conda/local-tgi-conda-example-build.yaml --name tgi
 ```
 
 We provide some example build configs to help you get started with building with different API providers.
@@ -276,16 +276,16 @@ Serving POST /inference/batch_completion
 Serving POST /inference/chat_completion
 Serving POST /inference/completion
 Serving POST /safety/run_shields
-Serving POST /agentic_system/memory_bank/attach
-Serving POST /agentic_system/create
-Serving POST /agentic_system/session/create
-Serving POST /agentic_system/turn/create
-Serving POST /agentic_system/delete
-Serving POST /agentic_system/session/delete
-Serving POST /agentic_system/memory_bank/detach
-Serving POST /agentic_system/session/get
-Serving POST /agentic_system/step/get
-Serving POST /agentic_system/turn/get
+Serving POST /agents/memory_bank/attach
+Serving POST /agents/create
+Serving POST /agents/session/create
+Serving POST /agents/turn/create
+Serving POST /agents/delete
+Serving POST /agents/session/delete
+Serving POST /agents/memory_bank/detach
+Serving POST /agents/session/get
+Serving POST /agents/step/get
+Serving POST /agents/turn/get
 Listening on :::5000
 INFO:     Started server process [453333]
 INFO:     Waiting for application startup.
@@ -308,7 +308,7 @@ This server is running a Llama model locally.
 
 ## Start an App and Interact with the Server
 
-Now that the Stack server is setup, the next thing would be to run an agentic app using AgenticSystem APIs.
+Now that the Stack server is setup, the next thing would be to run an agentic app using Agents APIs.
 
 We have built sample scripts, notebooks and a UI chat interface ( using [Mesop]([url](https://google.github.io/mesop/)) ! ) to help you get started.
 

@@ -12,11 +12,12 @@ import asyncio
 import fire
 
 from multi_turn import (
-    BuiltinTool,
     execute_turns,
+    load_api_keys_from_env,
     make_agent_config_with_custom_tools,
     prompt_to_turn,
     QuickToolConfig,
+    search_tool_defn,
 )
 
 
@@ -26,7 +27,7 @@ def main(host: str, port: int, disable_safety: bool = False):
         make_agent_config_with_custom_tools(
             tool_config=QuickToolConfig(
                 builtin_tools=[
-                    BuiltinTool.brave_search,
+                    search_tool_defn(load_api_keys_from_env()),
                 ],
             ),
             disable_safety=disable_safety,

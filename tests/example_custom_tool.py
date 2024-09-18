@@ -4,10 +4,17 @@
 # This source code is licensed under the terms described in the LICENSE file in
 # the root directory of this source tree.
 
+import os
+import sys
+
+THIS_DIR = os.path.dirname(__file__)
+sys.path += os.path.abspath(THIS_DIR + "../")
+
 from typing import Dict
 
+from common.custom_tools import SingleMessageCustomTool
+
 from llama_models.llama3.api.datatypes import ToolParamDefinition
-from llama_toolchain.tools.custom.datatypes import SingleMessageCustomTool
 
 
 class GetBoilingPointTool(SingleMessageCustomTool):
