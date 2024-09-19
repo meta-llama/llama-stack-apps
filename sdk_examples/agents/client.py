@@ -51,7 +51,7 @@ class EventLogger:
         previous_step_type = None
 
         for chunk in event_generator:
-            if isinstance(chunk, AgenticSystemTurnStreamChunk):
+            if isinstance(chunk, AgentsTurnStreamChunk):
                 event = chunk.event
                 event_type = chunk.event.payload.event_type
 
@@ -132,10 +132,10 @@ async def run_main(host: str, port: int, stream: bool = True):
         AgentConfigToolSearchToolDefinition(
             type="brave_search",
             engine="brave",
-            api_key="BSAd2liHqb7IjNGIpbxPRfRprAvwrbP",
+            api_key="YOUR_API_KEY",
         ),
         AgentConfigToolWolframAlphaToolDefinition(
-            type="wolfram_alpha", api_key="78G4K7-4A299UU69P"
+            type="wolfram_alpha", api_key="YOUR_API_KEY"
         ),
         AgentConfigToolCodeInterpreterToolDefinition(type="code_interpreter"),
         AgentConfigToolFunctionCallToolDefinition(

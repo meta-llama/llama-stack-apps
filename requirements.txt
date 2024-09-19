@@ -7,4 +7,4 @@ python-dotenv
 setuptools
 uvicorn
 yfinance
-llama-stack>=0.0.19
+llama-stack-client>=0.0.2
