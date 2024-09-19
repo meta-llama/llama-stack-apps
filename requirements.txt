@@ -7,4 +7,6 @@ python-dotenv
 setuptools
 uvicorn
 yfinance
+llama-stack>=0.0.19
+gradio
 llama-stack-client
