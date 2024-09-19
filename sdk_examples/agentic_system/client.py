@@ -10,14 +10,14 @@ from typing import Optional
 import fire
 from llama_stack import LlamaStack
 from llama_stack.types import SamplingParams, UserMessage
-from llama_stack.types.agentic_system import AgentTurnStreamChunk
-from llama_stack.types.agentic_system_create_params import (
+from llama_stack.types.agent_create_params import (
     AgentConfig,
     AgentConfigToolCodeInterpreterToolDefinition,
     AgentConfigToolFunctionCallToolDefinition,
     AgentConfigToolSearchToolDefinition,
     AgentConfigToolWolframAlphaToolDefinition,
 )
+from llama_stack.types.agents import AgentsTurnStreamChunk
 from llama_stack.types.tool_param_definition_param import ToolParamDefinitionParam
 from termcolor import cprint
 
@@ -51,7 +51,7 @@ class EventLogger:
         previous_step_type = None
 
         for chunk in event_generator:
-            if isinstance(chunk, AgentTurnStreamChunk):
+            if isinstance(chunk, AgenticSystemTurnStreamChunk):
                 event = chunk.event
                 event_type = chunk.event.payload.event_type
 
@@ -129,8 +129,14 @@ async def run_main(host: str, port: int, stream: bool = True):
     )
 
     tool_definitions = [
-        AgentConfigToolSearchToolDefinition(type="brave_search"),
-        AgentConfigToolWolframAlphaToolDefinition(type="wolfram_alpha"),
+        AgentConfigToolSearchToolDefinition(
+            type="brave_search",
+            engine="brave",
+            api_key="BSAd2liHqb7IjNGIpbxPRfRprAvwrbP",
+        ),
+        AgentConfigToolWolframAlphaToolDefinition(
+            type="wolfram_alpha", api_key="78G4K7-4A299UU69P"
+        ),
         AgentConfigToolCodeInterpreterToolDefinition(type="code_interpreter"),
         AgentConfigToolFunctionCallToolDefinition(
             function_name="get_boiling_point",
@@ -151,7 +157,7 @@ async def run_main(host: str, port: int, stream: bool = True):
         ),
     ]
 
-    agentic_system_create_response = client.agentic_system.create(
+    agentic_system_create_response = client.agents.create(
         agent_config=AgentConfig(
             model="Meta-Llama3.1-8B-Instruct",
             instructions="You are a helpful assistant",
@@ -165,7 +171,7 @@ async def run_main(host: str, port: int, stream: bool = True):
     )
     print(agentic_system_create_response)
 
-    agentic_system_create_session_response = client.agentic_system.sessions.create(
+    agentic_system_create_session_response = client.agents.sessions.create(
         agent_id=agentic_system_create_response.agent_id,
         session_name="test_session",
     )
@@ -182,7 +188,7 @@ async def run_main(host: str, port: int, stream: bool = True):
     for content in user_prompts:
         cprint(f"User> {content}", color="white", attrs=["bold"])
 
-        response = client.agentic_system.turns.create(
+        response = client.agents.turns.create(
             agent_id=agentic_system_create_response.agent_id,
             session_id=agentic_system_create_session_response.session_id,
             messages=[

@@ -1,7 +1,7 @@
 fastapi
 fire
 httpx
-llama-toolchain>=0.0.17
+llama-stack>=0.0.20
 mesop
 python-dotenv
 setuptools
