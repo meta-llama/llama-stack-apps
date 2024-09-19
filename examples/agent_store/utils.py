@@ -1,30 +1,21 @@
+import base64
+import mimetypes
 import os
 from typing import Dict
 
-from pypdf import PdfReader
+from llama_models.llama3.api.datatypes import URL
 
 
-def load_pdfs_from_directory(directory_path) -> Dict[str, str]:
-    """
-    Load all PDF files from a directory and return a dictionary
-    mapping file names to their contents.
-    """
-    pdf_files = {}
+def data_url_from_file(file_path: str) -> str:
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"File not found: {file_path}")
 
-    for filename in os.listdir(directory_path):
-        if filename.endswith(".pdf"):
-            file_path = os.path.join(directory_path, filename)
-            try:
-                pdf = PdfReader(file_path)
-                pdf_files[filename] = pdf
-            except Exception as e:
-                print(f"Error loading {filename}: {str(e)}")
+    with open(file_path, "rb") as file:
+        file_content = file.read()
 
-    content = {}
-    for name, reader in pdf_files.items():
-        text = ""
-        for page in reader.pages:
-            text += page.extract_text() + "\n"
-        content[name] = text
+    base64_content = base64.b64encode(file_content).decode("utf-8")
+    mime_type, _ = mimetypes.guess_type(file_path)
 
-    return content
+    data_url = f"data:{mime_type};base64,{base64_content}"
+    # return data_url
+    return URL(uri=data_url)
