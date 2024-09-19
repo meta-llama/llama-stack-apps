@@ -51,13 +51,14 @@ async def run_main(host: str, port: int, stream: bool = True):
     )
 
     message = UserMessage(
-        content="hello world, troll me in two-paragraphs about 42", role="user"
+        content="hello world, write me a 2 sentence poem about the moon", role="user"
     )
     cprint(f"User>{message.content}", "green")
     iterator = client.inference.chat_completion(
         messages=[
             UserMessage(
-                content="hello world, troll me in two-paragraphs about 42", role="user"
+                content="hello world, write me a 2 sentence poem about the moon",
+                role="user",
             ),
         ],
         model="Meta-Llama3.1-8B-Instruct",
