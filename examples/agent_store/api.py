@@ -4,6 +4,7 @@ import uuid
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
+from dotenv import load_dotenv
 from llama_stack import LlamaStack
 from llama_stack.types import Attachment, SamplingParams, UserMessage
 from llama_stack.types.agent_create_params import (
@@ -16,6 +17,8 @@ from llama_stack.types.agents import AgentsTurnStreamChunk
 from llama_stack.types.memory_bank_insert_params import Document, MemoryBankInsertParams
 
 from .utils import data_url_from_file
+
+load_dotenv()
 
 
 class AgentChoice(Enum):
@@ -59,6 +62,7 @@ class AgentStore:
                 },
             },
         )
+        # FIXME: To avoid empty banks
         self.append_to_live_memory_bank(
             "This is a live bank. It holds live context for this chat"
         )

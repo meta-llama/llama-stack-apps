@@ -1,0 +1,8 @@
+fastapi
+fire
+httpx
+python-dotenv
+setuptools
+uvicorn
+gradio
+llama-stack-client
