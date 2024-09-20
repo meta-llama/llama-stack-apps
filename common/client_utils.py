@@ -124,11 +124,8 @@ async def make_agent_config_with_custom_tools(
 
     if not disable_safety:
         for t in tool_definitions:
-            t.input_shields = [ShieldDefinition(shield_type=BuiltinShield.llama_guard)]
-            t.output_shields = [
-                ShieldDefinition(shield_type=BuiltinShield.llama_guard),
-                ShieldDefinition(shield_type=BuiltinShield.injection_shield),
-            ]
+            t.input_shields = ["llama_guard"]
+            t.output_shields = ["llama_guard", "injection_shield"]
 
     cfg = AgentConfig(
         model=model,
@@ -137,21 +134,8 @@ async def make_agent_config_with_custom_tools(
         tools=tool_definitions,
         tool_prompt_format=tool_config.prompt_format,
         tool_choice=tool_choice,
-        input_shields=(
-            []
-            if disable_safety
-            else [
-                ShieldDefinition(shield_type=BuiltinShield.llama_guard),
-                ShieldDefinition(shield_type=BuiltinShield.jailbreak_shield),
-            ]
-        ),
-        output_shields=(
-            []
-            if disable_safety
-            else [
-                ShieldDefinition(shield_type=BuiltinShield.llama_guard),
-            ]
-        ),
+        input_shields=([] if disable_safety else ["llama_guard", "jailbreak_shield"]),
+        output_shields=([] if disable_safety else ["llama_guard"]),
     )
     return cfg
 
