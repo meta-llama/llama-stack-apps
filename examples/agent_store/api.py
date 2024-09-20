@@ -37,11 +37,32 @@ class AgentStore:
             agent_type=AgentChoice.WebSearch
         )
         self.create_session(AgentChoice.WebSearch)
+        # Create a live bank that holds live context
+        self.live_bank = self.create_live_bank()
+
+        self.bank_ids = bank_ids
         self.agents[AgentChoice.Memory] = await self.get_agent(
             agent_type=AgentChoice.Memory,
-            agent_params={"bank_ids": bank_ids},
+            agent_params={"bank_ids": self.bank_ids + [self.live_bank["bank_id"]]},
         )
         self.create_session(AgentChoice.Memory)
+
+    def create_live_bank(self):
+        self.live_bank = self.client.memory_banks.create(
+            body={
+                "name": "live_bank",
+                "config": {
+                    "bank_id": "live_bank",
+                    "embedding_model": "dragon-roberta-query-2",
+                    "chunk_size_in_tokens": 512,
+                    "overlap_size_in_tokens": 64,
+                },
+            },
+        )
+        self.append_to_live_memory_bank(
+            "This is a live bank. It holds live context for this chat"
+        )
+        return self.live_bank
 
     async def get_agent(
         self,
@@ -153,7 +174,6 @@ class AgentStore:
             agent_choice in self.agents
         ), f"Agent of type {agent_choice} not initialized"
         agent_id = self.agents[agent_choice]
-        print(self.sessions)
         session_id = self.sessions[agent_choice]
         atts = []
         # if attachments is not None:
@@ -191,9 +211,22 @@ class AgentStore:
 
         return turn.output_message.content, inserted_context
 
-    async def append_to_memory_bank(self, bank_id: str, text: str) -> None:
+    def append_to_live_memory_bank(self, text: str) -> None:
         document = Document(
             document_id=uuid.uuid4().hex,
             content=text,
         )
-        self.client.memory_banks.insert(bank_id=bank_id, documents=[document])
+        # print(f"Inserting to live bank : {self.live_bank['bank_id']}")
+        self.client.memory_banks.insert(
+            bank_id=self.live_bank["bank_id"], documents=[document]
+        )
+
+    async def clear_live_bank(self) -> None:
+        # FIXME: This is a hack, ideally we should
+        # clear an existing bank instead of creating a new one
+        self.live_bank = self.create_live_bank()
+        self.agents[AgentChoice.Memory] = await self.get_agent(
+            agent_type=AgentChoice.Memory,
+            agent_params={"bank_ids": self.bank_ids + [self.live_bank["bank_id"]]},
+        )
+        self.create_session(AgentChoice.Memory)
