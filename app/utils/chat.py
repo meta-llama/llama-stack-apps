@@ -89,7 +89,7 @@ _STYLE_CHAT_BUBBLE_PLAINTEXT = me.Style(margin=me.Margin.symmetric(vertical=15))
 @dataclass
 class StepStatus:
     step_type: StepType
-    content: Union[InterleavedTextMedia, ShieldResponse]
+    content: Union[InterleavedTextMedia, SafetyViolation]
     show_tool_response: bool = False
 
 
@@ -313,7 +313,7 @@ def chat(
 
         elif isinstance(op, StepStatus) and op.step_type == StepType.shield_call:
             if state.debug_mode:
-                shield_response = op.content
+                violation = op.content
                 with me.box(
                     style=me.Style(
                         display="flex",
@@ -328,7 +328,7 @@ def chat(
                         style=me.Style(margin=me.Margin(right=4)),
                     )
                     me.text(
-                        f"Violation type: {shield_response.violation_type} ({state.violation_count} violations so far)"
+                        f"Violation: {violation.metadata} ({state.violation_count} violations so far)"
                     )
         elif isinstance(op, StepStatus) and op.step_type == StepType.tool_execution:
             if isinstance(op.content, str) and _SPECIAL_STDOUT_DELIMITER in op.content:
