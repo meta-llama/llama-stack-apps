@@ -5,8 +5,6 @@ import fire
 
 import gradio as gr
 
-from termcolor import cprint
-
 from examples.agent_store.api import AgentChoice, AgentStore
 
 

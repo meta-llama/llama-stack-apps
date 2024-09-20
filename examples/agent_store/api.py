@@ -15,6 +15,7 @@ from llama_stack.types.agent_create_params import (
 )
 from llama_stack.types.agents import AgentsTurnStreamChunk
 from llama_stack.types.memory_bank_insert_params import Document, MemoryBankInsertParams
+from termcolor import cprint
 
 from .utils import data_url_from_file
 
@@ -28,8 +29,6 @@ class AgentChoice(Enum):
 
 class AgentStore:
     def __init__(self, host, port, model) -> None:
-        self.host = host
-        self.port = port
         self.model = model
         self.client = LlamaStack(base_url=f"http://{host}:{port}")
         self.agents = {}
@@ -135,43 +134,41 @@ class AgentStore:
         self.sessions[agent_choice] = response.session_id
         return self.sessions[agent_choice]
 
-    # async def build_index(self, file_dir: str) -> str:
-    #     """Build a memory bank from a directory of pdf files."""
+    async def build_index(self, file_dir: str) -> str:
+        """Build a memory bank from a directory of pdf files."""
 
-    #     client = MemoryClient(f"http://{self.host}:{self.port}")
+        # 1. create memory bank
+        bank = self.client.memory_banks.create(
+            body={
+                "name": "memory_bank",
+                "config": {
+                    "bank_id": "memory_bank",
+                    "embedding_model": "all-MiniLM-L6-v2",
+                    "chunk_size_in_tokens": 512,
+                    "overlap_size_in_tokens": 64,
+                },
+            },
+        )
+        cprint(f"Created bank: {json.dumps(bank, indent=4)}", color="green")
 
-    #     # 1. create memory bank
-    #     bank = await client.create_memory_bank(
-    #         name="memory_bank",
-    #         config=VectorMemoryBankConfig(
-    #             bank_id="memory_bank",
-    #             embedding_model="all-MiniLM-L6-v2",
-    #             chunk_size_in_tokens=512,
-    #             overlap_size_in_tokens=64,
-    #         ),
-    #     )
-    #     print(f"Created bank: {json.dumps(bank.dict(), indent=4)}")
+        # 2. load pdfs from directory as raw text
+        paths = []
+        for filename in os.listdir(file_dir):
+            if filename.endswith(".pdf"):
+                file_path = os.path.join(file_dir, filename)
+                paths.append(file_path)
 
-    #     # 2. load pdfs from directory as raw text
-    #     paths = []
-    #     for filename in os.listdir(file_dir):
-    #         if filename.endswith(".pdf"):
-    #             file_path = os.path.join(file_dir, filename)
-    #             paths.append(file_path)
+        documents = [
+            Document(
+                document_id=os.path.basename(path),
+                content=data_url_from_file(path),
+            )
+            for path in paths
+        ]
+        # insert some documents
+        self.client.memory_banks.insert(bank_id=bank["bank_id"], documents=documents)
 
-    #     # 3. add raw text to memory bank
-    #     documents = [
-    #         MemoryBankDocument(
-    #             document_id=os.path.basename(path),
-    #             content=data_url_from_file(path),
-    #         )
-    #         for path in paths
-    #     ]
-
-    #     # insert some documents
-    #     await client.insert_documents(bank_id=bank.bank_id, documents=documents)
-
-    #     return bank.bank_id
+        return bank["bank_id"]
 
     async def chat(self, agent_choice, message, attachments) -> str:
         assert (
@@ -180,20 +177,20 @@ class AgentStore:
         agent_id = self.agents[agent_choice]
         session_id = self.sessions[agent_choice]
         atts = []
-        # if attachments is not None:
-        #     for attachment in attachments:
-        #         atts.append(
-        #             Attachment(
-        #                 content=data_url_from_file(attachment),
-        #                 # hardcoded for now since mimetype is inferred from data_url
-        #                 mime_type="text/plain",
-        #             )
-        #         )
+        if attachments is not None:
+            for attachment in attachments:
+                atts.append(
+                    Attachment(
+                        content=data_url_from_file(attachment),
+                        # hardcoded for now since mimetype is inferred from data_url
+                        mime_type="text/plain",
+                    )
+                )
         generator = self.client.agents.turns.create(
             agent_id=self.agents[agent_choice],
             session_id=self.sessions[agent_choice],
             messages=[UserMessage(role="user", content=message)],
-            # attachments=atts,
+            attachments=atts,
             stream=True,
         )
         for chunk in generator:
