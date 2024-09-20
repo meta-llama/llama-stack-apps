@@ -1,6 +1,12 @@
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+# All rights reserved.
+#
+# This source code is licensed under the terms described in the LICENSE file in
+# the root directory of this source tree.
+
 import fire
 from llama_stack import LlamaStack
-from llama_stack.types import ShieldDefinitionParam, UserMessage
+from llama_stack.types import UserMessage
 
 
 def main(host: str, port: int):
@@ -16,11 +22,7 @@ def main(host: str, port: int):
     ]:
         response = client.safety.run_shields(
             messages=[message],
-            shields=[
-                ShieldDefinitionParam(
-                    shield_type="llama_guard",
-                )
-            ],
+            shields=["llama_guard"],
         )
 
         print(response)
