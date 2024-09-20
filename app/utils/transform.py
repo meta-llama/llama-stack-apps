@@ -92,8 +92,8 @@ def transform(content: InterleavedTextMedia):
             step_uuid = event.payload.step_details.step_id
 
             if step_type == StepType.shield_call:
-                response = event.payload.step_details.response
-                if response.is_violation:
+                violation = event.payload.step_details.violation
+                if violation:
                     state.violation_count += 1
                     if state.moderated:
                         if state.violation_count >= MAX_VIOLATIONS:
@@ -105,20 +105,20 @@ def transform(content: InterleavedTextMedia):
                             content=chat_moderation_message,
                             stop_reason=StopReason.end_of_turn,
                         )
-                    elif response.violation_return_message:
+                    elif violation.user_message:
                         yield step_uuid, CompletionMessage(
-                            content=response.violation_return_message,
+                            content=violation.user_message,
                             stop_reason=StopReason.end_of_turn,
                         )
                     else:
                         yield step_uuid, StepStatus(
                             step_type=StepType.shield_call,
-                            content=response,
+                            content=violation,
                         )
                 else:
                     yield step_uuid, StepStatus(
                         step_type=StepType.shield_call,
-                        content=response,
+                        content="",
                     )
                 continue
             elif step_type == StepType.tool_execution:
