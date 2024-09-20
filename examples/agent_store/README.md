@@ -5,6 +5,19 @@ The app shows 2 agents -- one with memory ( aka RAG) and one with web search cap
 We also provide functionality like chat sessions and attachment uploads. 
 There is also an option to take a conversation and add it to a "Live" bank for leveraging it in future conversations.
 
+## Installtion 
+1. Git clone this repo
+```
+git clone https://github.com/meta-llama/llama-stack-apps.git
+```
+2. Start new env 
+```
+conda create -n agentstore python=3.10
+conda activate agentstore
+cd <path/to/llama-stack-apps>
+pip install -r requirements_agent_store.txt
+```
+
 ## How to start app
 1. Start your favorite llama stack distro ie. `llama stack run ...`
 2. Run the app script 
