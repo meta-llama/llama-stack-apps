@@ -1,5 +1,6 @@
 import json
 import os
+import textwrap
 import uuid
 from enum import Enum
 from typing import Any, Dict, List, Optional
@@ -33,6 +34,8 @@ class AgentStore:
         self.client = LlamaStack(base_url=f"http://{host}:{port}")
         self.agents = {}
         self.sessions = {}
+        self.first_turn = {}
+        self.system_message = {}
 
     async def initialize_agents(self, bank_ids: List[str]) -> None:
         self.agents[AgentChoice.WebSearch] = await self.get_agent(
@@ -88,7 +91,24 @@ class AgentStore:
             ]
             agent_config = AgentConfig(
                 model=self.model,
-                instructions="",
+                instructions=textwrap.dedent(
+                    """
+                    You are an agent that can search the web (using brave_search) to answer user questions.
+
+                    Your task is to search the web to get the information related to the provided question.
+                    Ask clarifying questions if needed to figure out appropriate search query.
+                    Cite the top sources with corresponding urls.
+                    Once you make a relevant search query, summarize the results to answer in the following format:
+                    ```
+                    This is what I found on the web:
+                    {answer}
+
+                    Sources:
+                    {add sources with corresponding links}
+                    ```
+                    Do not add any other comments like greetings.
+                    """
+                ),
                 sampling_params=SamplingParams(
                     strategy="greedy", temperature=0.0, top_p=0.95
                 ),
@@ -123,10 +143,18 @@ class AgentStore:
             agent_config=agent_config,
         )
 
-        return response.agent_id
+        agent_id = response.agent_id
+        # Use self.first_turn to keep track of whether it's the first turn for each agent or not
+        # This helps knowing whether to send the system message or not
+        self.first_turn[agent_id] = True
+        # Use self.system_message to keep track of the system message for each agent
+        self.system_message[agent_id] = agent_config["instructions"]
+
+        return agent_id
 
     def create_session(self, agent_choice: str) -> str:
         agent_id = self.agents[agent_choice]
+        self.first_turn[agent_id] = True
         response = self.client.agents.sessions.create(
             agent_id=agent_id,
             session_name=f"Session-{uuid.uuid4()}",
@@ -175,6 +203,16 @@ class AgentStore:
             agent_choice in self.agents
         ), f"Agent of type {agent_choice} not initialized"
         agent_id = self.agents[agent_choice]
+
+        messages = []
+        # If it's the first turn, send the system message along with the user message
+        if self.first_turn[agent_id]:
+            if self.system_message[agent_id]:
+                messages.append(
+                    UserMessage(content=self.system_message[agent_id], role="user")
+                )
+            self.first_turn[agent_id] = False
+
         session_id = self.sessions[agent_choice]
         atts = []
         if attachments is not None:
@@ -186,10 +224,11 @@ class AgentStore:
                         mime_type="text/plain",
                     )
                 )
+        messages.append(UserMessage(role="user", content=message))
         generator = self.client.agents.turns.create(
             agent_id=self.agents[agent_choice],
             session_id=self.sessions[agent_choice],
-            messages=[UserMessage(role="user", content=message)],
+            messages=messages,
             attachments=atts,
             stream=True,
         )
@@ -217,7 +256,6 @@ class AgentStore:
             document_id=uuid.uuid4().hex,
             content=text,
         )
-        # print(f"Inserting to live bank : {self.live_bank['bank_id']}")
         self.client.memory_banks.insert(
             bank_id=self.live_bank["bank_id"], documents=[document]
         )
