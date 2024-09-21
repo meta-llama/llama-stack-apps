@@ -55,7 +55,7 @@ class AgentStore:
                 "name": "live_bank",
                 "config": {
                     "bank_id": "live_bank",
-                    "embedding_model": "dragon-roberta-query-2",
+                    "embedding_model": "all-MiniLM-L6-v2",
                     "chunk_size_in_tokens": 512,
                     "overlap_size_in_tokens": 64,
                 },
