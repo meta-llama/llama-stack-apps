@@ -9,7 +9,7 @@ from typing import Optional
 
 import fire
 from llama_stack import LlamaStack
-from llama_stack.types import SamplingParams, UserMessage
+from llama_stack.types.shared_params import SamplingParams, UserMessage
 from llama_stack.types.agent_create_params import (
     AgentConfig,
     AgentConfigToolCodeInterpreterToolDefinition,
@@ -119,7 +119,7 @@ class EventLogger:
             else:
                 yield LogEvent(chunk, color="yellow")
 
-        preivous_event_type = event_type
+        previous_event_type = event_type
         previous_step_type = step_type
 
 
@@ -165,7 +165,7 @@ async def run_main(host: str, port: int, stream: bool = True):
                 strategy="greedy", temperature=1.0, top_p=0.9
             ),
             tools=tool_definitions,
-            tool_choices="auto",
+            tool_choice="auto",
             tool_prompt_format="function_tag",
         )
     )
