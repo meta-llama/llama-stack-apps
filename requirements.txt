@@ -1,12 +1,12 @@
 fastapi
 fire
 httpx
-llama-stack>=0.0.20
+llama-stack>=0.0.21
 mesop
 python-dotenv
 setuptools
 uvicorn
 yfinance
-llama-stack>=0.0.19
+llama-stack>=0.0.21
 gradio
-llama-stack-client
+llama-stack>=0.0.21
