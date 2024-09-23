@@ -68,6 +68,10 @@ async def run_main(host: str, port: int, stream: bool = True):
     async for log in EventLogger().log(iterator):
         log.print()
 
+    # query models endpoint
+    models_response = client.models.list()
+    print(models_response)
+
 
 def main(host: str, port: int, stream: bool = True):
     asyncio.run(run_main(host, port, stream))
