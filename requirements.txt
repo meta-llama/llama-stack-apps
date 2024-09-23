@@ -7,6 +7,5 @@ python-dotenv
 setuptools
 uvicorn
 yfinance
-llama-stack>=0.0.21
 gradio
-llama-stack>=0.0.21
+llama-stack-client
