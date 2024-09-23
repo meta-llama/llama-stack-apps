@@ -8,7 +8,7 @@ from pathlib import Path
 import fire
 
 from llama_stack import LlamaStack
-from llama_stack.types.memory_bank_insert_params import Document
+from llama_stack.types.memory_insert_params import Document
 from termcolor import cprint
 
 
@@ -34,7 +34,7 @@ async def run_main(host: str, port: int, stream: bool = True):
 
     print("hi")
     # create a memory bank
-    bank = client.memory_banks.create(
+    bank = client.memory.create(
         body={
             "name": "test_bank",
             "config": {
@@ -45,12 +45,12 @@ async def run_main(host: str, port: int, stream: bool = True):
             },
         },
     )
-    cprint(f"> /memory_banks/create: {bank}", "green")
+    cprint(f"> /memory/create: {bank}", "green")
 
-    retrieved_bank = client.memory_banks.retrieve(
+    retrieved_bank = client.memory.retrieve(
         bank_id=bank["bank_id"],
     )
-    cprint(f"> /memory_banks/get: {retrieved_bank}", "blue")
+    cprint(f"> /memory/get: {retrieved_bank}", "blue")
 
     urls = [
         "memory_optimizations.rst",
@@ -82,13 +82,13 @@ async def run_main(host: str, port: int, stream: bool = True):
     ]
 
     # insert some documents
-    client.memory_banks.insert(
+    client.memory.insert(
         bank_id=bank["bank_id"],
         documents=documents,
     )
 
     # query the documents
-    response = client.memory_banks.query(
+    response = client.memory.query(
         bank_id=bank["bank_id"],
         query=[
             "How do I use lora",
@@ -98,7 +98,7 @@ async def run_main(host: str, port: int, stream: bool = True):
         print(f"Score: {score}")
         print(f"Chunk:\n========\n{chunk}\n========\n")
 
-    response = client.memory_banks.query(
+    response = client.memory.query(
         bank_id=bank["bank_id"],
         query=[
             "Tell me more about llama3 and torchtune",
@@ -108,7 +108,7 @@ async def run_main(host: str, port: int, stream: bool = True):
         print(f"Score: {score}")
         print(f"Chunk:\n========\n{chunk}\n========\n")
 
-    response = client.memory_banks.query(
+    response = client.memory.query(
         bank_id=bank["bank_id"],
         query=[
             "Tell me more about llama models",
