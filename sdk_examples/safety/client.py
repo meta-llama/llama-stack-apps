@@ -23,6 +23,9 @@ def main(host: str, port: int):
 
         print(response)
 
+    shields_response = client.shields.list()
+    print(shields_response)
+
 
 if __name__ == "__main__":
     fire.Fire(main)
