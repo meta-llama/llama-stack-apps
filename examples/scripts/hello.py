@@ -11,16 +11,6 @@ import asyncio
 
 import fire
 
-# from common.client_utils import make_agent_config_with_custom_tools
-
-# from multi_turn import (
-#     execute_turns,
-#     # load_api_keys_from_env,
-#     # make_agent_config_with_custom_tools,
-#     # prompt_to_turn,
-#     # QuickToolConfig,
-#     # search_tool_defn,
-# )
 from llama_stack import LlamaStack
 
 from llama_stack.types import SamplingParams, UserMessage
@@ -92,31 +82,6 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
 
         async for log in EventLogger().log(response):
             log.print()
-
-    # agent_config = asyncio.run(
-    #     make_agent_config_with_custom_tools(
-    #         tool_config=QuickToolConfig(
-    #             builtin_tools=[
-    #                 search_tool_defn(load_api_keys_from_env()),
-    #             ],
-    #         ),
-    #         disable_safety=disable_safety,
-    #     )
-    # )
-    # asyncio.run(
-    #     execute_turns(
-    #         agent_config=agent_config,
-    #         custom_tools=[],
-    #         turn_inputs=[
-    #             prompt_to_turn("Hello"),
-    #             prompt_to_turn(
-    #                 "Which players played in the winning team of the NBA western conference semifinals of 2024, please use tools"
-    #             ),
-    #         ],
-    #         host=host,
-    #         port=port,
-    #     )
-    # )
 
 
 def main(host: str, port: int, disable_safety: bool = False):
