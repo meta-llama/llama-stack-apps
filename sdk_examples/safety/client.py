@@ -17,10 +17,8 @@ def main(host: str, port: int):
     ]:
         response = client.safety.run_shield(
             messages=[message],
-            shield="llama_guard",
-            params={
-                "shield_type": "llama_guard",
-            },
+            shield_type="llama_guard",
+            params={},
         )
 
         print(response)
