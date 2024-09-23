@@ -1,3 +1,5 @@
+import json
+
 import fire
 from llama_stack import LlamaStack
 from llama_stack.types import UserMessage
@@ -7,6 +9,10 @@ def main(host: str, port: int):
     client = LlamaStack(
         base_url=f"http://{host}:{port}",
     )
+
+    shields_response = client.shields.list()
+    for spec in shields_response:
+        print(json.dumps(spec.model_dump(), indent=4))
 
     for message in [
         UserMessage(
@@ -22,9 +28,6 @@ def main(host: str, port: int):
         )
 
         print(response)
-
-    shields_response = client.shields.list()
-    print(shields_response)
 
 
 if __name__ == "__main__":
