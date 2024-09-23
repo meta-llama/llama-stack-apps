@@ -118,6 +118,9 @@ async def run_main(host: str, port: int, stream: bool = True):
         print(f"Score: {score}")
         print(f"Chunk:\n========\n{chunk}\n========\n")
 
+    memory_banks_response = client.memory_banks.list()
+    print(memory_banks_response)
+
 
 def main(host: str, port: int, stream: bool = True):
     asyncio.run(run_main(host, port, stream))
