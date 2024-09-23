@@ -62,15 +62,15 @@ class EventLogger:
                 step_type = chunk.event.payload.step_type
                 # handle safety
                 if step_type == "shield_call" and event_type == "step_complete":
-                    response = event.payload.step_details.response
-                    if not response.is_violation:
+                    violation = event.payload.step_details.violation
+                    if not violation:
                         yield LogEvent(
                             role=step_type, content="No Violation", color="magenta"
                         )
                     else:
                         yield LogEvent(
                             role=step_type,
-                            content=f"{response.violation_type} {response.violation_return_message}",
+                            content=f"{violation.metadata} {violation.user_message}",
                             color="red",
                         )
 
@@ -167,6 +167,7 @@ async def run_main(host: str, port: int, stream: bool = True):
             tools=tool_definitions,
             tool_choices="auto",
             tool_prompt_format="function_tag",
+            enable_session_persistence=False,
         )
     )
     print(agentic_system_create_response)
