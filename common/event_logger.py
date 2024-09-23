@@ -77,15 +77,15 @@ class EventLogger:
                 step_type == StepType.shield_call
                 and event_type == EventType.step_complete.value
             ):
-                response = event.payload.step_details.response
-                if not response.is_violation:
+                violation = event.payload.step_details.violation
+                if not violation:
                     yield event, LogEvent(
                         role=step_type, content="No Violation", color="magenta"
                     )
                 else:
                     yield event, LogEvent(
                         role=step_type,
-                        content=f"{response.violation_type} {response.violation_return_message}",
+                        content=f"{violation.metadata} {violation.user_message}",
                         color="red",
                     )
 
