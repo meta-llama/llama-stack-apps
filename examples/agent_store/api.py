@@ -10,12 +10,12 @@ from llama_stack import LlamaStack
 from llama_stack.types import Attachment, SamplingParams, UserMessage
 from llama_stack.types.agent_create_params import (
     AgentConfig,
+    AgentConfigToolMemoryToolDefinition,
+    AgentConfigToolMemoryToolDefinitionMemoryBankConfigUnionMember0,
     AgentConfigToolSearchToolDefinition,
-    AgentConfigToolShield,
-    AgentConfigToolShieldMemoryBankConfigVector,
 )
 from llama_stack.types.agents import AgentsTurnStreamChunk
-from llama_stack.types.memory_bank_insert_params import Document, MemoryBankInsertParams
+from llama_stack.types.memory_insert_params import Document
 from termcolor import cprint
 
 from .utils import data_url_from_file
@@ -53,7 +53,7 @@ class AgentStore:
         self.create_session(AgentChoice.Memory)
 
     def create_live_bank(self):
-        self.live_bank = self.client.memory_banks.create(
+        self.live_bank = self.client.memory.create(
             body={
                 "name": "live_bank",
                 "config": {
@@ -82,54 +82,31 @@ class AgentStore:
                     engine="brave",
                     api_key=os.getenv("BRAVE_SEARCH_API_KEY"),
                 ),
-                AgentConfigToolShield(
+                AgentConfigToolMemoryToolDefinition(
                     type="memory",
                     max_chunks=5,
                     max_tokens_in_context=2048,
                     memory_bank_configs=[],
                 ),
             ]
-            agent_config = AgentConfig(
-                model=self.model,
-                instructions=textwrap.dedent(
-                    """
-                    You are an agent that can search the web (using brave_search) to answer user questions.
+            user_instructions = textwrap.dedent(
+                """
+                You are an agent that can search the web (using brave_search) to answer user questions.
 
-                    Your task is to search the web to get the information related to the provided question.
-                    Ask clarifying questions if needed to figure out appropriate search query.
-                    Cite the top sources with corresponding urls.
-                    Once you make a relevant search query, summarize the results to answer in the following format:
-                    ```
-                    This is what I found on the web:
-                    {answer}
+                Your task is to search the web to get the information related to the provided question.
+                Ask clarifying questions if needed to figure out appropriate search query.
+                Cite the top sources with corresponding urls.
+                Once you make a relevant search query, summarize the results to answer in the following format:
+                ```
+                This is what I found on the web:
+                {add answer here}
 
-                    Sources:
-                    {add sources with corresponding links}
-                    ```
-                    Do not add any other comments like greetings.
-                    """
-                ),
-                sampling_params=SamplingParams(
-                    strategy="greedy", temperature=0.0, top_p=0.95
-                ),
-                tools=tools,
+                Sources:
+                {add sources with corresponding links}
+                ```
+                Do NOT add any other greetings or explanations. Just make a search call and answer in the appropriate format.
+                """
             )
-        elif agent_type == AgentChoice.Memory:
-            bank_ids = agent_params.get("bank_ids", [])
-            tools = [
-                AgentConfigToolShield(
-                    type="memory",
-                    max_chunks=5,
-                    max_tokens_in_context=2048,
-                    memory_bank_configs=[
-                        AgentConfigToolShieldMemoryBankConfigVector(
-                            type="vector",
-                            bank_id=bank_id,
-                        )
-                        for bank_id in bank_ids
-                    ],
-                ),
-            ]
             agent_config = AgentConfig(
                 model=self.model,
                 instructions="",
@@ -137,6 +114,33 @@ class AgentStore:
                     strategy="greedy", temperature=0.0, top_p=0.95
                 ),
                 tools=tools,
+                enable_session_persistence=True,
+            )
+        elif agent_type == AgentChoice.Memory:
+            bank_ids = agent_params.get("bank_ids", [])
+            tools = [
+                AgentConfigToolMemoryToolDefinition(
+                    type="memory",
+                    max_chunks=5,
+                    max_tokens_in_context=2048,
+                    memory_bank_configs=[
+                        AgentConfigToolMemoryToolDefinitionMemoryBankConfigUnionMember0(
+                            type="vector",
+                            bank_id=bank_id,
+                        )
+                        for bank_id in bank_ids
+                    ],
+                ),
+            ]
+            user_instructions = ""
+            agent_config = AgentConfig(
+                model=self.model,
+                instructions="",
+                sampling_params=SamplingParams(
+                    strategy="greedy", temperature=0.0, top_p=0.95
+                ),
+                tools=tools,
+                enable_session_persistence=True,
             )
 
         response = self.client.agents.create(
@@ -148,7 +152,7 @@ class AgentStore:
         # This helps knowing whether to send the system message or not
         self.first_turn[agent_id] = True
         # Use self.system_message to keep track of the system message for each agent
-        self.system_message[agent_id] = agent_config["instructions"]
+        self.system_message[agent_id] = user_instructions
 
         return agent_id
 
@@ -166,7 +170,7 @@ class AgentStore:
         """Build a memory bank from a directory of pdf files."""
 
         # 1. create memory bank
-        bank = self.client.memory_banks.create(
+        bank = self.client.memory.create(
             body={
                 "name": "memory_bank",
                 "config": {
@@ -194,7 +198,7 @@ class AgentStore:
             for path in paths
         ]
         # insert some documents
-        self.client.memory_banks.insert(bank_id=bank["bank_id"], documents=documents)
+        self.client.memory.insert(bank_id=bank["bank_id"], documents=documents)
 
         return bank["bank_id"]
 
@@ -256,7 +260,7 @@ class AgentStore:
             document_id=uuid.uuid4().hex,
             content=text,
         )
-        self.client.memory_banks.insert(
+        self.client.memory.insert(
             bank_id=self.live_bank["bank_id"], documents=[document]
         )
 
