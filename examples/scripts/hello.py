@@ -45,7 +45,7 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
         instructions="You are a helpful assistant",
         sampling_params=SamplingParams(strategy="greedy", temperature=1.0, top_p=0.9),
         tools=tool_definitions,
-        tool_choices="auto",
+        tool_choice="auto",
         tool_prompt_format="function_tag",
         input_shields=input_shields,
         output_shields=output_shields,

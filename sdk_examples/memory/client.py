@@ -32,7 +32,6 @@ async def run_main(host: str, port: int, stream: bool = True):
         base_url=f"http://{host}:{port}",
     )
 
-    print("hi")
     # create a memory bank
     bank = client.memory.create(
         body={

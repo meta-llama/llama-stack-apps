@@ -165,7 +165,7 @@ async def run_main(host: str, port: int, stream: bool = True):
                 strategy="greedy", temperature=1.0, top_p=0.9
             ),
             tools=tool_definitions,
-            tool_choices="auto",
+            tool_choice="auto",
             tool_prompt_format="function_tag",
             enable_session_persistence=False,
         )

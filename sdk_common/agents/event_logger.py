@@ -9,7 +9,7 @@ from typing import Optional
 
 import fire
 from llama_stack import LlamaStack
-from llama_stack.types import SamplingParams, UserMessage
+from llama_stack.types import SamplingParams, ToolResponseMessage, UserMessage
 from llama_stack.types.agent_create_params import (
     AgentConfig,
     AgentConfigToolCodeInterpreterToolDefinition,
