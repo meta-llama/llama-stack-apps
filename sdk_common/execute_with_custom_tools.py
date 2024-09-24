@@ -66,11 +66,12 @@ class AgentWithCustomToolExecutor:
                 return
 
             tool_call = message.tool_calls[0]
-            if tool_call.arguments["tool_name"] not in tools_dict:
+            if tool_call.tool_name not in tools_dict:
                 m = ToolResponseMessage(
                     call_id=tool_call.call_id,
                     tool_name=tool_call.tool_name,
                     content=f"Unknown tool `{tool_call.tool_name}` was called. Try again with something else",
+                    role="ipython",
                 )
                 next_message = m
             else:

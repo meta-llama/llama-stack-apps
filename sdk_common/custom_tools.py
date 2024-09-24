@@ -97,6 +97,7 @@ class SingleMessageCustomTool(CustomTool):
             call_id=tool_call.call_id,
             tool_name=tool_call.tool_name,
             content=response_str,
+            role="ipython",
         )
         return [message]
 

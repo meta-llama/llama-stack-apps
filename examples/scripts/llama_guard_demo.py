@@ -11,26 +11,32 @@ import asyncio
 
 import fire
 
-from multi_turn import (
-    execute_turns,
+from sdk_common.client_utils import (
     load_api_keys_from_env,
     make_agent_config_with_custom_tools,
-    prompt_to_turn,
     QuickToolConfig,
     search_tool_defn,
 )
 
+from .multi_turn import execute_turns, prompt_to_turn
+
 
 def main(host: str, port: int, disable_safety: bool = False):
-    api_keys = load_api_keys_from_env()
-    agent_config = asyncio.run(
-        make_agent_config_with_custom_tools(
-            tool_config=QuickToolConfig(
-                builtin_tools=[search_tool_defn(api_keys)],
-            ),
-            disable_safety=disable_safety,
-        )
+    tool_definitions = [search_tool_defn(load_api_keys_from_env())]
+    agent_config = await make_agent_config_with_custom_tools(
+        disable_safety=disable_safety,
+        tool_config=QuickToolConfig(tool_definitions=tool_definitions),
     )
+
+    # api_keys = load_api_keys_from_env()
+    # agent_config = asyncio.run(
+    #     make_agent_config_with_custom_tools(
+    #         tool_config=QuickToolConfig(
+    #             builtin_tools=[search_tool_defn(api_keys)],
+    #         ),
+    #         disable_safety=disable_safety,
+    #     )
+    # )
     print(f"Agent config: {agent_config.input_shields}")
 
     unsafe_examples = [

@@ -81,7 +81,7 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
             ),
             prompt_to_turn("Plot average yearly inflation as a time series"),
             prompt_to_turn(
-                "Using provided functions, get ticker data for META for the past 10 years ? plot percentage year over year growth"
+                "Using provided functions, get ticker data for META for the past 10 years?"
             ),
             prompt_to_turn(
                 "Can you take Meta's year over year growth data and put it in the same inflation timeseries as above ?"

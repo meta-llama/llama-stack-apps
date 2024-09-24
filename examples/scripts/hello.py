@@ -29,12 +29,6 @@ from .multi_turn import execute_turns, prompt_to_turn
 
 
 async def run_main(host: str, port: int, disable_safety: bool = False):
-    # client = LlamaStack(
-    #     base_url=f"http://{host}:{port}",
-    # )
-
-    custom_tools = []
-
     tool_definitions = [search_tool_defn(load_api_keys_from_env())]
     agent_config = await make_agent_config_with_custom_tools(
         disable_safety=disable_safety,
