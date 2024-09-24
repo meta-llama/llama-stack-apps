@@ -8,6 +8,8 @@ import uuid
 from enum import Enum
 from typing import List, Optional
 
+from llama_stack.types import *  # noqa: F403
+
 # from .custom_tools import CustomTool
 # from .execute_with_custom_tools import AgentWithCustomToolExecutor
 
@@ -57,3 +59,36 @@ def search_tool_defn(api_keys: ApiKeys) -> AgentConfigToolSearchToolDefinition:
         engine="bing" if api_keys.bing else "brave",
         api_key=api_keys.bing if api_keys.bing else api_keys.brave,
     )
+
+
+# This is a utility function; it does not provide all bells and whistles
+# you can get from the underlying Agents API. Any limitations should
+# ideally be resolved by making another well-scoped utility function instead
+# of adding complex options here.
+async def make_agent_config_with_custom_tools(
+    model: str = "Meta-Llama3.1-8B-Instruct",
+    disable_safety: bool = False,
+    tool_definitions: list = [],
+) -> AgentConfig:
+    input_shields = []
+    output_shields = []
+    if not disable_safety:
+        for t in tool_definitions:
+            t["input_shields"] = ["llama_guard"]
+            t["output_shields"] = ["llama_guard", "injection_shield"]
+
+        input_shields = ["llama_guard", "jailbreak_shield"]
+        output_shields = ["llama_guard"]
+
+    agent_config = AgentConfig(
+        model="Meta-Llama3.1-8B-Instruct",
+        instructions="You are a helpful assistant",
+        sampling_params=SamplingParams(strategy="greedy", temperature=1.0, top_p=0.9),
+        tools=tool_definitions,
+        tool_choice="auto",
+        tool_prompt_format="function_tag",
+        input_shields=input_shields,
+        output_shields=output_shields,
+        enable_session_persistence=False,
+    )
+    return agent_config

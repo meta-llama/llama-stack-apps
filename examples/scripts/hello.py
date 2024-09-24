@@ -17,7 +17,11 @@ from llama_stack.types import SamplingParams, UserMessage
 from llama_stack.types.agent_create_params import AgentConfig
 from sdk_common.agents.event_logger import EventLogger
 
-from sdk_common.client_utils import load_api_keys_from_env, search_tool_defn
+from sdk_common.client_utils import (
+    load_api_keys_from_env,
+    make_agent_config_with_custom_tools,
+    search_tool_defn,
+)
 from termcolor import cprint
 
 
@@ -29,28 +33,7 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
     custom_tools = []
 
     tool_definitions = [search_tool_defn(load_api_keys_from_env())]
-    input_shields = []
-    output_shields = []
-
-    if not disable_safety:
-        for t in tool_definitions:
-            t["input_shields"] = ["llama_guard"]
-            t["output_shields"] = ["llama_guard", "injection_shield"]
-
-        input_shields = ["llama_guard", "jailbreak_shield"]
-        output_shields = ["llama_guard"]
-
-    agent_config = AgentConfig(
-        model="Meta-Llama3.1-8B-Instruct",
-        instructions="You are a helpful assistant",
-        sampling_params=SamplingParams(strategy="greedy", temperature=1.0, top_p=0.9),
-        tools=tool_definitions,
-        tool_choice="auto",
-        tool_prompt_format="function_tag",
-        input_shields=input_shields,
-        output_shields=output_shields,
-        enable_session_persistence=False,
-    )
+    agent_config = await make_agent_config_with_custom_tools(tool_definitions)
 
     agentic_system_create_response = client.agents.create(
         agent_config=agent_config,
