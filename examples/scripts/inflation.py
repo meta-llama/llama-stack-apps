@@ -23,7 +23,13 @@ from llama_stack.types.agent_create_params import (
     AgentConfigToolWolframAlphaToolDefinition,
 )
 from sdk_common.agents.event_logger import EventLogger
-from sdk_common.client_utils import load_api_keys_from_env, search_tool_defn
+from sdk_common.client_utils import (
+    AttachmentBehavior,
+    load_api_keys_from_env,
+    make_agent_config_with_custom_tools,
+    QuickToolConfig,
+    search_tool_defn,
+)
 from termcolor import cprint
 
 
@@ -42,32 +48,18 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
         AgentConfigToolCodeInterpreterToolDefinition(type="code_interpreter"),
     ]
 
-    input_shields = []
-    output_shields = []
-
-    if not disable_safety:
-        for t in tool_definitions:
-            t["input_shields"] = ["llama_guard"]
-            t["output_shields"] = ["llama_guard", "injection_shield"]
-
-        input_shields = ["llama_guard", "jailbreak_shield"]
-        output_shields = ["llama_guard"]
-
     # add ticker data as custom tool
     custom_tools = [TickerDataTool()]
-    tool_definitions += [t.get_tool_definition() for t in custom_tools]
 
-    agent_config = AgentConfig(
-        model="Meta-Llama3.1-8B-Instruct",
-        instructions="You are a helpful assistant",
-        sampling_params=SamplingParams(strategy="greedy", temperature=1.0, top_p=0.9),
-        tools=tool_definitions,
-        tool_choice="required",
-        tool_prompt_format="json",
-        input_shields=input_shields,
-        output_shields=output_shields,
-        enable_session_persistence=False,
+    agent_config = await make_agent_config_with_custom_tools(
+        disable_safety=disable_safety,
+        tool_config=QuickToolConfig(
+            tool_definitions=tool_definitions,
+            custom_tools=custom_tools,
+            attachment_behavior="code_interpreter",
+        ),
     )
+
     agentic_system_create_response = client.agents.create(
         agent_config=agent_config,
     )

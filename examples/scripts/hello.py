@@ -20,6 +20,7 @@ from sdk_common.agents.event_logger import EventLogger
 from sdk_common.client_utils import (
     load_api_keys_from_env,
     make_agent_config_with_custom_tools,
+    QuickToolConfig,
     search_tool_defn,
 )
 from termcolor import cprint
@@ -33,7 +34,10 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
     custom_tools = []
 
     tool_definitions = [search_tool_defn(load_api_keys_from_env())]
-    agent_config = await make_agent_config_with_custom_tools(tool_definitions)
+    agent_config = await make_agent_config_with_custom_tools(
+        QuickToolConfig(tool_definitions=tool_definitions),
+        disable_safety=disable_safety,
+    )
 
     agentic_system_create_response = client.agents.create(
         agent_config=agent_config,
