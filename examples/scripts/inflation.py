@@ -15,7 +15,6 @@ from llama_stack import LlamaStack
 
 from llama_stack.types import Attachment, SamplingParams, UserMessage
 from llama_stack.types.agent_create_params import *  # noqa: F403
-from common.agents.event_logger import EventLogger
 from common.client_utils import *  # noqa: F403
 from termcolor import cprint
 

@@ -10,7 +10,6 @@
 import asyncio
 
 import fire
-from common.agents.event_logger import EventLogger
 from common.client_utils import *  # noqa: F403
 
 from llama_stack import LlamaStack
