@@ -12,12 +12,8 @@ from typing import List, Optional
 
 from pydantic import BaseModel
 
-from sdk_common.client_utils import *  # noqa: F403
-from sdk_common.agents.event_logger import EventLogger
-
-# from llama_models.llama3.api.datatypes import *  # noqa: F403
-# from llama_stack.apis.agents import *  # noqa: F403
-
+from common.client_utils import *  # noqa: F403
+from common.agents.event_logger import EventLogger
 from termcolor import cprint
 
 

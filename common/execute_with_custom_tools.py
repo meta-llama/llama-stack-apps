@@ -4,28 +4,26 @@
 # This source code is licensed under the terms described in the LICENSE file in
 # the root directory of this source tree.
 
-from typing import AsyncGenerator, List
 
-from llama_models.llama3.api.datatypes import *  # noqa: F403
-from llama_stack.apis.agents import *  # noqa: F403
-from llama_stack.apis.memory import *  # noqa: F403
-from llama_stack.apis.safety import *  # noqa: F403
+from typing import AsyncGenerator, List, Optional
 
-from llama_stack.apis.agents import AgentTurnResponseEventType as EventType
+from .custom_tools import CustomTool, Message, ToolResponseMessage
 
-from .custom_tools import CustomTool
+from llama_stack.types import *  # noqa: F403
+from llama_stack import LlamaStack
+from llama_stack.types.agent_create_params import AgentConfig
 
 
 class AgentWithCustomToolExecutor:
     def __init__(
         self,
-        api: Agents,
+        client: LlamaStack,
         agent_id: str,
         session_id: str,
         agent_config: AgentConfig,
         custom_tools: List[CustomTool],
     ):
-        self.api = api
+        self.client = client
         self.agent_id = agent_id
         self.session_id = session_id
         self.agent_config = agent_config
@@ -33,9 +31,9 @@ class AgentWithCustomToolExecutor:
 
     async def execute_turn(
         self,
-        messages: List[Message],
+        messages: List[UserMessage],
         attachments: Optional[List[Attachment]] = None,
-        max_iters: int = 5,
+        max_iters: int = 1,
         stream: bool = True,
     ) -> AsyncGenerator:
         tools_dict = {t.get_name(): t for t in self.custom_tools}
@@ -44,18 +42,16 @@ class AgentWithCustomToolExecutor:
         n_iter = 0
         while n_iter < max_iters:
             n_iter += 1
-
-            request = AgentTurnCreateRequest(
+            response = self.client.agents.turns.create(
                 agent_id=self.agent_id,
                 session_id=self.session_id,
                 messages=current_messages,
                 attachments=attachments,
-                stream=stream,
+                stream=True,
             )
-
             turn = None
-            async for chunk in self.api.create_agent_turn(request):
-                if chunk.event.payload.event_type != EventType.turn_complete.value:
+            for chunk in response:
+                if chunk.event.payload.event_type != "turn_complete":
                     yield chunk
                 else:
                     turn = chunk.event.payload.turn
@@ -65,7 +61,7 @@ class AgentWithCustomToolExecutor:
                 yield chunk
                 return
 
-            if message.stop_reason == StopReason.out_of_tokens:
+            if message.stop_reason == "out_of_tokens":
                 yield chunk
                 return
 
@@ -75,6 +71,7 @@ class AgentWithCustomToolExecutor:
                     call_id=tool_call.call_id,
                     tool_name=tool_call.tool_name,
                     content=f"Unknown tool `{tool_call.tool_name}` was called. Try again with something else",
+                    role="ipython",
                 )
                 next_message = m
             else:

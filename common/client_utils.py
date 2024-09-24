@@ -3,25 +3,23 @@
 #
 # This source code is licensed under the terms described in the LICENSE file in
 # the root directory of this source tree.
-
 import os
 import uuid
 from enum import Enum
-from typing import List, Optional
+from typing import Any, List, Literal, Optional
+
+from typing_extensions import TypedDict
+
+from llama_stack.types import *  # noqa: F403
+from llama_stack import LlamaStack
+
+from llama_stack.types.agent_create_params import *  # noqa: F403
 
 from pydantic import BaseModel, Field
-
-from llama_models.llama3.api.datatypes import *  # noqa: F403
-from llama_stack.apis.agents import *  # noqa: F403
-from llama_stack.apis.agents.client import AgentsClient
-from llama_stack.apis.memory import *  # noqa: F403
-from llama_stack.apis.safety import *  # noqa: F403
-from dotenv import load_dotenv
+from termcolor import cprint
 
 from .custom_tools import CustomTool
 from .execute_with_custom_tools import AgentWithCustomToolExecutor
-
-load_dotenv()
 
 
 class AttachmentBehavior(Enum):
@@ -44,36 +42,35 @@ def load_api_keys_from_env() -> ApiKeys:
     )
 
 
-def search_tool_defn(api_keys: ApiKeys) -> SearchToolDefinition:
+def search_tool_defn(api_keys: ApiKeys) -> AgentConfigToolSearchToolDefinition:
     if not api_keys.brave and not api_keys.bing:
         raise ValueError("You must specify either Brave or Bing search API key")
 
-    return SearchToolDefinition(
-        engine=SearchEngineType.bing if api_keys.bing else SearchEngineType.brave,
+    return AgentConfigToolSearchToolDefinition(
+        type="bing" if api_keys.bing else "brave_search",
+        engine="bing" if api_keys.bing else "brave",
         api_key=api_keys.bing if api_keys.bing else api_keys.brave,
     )
 
 
-def default_builtins(api_keys: ApiKeys) -> List[ToolDefinitionCommon]:
+def default_builtins(api_keys: ApiKeys) -> List[TypedDict]:
     return [
         search_tool_defn(api_keys),
-        WolframAlphaToolDefinition(api_key=api_keys.wolfram_lpha),
-        PhotogenToolDefinition(),
-        CodeInterpreterToolDefinition(),
+        AgentConfigToolWolframAlphaToolDefinition(
+            type="wolfram_alpha", api_key=api_keys.wolfram_alpha
+        ),
+        AgentConfigToolPhotogenToolDefinition(type="photogen"),
+        AgentConfigToolCodeInterpreterToolDefinition(type="code_interpreter"),
     ]
 
 
 class QuickToolConfig(BaseModel):
+    tool_definitions: List[Any] = Field(default_factory=list)
     custom_tools: List[CustomTool] = Field(default_factory=list)
-
-    prompt_format: ToolPromptFormat = ToolPromptFormat.json
-
+    prompt_format: Literal["json", "function_tag"] = "json"
     # use this to control whether you want the model to write code to
     # process them, or you want to "RAG" them beforehand
-    attachment_behavior: Optional[AttachmentBehavior] = None
-
-    builtin_tools: List[ToolDefinitionCommon] = Field(default_factory=list)
-
+    attachment_behavior: Optional[str] = None
     # if you have a memory bank already pre-populated, specify it here
     memory_bank_id: Optional[str] = None
 
@@ -86,7 +83,7 @@ def enable_memory_tool(cfg: QuickToolConfig) -> bool:
         return True
     return (
         cfg.attachment_behavior
-        and cfg.attachment_behavior != AttachmentBehavior.code_interpreter
+        and cfg.attachment_behavior != AttachmentBehavior.code_interpreter.value
     )
 
 
@@ -99,61 +96,70 @@ async def make_agent_config_with_custom_tools(
     disable_safety: bool = False,
     tool_config: QuickToolConfig = QuickToolConfig(),
 ) -> AgentConfig:
-    tool_definitions = []
+    input_shields = []
+    output_shields = []
+    if not disable_safety:
+        for t in tool_config.tool_definitions:
+            t["input_shields"] = ["llama_guard"]
+            t["output_shields"] = ["llama_guard", "injection_shield"]
+
+        input_shields = ["llama_guard", "jailbreak_shield"]
+        output_shields = ["llama_guard"]
 
     # ensure code interpreter is enabled if attachments need it
-    builtin_tools = tool_config.builtin_tools
-    tool_choice = ToolChoice.auto
-    if tool_config.attachment_behavior == AttachmentBehavior.code_interpreter:
-        if not any(isinstance(t, CodeInterpreterToolDefinition) for t in builtin_tools):
-            builtin_tools.append(CodeInterpreterToolDefinition())
+    tool_choice = "auto"
+    if (
+        tool_config.attachment_behavior
+        and tool_config.attachment_behavior == AttachmentBehavior.code_interpreter.value
+    ):
+        if not any(
+            t["type"] == "code_interpreter" for t in tool_config.tool_definitions
+        ):
+            tool_config.tool_definitions.append(
+                AgentConfigToolCodeInterpreterToolDefinition(type="code_interpreter")
+            )
 
-        tool_choice = ToolChoice.required
+        tool_choice = "required"
 
-    tool_definitions = [*builtin_tools]
-
+    # switch to memory
     if enable_memory_tool(tool_config):
         bank_configs = []
         if tool_config.memory_bank_id:
             bank_configs.append(
-                AgentVectorMemoryBankConfig(bank_id=tool_config.memory_bank_id)
+                {
+                    "bank_id": tool_config.memory_bank_id,
+                    "type": "vector",
+                }
             )
-        tool_definitions.append(MemoryToolDefinition(memory_bank_configs=bank_configs))
+        tool_config.tool_definitions.append(
+            AgentConfigToolMemoryToolDefinition(
+                type="memory",
+                memory_bank_configs=bank_configs,
+                query_generator_config={
+                    "type": "default",
+                    "sep": " ",
+                },
+                max_tokens_in_context=4096,
+                max_chunks=10,
+            )
+        )
 
-    tool_definitions += [t.get_tool_definition() for t in tool_config.custom_tools]
+    tool_config.tool_definitions += [
+        t.get_tool_definition() for t in tool_config.custom_tools
+    ]
 
-    if not disable_safety:
-        for t in tool_definitions:
-            t.input_shields = [ShieldDefinition(shield_type=BuiltinShield.llama_guard)]
-            t.output_shields = [
-                ShieldDefinition(shield_type=BuiltinShield.llama_guard),
-                ShieldDefinition(shield_type=BuiltinShield.injection_shield),
-            ]
-
-    cfg = AgentConfig(
-        model=model,
+    agent_config = AgentConfig(
+        model="Meta-Llama3.1-8B-Instruct",
         instructions="You are a helpful assistant",
-        sampling_params=SamplingParams(),
-        tools=tool_definitions,
-        tool_prompt_format=tool_config.prompt_format,
+        sampling_params=SamplingParams(strategy="greedy", temperature=1.0, top_p=0.9),
+        tools=tool_config.tool_definitions.copy(),
         tool_choice=tool_choice,
-        input_shields=(
-            []
-            if disable_safety
-            else [
-                ShieldDefinition(shield_type=BuiltinShield.llama_guard),
-                ShieldDefinition(shield_type=BuiltinShield.jailbreak_shield),
-            ]
-        ),
-        output_shields=(
-            []
-            if disable_safety
-            else [
-                ShieldDefinition(shield_type=BuiltinShield.llama_guard),
-            ]
-        ),
+        tool_prompt_format=tool_config.prompt_format,
+        input_shields=input_shields,
+        output_shields=output_shields,
+        enable_session_persistence=False,
     )
-    return cfg
+    return agent_config
 
 
 async def get_agent_with_custom_tools(
@@ -161,19 +167,24 @@ async def get_agent_with_custom_tools(
     port: int,
     agent_config: AgentConfig,
     custom_tools: List[CustomTool],
-) -> AgentWithCustomToolExecutor:
-    api = AgentsClient(base_url=f"http://{host}:{port}")
+):
+    client = LlamaStack(
+        base_url=f"http://{host}:{port}",
+    )
 
-    create_response = await api.create_agent(agent_config)
+    create_response = client.agents.create(
+        agent_config=agent_config,
+    )
     agent_id = create_response.agent_id
+    cprint(f"> created agents with agent_id={agent_id}", "green")
 
     name = f"Session-{uuid.uuid4()}"
-    response = await api.create_agent_session(
+    session_response = client.agents.sessions.create(
         agent_id=agent_id,
         session_name=name,
     )
-    session_id = response.session_id
+    session_id = session_response.session_id
 
     return AgentWithCustomToolExecutor(
-        api, agent_id, session_id, agent_config, custom_tools
+        client, agent_id, session_id, agent_config, custom_tools
     )

@@ -7,11 +7,16 @@
 import json
 
 from abc import abstractmethod
-from typing import Dict, List
+from typing import Dict, List, Union
 
-from llama_models.llama3.api.datatypes import *  # noqa: F403
+from llama_stack.types import CompletionMessage, ToolResponseMessage, UserMessage
+from llama_stack.types.agent_create_params import (
+    AgentConfigToolFunctionCallToolDefinition,
+)
+from llama_stack.types.tool_param_definition_param import ToolParamDefinitionParam
+from typing_extensions import TypeAlias
 
-# from llama_stack.apis.agents import *  # noqa: F403
+Message: TypeAlias = Union[UserMessage, ToolResponseMessage]
 
 
 class CustomTool:
@@ -37,7 +42,7 @@ class CustomTool:
         raise NotImplementedError
 
     @abstractmethod
-    def get_params_definition(self) -> Dict[str, ToolParamDefinition]:
+    def get_params_definition(self) -> Dict[str, ToolParamDefinitionParam]:
         raise NotImplementedError
 
     def get_instruction_string(self) -> str:
@@ -55,11 +60,12 @@ class CustomTool:
             }
         )
 
-    def get_tool_definition(self) -> FunctionCallToolDefinition:
-        return FunctionCallToolDefinition(
+    def get_tool_definition(self) -> AgentConfigToolFunctionCallToolDefinition:
+        return AgentConfigToolFunctionCallToolDefinition(
             function_name=self.get_name(),
             description=self.get_description(),
             parameters=self.get_params_definition(),
+            type="function_call",
         )
 
     @abstractmethod
@@ -91,6 +97,7 @@ class SingleMessageCustomTool(CustomTool):
             call_id=tool_call.call_id,
             tool_name=tool_call.tool_name,
             content=response_str,
+            role="ipython",
         )
         return [message]
 

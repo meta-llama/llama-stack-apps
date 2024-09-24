@@ -15,8 +15,8 @@ from termcolor import cprint
 
 from llama_stack.types import *  # noqa: F403
 from llama_stack.types.agent_create_params import *  # noqa: F403
-from sdk_common.agents.event_logger import EventLogger
-from sdk_common.client_utils import *  # noqa: F403
+from common.agents.event_logger import EventLogger
+from common.client_utils import *  # noqa: F403
 
 from .multi_turn import execute_turns, prompt_to_turn
 

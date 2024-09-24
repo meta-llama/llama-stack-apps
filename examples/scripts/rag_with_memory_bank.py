@@ -10,7 +10,7 @@
 import asyncio
 
 import fire
-from sdk_common.client_utils import *  # noqa: F403
+from common.client_utils import *  # noqa: F403
 
 from llama_stack import LlamaStack
 from llama_stack.types import Attachment
