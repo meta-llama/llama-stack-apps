@@ -10,7 +10,9 @@ from typing import Dict
 
 import yfinance as yf
 from common.custom_tools import SingleMessageCustomTool
-from llama_stack.types.tool_param_definition_param import ToolParamDefinitionParam
+from llama_stack_client.types.tool_param_definition_param import (
+    ToolParamDefinitionParam,
+)
 
 
 class TickerDataTool(SingleMessageCustomTool):

@@ -12,7 +12,7 @@ import asyncio
 import fire
 from common.client_utils import *  # noqa: F403
 
-from llama_stack.types import Attachment
+from llama_stack_client.types import Attachment
 
 from .multi_turn import execute_turns, prompt_to_turn
 

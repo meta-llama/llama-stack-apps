@@ -7,12 +7,12 @@
 import json
 
 import fire
-from llama_stack import LlamaStack
-from llama_stack.types import UserMessage
+from llama_stack_client import LlamaStackClient
+from llama_stack_client.types import UserMessage
 
 
 def main(host: str, port: int):
-    client = LlamaStack(
+    client = LlamaStackClient(
         base_url=f"http://{host}:{port}",
     )
 

@@ -7,8 +7,8 @@ from pathlib import Path
 
 import fire
 
-from llama_stack import LlamaStack
-from llama_stack.types.memory_insert_params import Document
+from llama_stack_client import LlamaStackClient
+from llama_stack_client.types.memory_insert_params import Document
 from termcolor import cprint
 
 
@@ -28,7 +28,7 @@ def data_url_from_file(file_path: str) -> str:
 
 
 async def run_main(host: str, port: int, stream: bool = True):
-    client = LlamaStack(
+    client = LlamaStackClient(
         base_url=f"http://{host}:{port}",
     )
 

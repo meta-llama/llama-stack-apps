@@ -2,14 +2,14 @@ import asyncio
 
 import fire
 
-from llama_stack import LlamaStack
-from llama_stack.lib.inference.event_logger import EventLogger
-from llama_stack.types import UserMessage
+from llama_stack_client import LlamaStackClient
+from llama_stack_client.lib.inference.event_logger import EventLogger
+from llama_stack_client.types import UserMessage
 from termcolor import cprint
 
 
 async def run_main(host: str, port: int, stream: bool = True):
-    client = LlamaStack(
+    client = LlamaStackClient(
         base_url=f"http://{host}:{port}",
     )
 

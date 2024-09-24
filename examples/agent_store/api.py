@@ -6,16 +6,16 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 
 from dotenv import load_dotenv
-from llama_stack import LlamaStack
-from llama_stack.types import Attachment, SamplingParams, UserMessage
-from llama_stack.types.agent_create_params import (
+from llama_stack_client import LlamaStackClient
+from llama_stack_client.types import Attachment, SamplingParams, UserMessage
+from llama_stack_client.types.agent_create_params import (
     AgentConfig,
     AgentConfigToolMemoryToolDefinition,
     AgentConfigToolMemoryToolDefinitionMemoryBankConfigUnionMember0,
     AgentConfigToolSearchToolDefinition,
 )
-from llama_stack.types.agents import AgentsTurnStreamChunk
-from llama_stack.types.memory_insert_params import Document
+from llama_stack_client.types.agents import AgentsTurnStreamChunk
+from llama_stack_client.types.memory_insert_params import Document
 from termcolor import cprint
 
 from .utils import data_url_from_file
@@ -31,7 +31,7 @@ class AgentChoice(Enum):
 class AgentStore:
     def __init__(self, host, port, model) -> None:
         self.model = model
-        self.client = LlamaStack(base_url=f"http://{host}:{port}")
+        self.client = LlamaStackClient(base_url=f"http://{host}:{port}")
         self.agents = {}
         self.sessions = {}
         self.first_turn = {}

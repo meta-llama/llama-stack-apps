@@ -20,7 +20,7 @@ import mesop as me
 from mesop.components.uploader.uploader import UploadEvent
 from typing_extensions import Annotated, Required, TypeAlias, TypedDict
 
-from llama_stack.types import *  # noqa: F403
+from llama_stack_client.types import *  # noqa: F403
 
 MAX_VIOLATIONS = 3
 

@@ -12,10 +12,10 @@ import asyncio
 import fire
 from common.client_utils import *  # noqa: F403
 
-from llama_stack import LlamaStack
+from llama_stack_client import LlamaStackClient
 
-from llama_stack.types import SamplingParams, UserMessage
-from llama_stack.types.agent_create_params import AgentConfig
+from llama_stack_client.types import SamplingParams, UserMessage
+from llama_stack_client.types.agent_create_params import AgentConfig
 from termcolor import cprint
 
 from .multi_turn import execute_turns, prompt_to_turn

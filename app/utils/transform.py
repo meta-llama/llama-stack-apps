@@ -22,7 +22,7 @@ from .chat import (
 
 from .client import ClientManager
 from .common import sync_generator
-from llama_stack.types import *  # noqa: F403
+from llama_stack_client.types import *  # noqa: F403
 
 
 EVENT_LOOP = asyncio.new_event_loop()

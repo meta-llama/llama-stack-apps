@@ -12,9 +12,9 @@ import asyncio
 import fire
 from common.client_utils import *  # noqa: F403
 
-from llama_stack import LlamaStack
-from llama_stack.types import Attachment
-from llama_stack.types.memory_insert_params import Document
+from llama_stack_client import LlamaStack
+from llama_stack_client.types import Attachment
+from llama_stack_client.types.memory_insert_params import Document
 
 from .multi_turn import execute_turns, prompt_to_turn
 

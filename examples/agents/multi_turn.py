@@ -13,7 +13,7 @@ from typing import List, Optional
 from pydantic import BaseModel
 
 from common.client_utils import *  # noqa: F403
-from llama_stack.lib.agents.event_logger import EventLogger
+from llama_stack_client.lib.agents.event_logger import EventLogger
 from termcolor import cprint
 
 
