@@ -38,6 +38,7 @@ class ClientManager:
                     tool_config=QuickToolConfig(
                         custom_tools=custom_tools,
                         builtin_tools=default_builtins(load_api_keys_from_env()),
+                        attachment_behavior="rag",
                     ),
                     disable_safety=disable_safety,
                 )

@@ -6,32 +6,43 @@
 
 import asyncio
 import uuid
+from typing import Any, Callable, Dict, Generator, List, Optional, Sequence, Union
 
 import mesop as me
-from llama_stack.apis.agents import AgentTurnResponseEventType as EventType, StepType
 
-from .chat import KEY_TO_OUTPUTS, MAX_VIOLATIONS, State, StepStatus
+from .chat import (
+    EventType,
+    KEY_TO_OUTPUTS,
+    MAX_VIOLATIONS,
+    State,
+    StepStatus,
+    StepType,
+    StopReason,
+)
 
 from .client import ClientManager
 from .common import sync_generator
-
-from llama_stack.apis.inference import *  # noqa: F403
+from llama_stack.types import *  # noqa: F403
 
 
 EVENT_LOOP = asyncio.new_event_loop()
 
 
-def transform(content: InterleavedTextMedia):
+def transform(content: str, attachments: Optional[List[Attachment]] = None):
     state = me.state(State)
 
-    input_message = UserMessage(content=content)
+    input_message = UserMessage(content=content, role="user")
 
     client_manager = ClientManager()
     client = client_manager.get_client()
 
     generator = sync_generator(
-        EVENT_LOOP, client.execute_turn(messages=[input_message])
+        EVENT_LOOP,
+        client.execute_turn(messages=[input_message], attachments=attachments),
     )
+
+    print(generator)
+
     for chunk in generator:
         if not hasattr(chunk, "event"):
             # Need to check for custom tool first
@@ -44,6 +55,7 @@ def transform(content: InterleavedTextMedia):
 
         event = chunk.event
         event_type = event.payload.event_type
+
         if event_type == EventType.turn_start.value:
             continue
 
@@ -54,7 +66,7 @@ def transform(content: InterleavedTextMedia):
             step_type = event.payload.step_type
             step_uuid = event.payload.step_id
 
-            if step_type == StepType.inference:
+            if step_type == StepType.inference.value:
                 existing = KEY_TO_OUTPUTS.get(step_uuid)
                 if event.payload.tool_call_delta:
                     delta = event.payload.tool_call_delta
@@ -75,23 +87,25 @@ def transform(content: InterleavedTextMedia):
                         )
                 else:
                     if existing and isinstance(existing, CompletionMessage):
-                        existing.content += event.payload.model_response_text_delta
+                        existing.content += event.payload.text_delta_model_response
                         yield step_uuid, existing
                     else:
                         yield step_uuid, CompletionMessage(
-                            content=event.payload.model_response_text_delta,
+                            content=event.payload.text_delta_model_response,
                             # this is bad, I am needing to make this up. we probably don't need a Message
                             # struct in StepStatus, but just content with some metadata
-                            stop_reason=StopReason.end_of_turn,
+                            stop_reason=StopReason.end_of_turn.value,
+                            role="assistant",
+                            tool_calls=[],
                         )
-            elif step_type == StepType.tool_execution:
+            elif step_type == StepType.tool_execution.value:
                 pass
 
         elif event_type == EventType.step_complete.value:
             step_type = event.payload.step_type
             step_uuid = event.payload.step_details.step_id
 
-            if step_type == StepType.shield_call:
+            if step_type == StepType.shield_call.value:
                 violation = event.payload.step_details.violation
                 if violation:
                     state.violation_count += 1
@@ -103,29 +117,33 @@ def transform(content: InterleavedTextMedia):
 
                         yield step_uuid, CompletionMessage(
                             content=chat_moderation_message,
-                            stop_reason=StopReason.end_of_turn,
+                            stop_reason=StopReason.end_of_turn.value,
+                            role="assistant",
+                            tool_calls=[],
                         )
                     elif violation.user_message:
                         yield step_uuid, CompletionMessage(
                             content=violation.user_message,
-                            stop_reason=StopReason.end_of_turn,
+                            stop_reason=StopReason.end_of_turn.value,
+                            role="assistant",
+                            tool_calls=[],
                         )
                     else:
                         yield step_uuid, StepStatus(
-                            step_type=StepType.shield_call,
+                            step_type=StepType.shield_call.value,
                             content=violation,
                         )
                 else:
                     yield step_uuid, StepStatus(
-                        step_type=StepType.shield_call,
+                        step_type=StepType.shield_call.value,
                         content="",
                     )
                 continue
-            elif step_type == StepType.tool_execution:
+            elif step_type == StepType.tool_execution.value:
                 details = event.payload.step_details
                 response = details.tool_responses[0]
 
                 yield step_uuid, StepStatus(
-                    step_type=StepType.tool_execution,
+                    step_type=StepType.tool_execution.value,
                     content=response.content,
                 )

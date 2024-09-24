@@ -4,6 +4,8 @@
 # This source code is licensed under the terms described in the LICENSE file in
 # the root directory of this source tree.
 
+import json
+
 import fire
 from llama_stack import LlamaStack
 from llama_stack.types import UserMessage
@@ -13,6 +15,10 @@ def main(host: str, port: int):
     client = LlamaStack(
         base_url=f"http://{host}:{port}",
     )
+
+    shields_response = client.shields.list()
+    for spec in shields_response:
+        print(json.dumps(spec.model_dump(), indent=4))
 
     for message in [
         UserMessage(

@@ -8,21 +8,12 @@
 # This software may be used and distributed in accordance with the terms of the Llama 3 Community License Agreement.
 import os
 import sys
-
-THIS_DIR = os.path.dirname(__file__)
-
-sys.path += os.path.abspath(THIS_DIR + "../../")
-
 from typing import List, Optional
 
 from pydantic import BaseModel
 
 from common.client_utils import *  # noqa: F403
-from common.event_logger import EventLogger
-
-from llama_models.llama3.api.datatypes import *  # noqa: F403
-from llama_stack.apis.agents import *  # noqa: F403
-
+from llama_stack.lib.agents.event_logger import EventLogger
 from termcolor import cprint
 
 
@@ -34,11 +25,12 @@ class UserTurnInput(BaseModel):
 def prompt_to_turn(
     content: str, attachments: Optional[List[Attachment]] = None
 ) -> UserTurnInput:
-    return UserTurnInput(message=UserMessage(content=content), attachments=attachments)
+    return UserTurnInput(
+        message=UserMessage(content=content, role="user"), attachments=attachments
+    )
 
 
 async def execute_turns(
-    *,
     agent_config: AgentConfig,
     custom_tools: List[CustomTool],
     turn_inputs: List[UserTurnInput],
@@ -59,6 +51,6 @@ async def execute_turns(
             turn.attachments,
         )
         cprint(f"User> {turn.message.content}", color="white", attrs=["bold"])
-        async for event, log in EventLogger().log(iterator):
+        async for log in EventLogger().log(iterator):
             if log is not None:
                 log.print()

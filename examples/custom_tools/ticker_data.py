@@ -6,16 +6,11 @@
 
 import os
 import sys
-
-THIS_DIR = os.path.dirname(__file__)
-sys.path += os.path.abspath(THIS_DIR + "../../")
-
 from typing import Dict
 
 import yfinance as yf
-
 from common.custom_tools import SingleMessageCustomTool
-from llama_models.llama3.api.datatypes import ToolParamDefinition
+from llama_stack.types.tool_param_definition_param import ToolParamDefinitionParam
 
 
 class TickerDataTool(SingleMessageCustomTool):
@@ -27,19 +22,19 @@ class TickerDataTool(SingleMessageCustomTool):
     def get_description(self) -> str:
         return "Get yearly closing prices for a given ticker symbol"
 
-    def get_params_definition(self) -> Dict[str, ToolParamDefinition]:
+    def get_params_definition(self) -> Dict[str, ToolParamDefinitionParam]:
         return {
-            "ticker_symbol": ToolParamDefinition(
+            "ticker_symbol": ToolParamDefinitionParam(
                 param_type="str",
                 description="The ticker symbol for which to get the data. eg. '^GSPC'",
                 required=True,
             ),
-            "start": ToolParamDefinition(
+            "start": ToolParamDefinitionParam(
                 param_type="str",
                 description="Start date, eg. '2021-01-01'",
                 required=True,
             ),
-            "end": ToolParamDefinition(
+            "end": ToolParamDefinitionParam(
                 param_type="str",
                 description="End date, eg. '2024-12-31'",
                 required=True,

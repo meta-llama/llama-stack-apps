@@ -4,20 +4,23 @@
 # This source code is licensed under the terms described in the LICENSE file in
 # the root directory of this source tree.
 
+import asyncio
 import base64
+import json
+import mimetypes
 import os
 import re
 import uuid
 from dataclasses import dataclass
-from typing import Any, Callable, Generator, List, Sequence, Union
+from enum import Enum
+from typing import Any, Callable, Dict, Generator, List, Optional, Sequence, Union
 
 import mesop as me
 
 from mesop.components.uploader.uploader import UploadEvent
+from typing_extensions import Annotated, Required, TypeAlias, TypedDict
 
-from llama_stack.apis.inference import *  # noqa: F403
-from llama_stack.apis.agents import *  # noqa: F403
-from llama_stack.apis.safety import *  # noqa: F403
+from llama_stack.types import *  # noqa: F403
 
 MAX_VIOLATIONS = 3
 
@@ -86,12 +89,53 @@ _STYLE_CHAT_BUTTON = me.Style(
 _STYLE_CHAT_BUBBLE_PLAINTEXT = me.Style(margin=me.Margin.symmetric(vertical=15))
 
 
+class SafetyViolation:
+    violation_level: str
+    # what message should you convey to the user
+    user_message: Optional[str] = None
+    # additional metadata (including specific violation codes) more for
+    # debugging, telemetry
+    metadata: Dict[str, Any] = {}
+
+
 @dataclass
 class StepStatus:
-    step_type: StepType
-    content: Union[InterleavedTextMedia, SafetyViolation]
+    step_type: str
+    content: Union[
+        Union[
+            str,
+            List[str],
+        ],
+        SafetyViolation,
+    ]
     show_tool_response: bool = False
 
+
+class EventType(Enum):
+    step_start = "step_start"
+    step_complete = "step_complete"
+    step_progress = "step_progress"
+
+    turn_start = "turn_start"
+    turn_complete = "turn_complete"
+
+
+class StepType(Enum):
+    inference = "inference"
+    tool_execution = "tool_execution"
+    shield_call = "shield_call"
+    memory_retrieval = "memory_retrieval"
+
+
+class StopReason(Enum):
+    end_of_turn = "end_of_turn"
+    end_of_message = "end_of_message"
+    out_of_tokens = "out_of_tokens"
+
+
+Message: TypeAlias = Union[
+    UserMessage, SystemMessage, ToolResponseMessage, CompletionMessage
+]
 
 RenderableOutputType = Union[Message, StepStatus]
 
@@ -118,7 +162,7 @@ def _make_style_chat_bubble_wrapper(role: str) -> me.Style:
     Args:
       role: Chat bubble alignment depends on the role
     """
-    align_items = "end" if role == Role.user.value else "start"
+    align_items = "end" if role == "user" else "start"
     return me.Style(
         display="flex",
         flex_direction="column",
@@ -129,13 +173,28 @@ def _make_style_chat_bubble_wrapper(role: str) -> me.Style:
 
 def is_tool_op(op: RenderableOutputType) -> bool:
     return isinstance(op, StepStatus) and op.step_type in (
-        StepType.inference,
-        StepType.tool_execution,
-        StepType.shield_call,
+        StepType.inference.value,
+        StepType.tool_execution.value,
+        StepType.shield_call.value,
     )
 
 
-def _make_chat_bubble_style(op: RenderableOutputType, role: Role) -> me.Style:
+def data_url_from_file(file_path: str) -> str:
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"File not found: {file_path}")
+
+    with open(file_path, "rb") as file:
+        file_content = file.read()
+
+    base64_content = base64.b64encode(file_content).decode("utf-8")
+    mime_type, _ = mimetypes.guess_type(file_path)
+
+    data_url = f"data:{mime_type};base64,{base64_content}"
+
+    return data_url
+
+
+def _make_chat_bubble_style(op: RenderableOutputType, role: str) -> me.Style:
     if is_tool_op(op):
         return me.Style(
             font_size="12px",
@@ -155,9 +214,7 @@ def _make_chat_bubble_style(op: RenderableOutputType, role: Role) -> me.Style:
             ),
         )
 
-    background = (
-        _COLOR_CHAT_BUBBLE_YOU if role == Role.user.value else _COLOR_CHAT_BUBBLE_BOT
-    )
+    background = _COLOR_CHAT_BUBBLE_YOU if role == "user" else _COLOR_CHAT_BUBBLE_BOT
 
     return me.Style(
         width="80%" if isinstance(op.content, str) else None,
@@ -243,25 +300,23 @@ def chat(
             output = []
 
         # Parse any pending attachment into the newly sent message and clear it.
-        content = (
-            [
-                input,
-                Attachment(
-                    url=URL(
-                        uri=f"file://{os.path.abspath(state.pending_attachment_path)}"
-                    ),
-                    mime_type=state.pending_attachment_mime_type,
-                ),
-            ]
-            if state.pending_attachment_path is not None
+        msg = input
+        attachments = []
+        if (
+            state.pending_attachment_path is not None
             and state.pending_attachment_path != ""
-            else input
-        )
+        ):
+            attachments.append(
+                Attachment(
+                    content=f"{data_url_from_file(os.path.abspath(state.pending_attachment_path))}",
+                    mime_type=state.pending_attachment_mime_type,
+                )
+            )
         state.pending_attachment_path = None
         state.pending_attachment_mime_type = None
 
         msg_uuid = str(uuid.uuid4())
-        KEY_TO_OUTPUTS[msg_uuid] = UserMessage(content=content)
+        KEY_TO_OUTPUTS[msg_uuid] = UserMessage(content=input, role="user")
         output.append(msg_uuid)
         state.output = output
 
@@ -269,7 +324,7 @@ def chat(
         yield
 
         cur_uuids = set(state.output)
-        for op_uuid, op in transform(content):
+        for op_uuid, op in transform(input, attachments):
             KEY_TO_OUTPUTS[op_uuid] = op
             if op_uuid not in cur_uuids:
                 output.append(op_uuid)
@@ -302,16 +357,16 @@ def chat(
         op.show_tool_response = not op.show_tool_response
 
     def render_tool(op_uuid: str, op: RenderableOutputType):
-        if isinstance(op, StepStatus) and op.step_type == StepType.inference:
+        if isinstance(op, StepStatus) and op.step_type == StepType.inference.value:
             me.text("Executing tool...", type="subtitle-2")
-            with me.box(style=_make_chat_bubble_style(op, Role.assistant.value)):
+            with me.box(style=_make_chat_bubble_style(op, "assistant")):
                 return codeblock(op.content)
 
         if isinstance(op.content, list):
-            with me.box(style=_make_chat_bubble_style(op, Role.assistant.value)):
+            with me.box(style=_make_chat_bubble_style(op, "assistant")):
                 return render(op.content)
 
-        elif isinstance(op, StepStatus) and op.step_type == StepType.shield_call:
+        elif isinstance(op, StepStatus) and op.step_type == StepType.shield_call.value:
             if state.debug_mode:
                 violation = op.content
                 with me.box(
@@ -330,7 +385,9 @@ def chat(
                     me.text(
                         f"Violation: {violation.metadata} ({state.violation_count} violations so far)"
                     )
-        elif isinstance(op, StepStatus) and op.step_type == StepType.tool_execution:
+        elif (
+            isinstance(op, StepStatus) and op.step_type == StepType.tool_execution.value
+        ):
             if isinstance(op.content, str) and _SPECIAL_STDOUT_DELIMITER in op.content:
                 stdout_match = re.search(
                     r"\[stdout\](.*?)\[/stdout\]", op.content, re.DOTALL
@@ -338,7 +395,7 @@ def chat(
                 if not stdout_match:
                     raise Exception(f"Unable to parse stdout: {op.content}")
                 stdout = stdout_match.group(1)
-                with me.box(style=_make_chat_bubble_style(op, Role.assistant.value)):
+                with me.box(style=_make_chat_bubble_style(op, "assistant")):
                     if len(stdout) > STDOUT_CUTOFF_LENGTH:
                         codeblock(stdout[:STDOUT_CUTOFF_LENGTH])
                         me.text(
@@ -350,7 +407,7 @@ def chat(
             else:
                 # TODO: Hack to disable photogen showing tool response due to rendering
                 if str(BuiltinTool.photogen) not in op.content:
-                    with me.box(style=_make_chat_bubble_style(op, Role.ipython.value)):
+                    with me.box(style=_make_chat_bubble_style(op, "ipython")):
                         if op.show_tool_response:
                             me.button(
                                 "Hide tool response △",
@@ -380,7 +437,7 @@ def chat(
                         print(f"Missing key {op_uuid} in KEY_TO_OUTPUTS")
                         continue
 
-                    role = op.role if hasattr(op, "role") else Role.assistant.value
+                    role = op.role if hasattr(op, "role") else "assistant"
                     with me.box(style=_make_style_chat_bubble_wrapper(role)):
                         if is_tool_op(op):
                             render_tool(op_uuid, op)
