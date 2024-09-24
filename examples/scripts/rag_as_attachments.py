@@ -35,7 +35,6 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
         for i, url in enumerate(urls)
     ]
 
-    # now run the agentic system pointing it to the pre-populated memory bank
     agent_config = await make_agent_config_with_custom_tools(
         disable_safety=disable_safety,
         tool_config=QuickToolConfig(

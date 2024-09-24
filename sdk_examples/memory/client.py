@@ -37,6 +37,7 @@ async def run_main(host: str, port: int, stream: bool = True):
         body={
             "name": "test_bank",
             "config": {
+                "type": "vector",
                 "bank_id": "test_bank",
                 "embedding_model": "dragon-roberta-query-2",
                 "chunk_size_in_tokens": 512,
