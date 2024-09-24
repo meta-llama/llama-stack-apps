@@ -36,10 +36,6 @@ from .multi_turn import execute_turns, prompt_to_turn
 
 
 async def run_main(host: str, port: int, disable_safety: bool = False):
-    client = LlamaStack(
-        base_url=f"http://{host}:{port}",
-    )
-
     api_keys = load_api_keys_from_env()
     tool_definitions = [
         search_tool_defn(api_keys),
