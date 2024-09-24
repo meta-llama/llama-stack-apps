@@ -32,6 +32,8 @@ from sdk_common.client_utils import (
 )
 from termcolor import cprint
 
+from .multi_turn import execute_turns, prompt_to_turn
+
 
 async def run_main(host: str, port: int, disable_safety: bool = False):
     client = LlamaStack(
@@ -59,58 +61,36 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
             attachment_behavior="code_interpreter",
         ),
     )
+    print(agent_config)
 
-    agentic_system_create_response = client.agents.create(
+    await execute_turns(
         agent_config=agent_config,
-    )
-    print(agentic_system_create_response)
-
-    agentic_system_create_session_response = client.agents.sessions.create(
-        agent_id=agentic_system_create_response.agent_id,
-        session_name="test_session",
-    )
-    print(agentic_system_create_session_response)
-
-    response = client.agents.turns.create(
-        agent_id=agentic_system_create_response.agent_id,
-        session_id=agentic_system_create_session_response.session_id,
-        messages=[
-            UserMessage(role="user", content="Here is a csv, can you describe it ?"),
-        ],
-        attachments=[
-            Attachment(
-                content="https://raw.githubusercontent.com/meta-llama/llama-agentic-system/main/examples/resources/inflation.csv",
-                mime_type="text/csv",
+        custom_tools=custom_tools,
+        turn_inputs=[
+            prompt_to_turn(
+                "Here is a csv, can you describe it ?",
+                attachments=[
+                    Attachment(
+                        content="https://raw.githubusercontent.com/meta-llama/llama-agentic-system/main/examples/resources/inflation.csv",
+                        mime_type="text/csv",
+                    ),
+                ],
+            ),
+            prompt_to_turn("Which year ended with the highest inflation ?"),
+            prompt_to_turn(
+                "What macro economic situations that led to such high inflation in that period?"
+            ),
+            prompt_to_turn("Plot average yearly inflation as a time series"),
+            prompt_to_turn(
+                "Using provided functions, get ticker data for META for the past 10 years ? plot percentage year over year growth"
+            ),
+            prompt_to_turn(
+                "Can you take Meta's year over year growth data and put it in the same inflation timeseries as above ?"
             ),
         ],
-        stream=True,
+        host=host,
+        port=port,
     )
-
-    async for log in EventLogger().log(response):
-        log.print()
-
-    user_prompts = [
-        "Which year ended with the highest inflation?",
-        "What macro economic situations that led to such high inflation in that period?",
-        "Plot average yearly inflation as a time series",
-        "Using provided functions, get ticker data for META for the past 10 years ? plot percentage year over year growth",
-        "Can you take Meta's year over year growth data and put it in the same inflation timeseries as above ?",
-    ]
-
-    for content in user_prompts:
-        cprint(f"User> {content}", color="white", attrs=["bold"])
-
-        response = client.agents.turns.create(
-            agent_id=agentic_system_create_response.agent_id,
-            session_id=agentic_system_create_session_response.session_id,
-            messages=[
-                UserMessage(content=content, role="user"),
-            ],
-            stream=True,
-        )
-
-        async for log in EventLogger().log(response):
-            log.print()
 
 
 def main(host: str, port: int, disable_safety: bool = False):

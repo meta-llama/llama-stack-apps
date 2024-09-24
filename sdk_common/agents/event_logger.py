@@ -50,7 +50,7 @@ class EventLogger:
         previous_event_type = None
         previous_step_type = None
 
-        for chunk in event_generator:
+        async for chunk in event_generator:
             if isinstance(chunk, AgentsTurnStreamChunk):
                 event = chunk.event
                 event_type = chunk.event.payload.event_type

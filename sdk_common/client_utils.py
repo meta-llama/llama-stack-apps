@@ -9,8 +9,7 @@ from enum import Enum
 from typing import Any, List, Literal, Optional
 
 from llama_stack.types import *  # noqa: F403
-
-# from .execute_with_custom_tools import AgentWithCustomToolExecutor
+from llama_stack import LlamaStack
 
 from llama_stack.types.agent_create_params import (
     AgentConfig,
@@ -28,8 +27,10 @@ from llama_stack.types.agent_create_params import (
 # from llama_stack.apis.safety import *  # noqa: F403
 
 from pydantic import BaseModel, Field
+from termcolor import cprint
 
 from .custom_tools import CustomTool
+from .execute_with_custom_tools import AgentWithCustomToolExecutor
 
 
 class AttachmentBehavior(Enum):
@@ -119,7 +120,7 @@ async def make_agent_config_with_custom_tools(
         model="Meta-Llama3.1-8B-Instruct",
         instructions="You are a helpful assistant",
         sampling_params=SamplingParams(strategy="greedy", temperature=1.0, top_p=0.9),
-        tools=tool_config.tool_definitions,
+        tools=tool_config.tool_definitions.copy(),
         tool_choice=tool_choice,
         tool_prompt_format=tool_config.prompt_format,
         input_shields=input_shields,
@@ -127,3 +128,31 @@ async def make_agent_config_with_custom_tools(
         enable_session_persistence=False,
     )
     return agent_config
+
+
+async def get_agent_with_custom_tools(
+    host: str,
+    port: int,
+    agent_config: AgentConfig,
+    custom_tools: List[CustomTool],
+):
+    client = LlamaStack(
+        base_url=f"http://{host}:{port}",
+    )
+
+    create_response = client.agents.create(
+        agent_config=agent_config,
+    )
+    agent_id = create_response.agent_id
+    cprint(f"> created agents with agent_id={agent_id}", "green")
+
+    name = f"Session-{uuid.uuid4()}"
+    session_response = client.agents.sessions.create(
+        agent_id=agent_id,
+        session_name=name,
+    )
+    session_id = session_response.session_id
+
+    return AgentWithCustomToolExecutor(
+        client, agent_id, session_id, agent_config, custom_tools
+    )

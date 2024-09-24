@@ -25,50 +25,36 @@ from sdk_common.client_utils import (
 )
 from termcolor import cprint
 
+from .multi_turn import execute_turns, prompt_to_turn
+
 
 async def run_main(host: str, port: int, disable_safety: bool = False):
-    client = LlamaStack(
-        base_url=f"http://{host}:{port}",
-    )
+    # client = LlamaStack(
+    #     base_url=f"http://{host}:{port}",
+    # )
 
     custom_tools = []
 
     tool_definitions = [search_tool_defn(load_api_keys_from_env())]
     agent_config = await make_agent_config_with_custom_tools(
-        QuickToolConfig(tool_definitions=tool_definitions),
         disable_safety=disable_safety,
+        tool_config=QuickToolConfig(tool_definitions=tool_definitions),
     )
 
-    agentic_system_create_response = client.agents.create(
+    await execute_turns(
         agent_config=agent_config,
+        custom_tools=[],
+        turn_inputs=[
+            prompt_to_turn(
+                "Hello",
+            ),
+            prompt_to_turn(
+                "Which players played in the winning team of the NBA western conference semifinals of 2024, please use tools"
+            ),
+        ],
+        host=host,
+        port=port,
     )
-    print(agentic_system_create_response)
-
-    agentic_system_create_session_response = client.agents.sessions.create(
-        agent_id=agentic_system_create_response.agent_id,
-        session_name="test_session",
-    )
-    print(agentic_system_create_session_response)
-
-    user_prompts = [
-        "Hello",
-        "Which players played in the winning team of the NBA western conference semifinals of 2024, please use tools",
-    ]
-
-    for content in user_prompts:
-        cprint(f"User> {content}", color="white", attrs=["bold"])
-
-        response = client.agents.turns.create(
-            agent_id=agentic_system_create_response.agent_id,
-            session_id=agentic_system_create_session_response.session_id,
-            messages=[
-                UserMessage(content=content, role="user"),
-            ],
-            stream=True,
-        )
-
-        async for log in EventLogger().log(response):
-            log.print()
 
 
 def main(host: str, port: int, disable_safety: bool = False):
