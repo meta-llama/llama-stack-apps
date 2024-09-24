@@ -10,18 +10,14 @@
 import asyncio
 
 import fire
-from llama_stack.apis.agents import *  # noqa: F403
+from sdk_common.client_utils import *  # noqa: F403
 
-from multi_turn import (
-    AttachmentBehavior,
-    execute_turns,
-    make_agent_config_with_custom_tools,
-    prompt_to_turn,
-    QuickToolConfig,
-)
+from llama_stack.types import Attachment
+
+from .multi_turn import execute_turns, prompt_to_turn
 
 
-def main(host: str, port: int, disable_safety: bool = False):
+async def run_main(host: str, port: int, disable_safety: bool = False):
     urls = [
         "memory_optimizations.rst",
         "chat.rst",
@@ -30,51 +26,51 @@ def main(host: str, port: int, disable_safety: bool = False):
         "qat_finetune.rst",
         "lora_finetune.rst",
     ]
+
     attachments = [
         Attachment(
-            content=URL(
-                uri=f"https://raw.githubusercontent.com/pytorch/torchtune/main/docs/source/tutorials/{url}"
-            ),
+            content=f"https://raw.githubusercontent.com/pytorch/torchtune/main/docs/source/tutorials/{url}",
             mime_type="text/plain",
         )
         for i, url in enumerate(urls)
     ]
+
     # now run the agentic system pointing it to the pre-populated memory bank
-    agent_config = asyncio.run(
-        make_agent_config_with_custom_tools(
-            tool_config=QuickToolConfig(
-                builtin_tools=[],
-                attachment_behavior=AttachmentBehavior.rag,
-            ),
-            disable_safety=disable_safety,
-        )
-    )
-    asyncio.run(
-        execute_turns(
-            agent_config=agent_config,
+    agent_config = await make_agent_config_with_custom_tools(
+        disable_safety=disable_safety,
+        tool_config=QuickToolConfig(
+            tool_definitions=[],
             custom_tools=[],
-            turn_inputs=[
-                prompt_to_turn(
-                    "I am attaching some documentation for Torchtune. Help me answer questions I will ask next.",
-                    attachments=attachments,
-                ),
-                prompt_to_turn(
-                    "What are the top 5 topics that were explained? Only list succinct bullet points.",
-                ),
-                prompt_to_turn(
-                    "Was anything related to 'Llama3' discussed, if so what?"
-                ),
-                prompt_to_turn(
-                    "Tell me how to use LoRA",
-                ),
-                prompt_to_turn(
-                    "What about Quantization?",
-                ),
-            ],
-            host=host,
-            port=port,
-        )
+            attachment_behavior="rag",
+        ),
     )
+    print(agent_config)
+    await execute_turns(
+        agent_config=agent_config,
+        custom_tools=[],
+        turn_inputs=[
+            prompt_to_turn(
+                "I am attaching some documentation for Torchtune. Help me answer questions I will ask next.",
+                attachments=attachments,
+            ),
+            prompt_to_turn(
+                "What are the top 5 topics that were explained? Only list succinct bullet points.",
+            ),
+            prompt_to_turn("Was anything related to 'Llama3' discussed, if so what?"),
+            prompt_to_turn(
+                "Tell me how to use LoRA",
+            ),
+            prompt_to_turn(
+                "What about Quantization?",
+            ),
+        ],
+        host=host,
+        port=port,
+    )
+
+
+def main(host: str, port: int, disable_safety: bool = False):
+    asyncio.run(run_main(host, port, disable_safety))
 
 
 if __name__ == "__main__":

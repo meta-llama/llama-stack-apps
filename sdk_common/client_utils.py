@@ -16,6 +16,7 @@ from llama_stack.types.agent_create_params import (
     AgentConfigTool,
     AgentConfigToolCodeInterpreterToolDefinition,
     AgentConfigToolFunctionCallToolDefinition,
+    AgentConfigToolMemoryToolDefinition,
     AgentConfigToolSearchToolDefinition,
     AgentConfigToolWolframAlphaToolDefinition,
 )
@@ -78,6 +79,15 @@ class QuickToolConfig(BaseModel):
         arbitrary_types_allowed = True
 
 
+def enable_memory_tool(cfg: QuickToolConfig) -> bool:
+    if cfg.memory_bank_id:
+        return True
+    return (
+        cfg.attachment_behavior
+        and cfg.attachment_behavior != AttachmentBehavior.code_interpreter.value
+    )
+
+
 # This is a utility function; it does not provide all bells and whistles
 # you can get from the underlying Agents API. Any limitations should
 # ideally be resolved by making another well-scoped utility function instead
@@ -111,6 +121,29 @@ async def make_agent_config_with_custom_tools(
             )
 
         tool_choice = "required"
+
+    # switch to memory
+    if enable_memory_tool(tool_config):
+        bank_configs = []
+        if tool_config.memory_bank_id:
+            bank_configs.append(
+                {
+                    "bank_id": tool_config.memory_bank_id,
+                    "type": "vector",
+                }
+            )
+        tool_config.tool_definitions.append(
+            AgentConfigToolMemoryToolDefinition(
+                type="memory",
+                memory_bank_configs=bank_configs,
+                query_generator_config={
+                    "type": "default",
+                    "sep": " ",
+                },
+                max_tokens_in_context=4096,
+                max_chunks=10,
+            )
+        )
 
     tool_config.tool_definitions += [
         t.get_tool_definition() for t in tool_config.custom_tools
