@@ -41,7 +41,7 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
 
     print(agent_config)
 
-    transcript_path = "https://raw.githubusercontent.com/meta-llama/llama-agentic-system/main/examples/resources/transcript_shorter.txt"
+    transcript_path = "https://raw.githubusercontent.com/meta-llama/llama-stack-apps/main/examples/resources/transcript_shorter.txt"
 
     await execute_turns(
         agent_config=agent_config,

@@ -53,7 +53,7 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
                 "Here is a csv, can you describe it ?",
                 attachments=[
                     Attachment(
-                        content="https://raw.githubusercontent.com/meta-llama/llama-agentic-system/main/examples/resources/inflation.csv",
+                        content="https://raw.githubusercontent.com/meta-llama/llama-stack-apps/main/examples/resources/inflation.csv",
                         mime_type="text/csv",
                     ),
                 ],
