@@ -61,7 +61,6 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
             attachment_behavior="code_interpreter",
         ),
     )
-    print(agent_config)
 
     await execute_turns(
         agent_config=agent_config,
