@@ -40,6 +40,7 @@ class AgentWithCustomToolExecutor:
 
         current_messages = messages.copy()
         n_iter = 0
+
         while n_iter < max_iters:
             n_iter += 1
             response = self.client.agents.turns.create(

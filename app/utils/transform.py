@@ -28,7 +28,7 @@ from llama_stack.types import *  # noqa: F403
 EVENT_LOOP = asyncio.new_event_loop()
 
 
-def transform(content: Union[str, List[str]]):
+def transform(content: str, attachments: Optional[List[Attachment]] = None):
     state = me.state(State)
 
     input_message = UserMessage(content=content, role="user")
@@ -37,8 +37,12 @@ def transform(content: Union[str, List[str]]):
     client = client_manager.get_client()
 
     generator = sync_generator(
-        EVENT_LOOP, client.execute_turn(messages=[input_message])
+        EVENT_LOOP,
+        client.execute_turn(messages=[input_message], attachments=attachments),
     )
+
+    print(generator)
+
     for chunk in generator:
         if not hasattr(chunk, "event"):
             # Need to check for custom tool first

@@ -4,7 +4,10 @@
 # This source code is licensed under the terms described in the LICENSE file in
 # the root directory of this source tree.
 
+import asyncio
 import base64
+import json
+import mimetypes
 import os
 import re
 import uuid
@@ -176,6 +179,21 @@ def is_tool_op(op: RenderableOutputType) -> bool:
     )
 
 
+def data_url_from_file(file_path: str) -> str:
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"File not found: {file_path}")
+
+    with open(file_path, "rb") as file:
+        file_content = file.read()
+
+    base64_content = base64.b64encode(file_content).decode("utf-8")
+    mime_type, _ = mimetypes.guess_type(file_path)
+
+    data_url = f"data:{mime_type};base64,{base64_content}"
+
+    return data_url
+
+
 def _make_chat_bubble_style(op: RenderableOutputType, role: str) -> me.Style:
     if is_tool_op(op):
         return me.Style(
@@ -282,23 +300,23 @@ def chat(
             output = []
 
         # Parse any pending attachment into the newly sent message and clear it.
-        content = (
-            [
-                input,
-                Attachment(
-                    url=f"file://{os.path.abspath(state.pending_attachment_path)}",
-                    mime_type=state.pending_attachment_mime_type,
-                ),
-            ]
-            if state.pending_attachment_path is not None
+        msg = input
+        attachments = []
+        if (
+            state.pending_attachment_path is not None
             and state.pending_attachment_path != ""
-            else input
-        )
+        ):
+            attachments.append(
+                Attachment(
+                    content=f"{data_url_from_file(os.path.abspath(state.pending_attachment_path))}",
+                    mime_type=state.pending_attachment_mime_type,
+                )
+            )
         state.pending_attachment_path = None
         state.pending_attachment_mime_type = None
 
         msg_uuid = str(uuid.uuid4())
-        KEY_TO_OUTPUTS[msg_uuid] = UserMessage(content=content, role="user")
+        KEY_TO_OUTPUTS[msg_uuid] = UserMessage(content=input, role="user")
         output.append(msg_uuid)
         state.output = output
 
@@ -306,7 +324,7 @@ def chat(
         yield
 
         cur_uuids = set(state.output)
-        for op_uuid, op in transform(content):
+        for op_uuid, op in transform(input, attachments):
             KEY_TO_OUTPUTS[op_uuid] = op
             if op_uuid not in cur_uuids:
                 output.append(op_uuid)
