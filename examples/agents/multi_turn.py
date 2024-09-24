@@ -51,6 +51,6 @@ async def execute_turns(
             turn.attachments,
         )
         cprint(f"User> {turn.message.content}", color="white", attrs=["bold"])
-        async for log in EventLogger().log(iterator):
+        async for log in EventLogger().async_log(iterator):
             if log is not None:
                 log.print()
