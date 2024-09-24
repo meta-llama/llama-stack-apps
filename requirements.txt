@@ -1,6 +1,10 @@
 fastapi
 fire
 httpx
+<<<<<<< HEAD
+=======
+llama-stack>=0.0.21
+>>>>>>> main
 mesop
 python-dotenv
 setuptools
