@@ -8,4 +8,4 @@ uvicorn
 yfinance
 gradio
 llama-stack>=0.0.36
-llama-stack>=0.0.36
+llama-stack-client
