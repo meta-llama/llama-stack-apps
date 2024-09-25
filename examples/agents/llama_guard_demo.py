@@ -12,7 +12,7 @@ import asyncio
 import fire
 from common.client_utils import *  # noqa: F403
 
-from .multi_turn import execute_turns, prompt_to_turn
+from multi_turn import execute_turns, prompt_to_turn
 
 
 async def run_main(host: str, port: int):
