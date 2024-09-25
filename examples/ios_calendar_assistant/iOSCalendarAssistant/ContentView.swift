@@ -25,7 +25,7 @@ struct ContentView: View {
 
   @State var isShowingEventModal = false
 
-  private let agents = RemoteAgents(url: URL(string: "http://127.0.0.1:5000")!)
+  private let agents = RemoteAgents(url: URL(string: "http://0.0.0.0:5000")!)
   @State var agentId = ""
   @State var agenticSystemSessionId = ""
 

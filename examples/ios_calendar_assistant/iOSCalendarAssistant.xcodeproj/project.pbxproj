@@ -3,11 +3,10 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 60;
+	objectVersion = 56;
 	objects = {
 
 /* Begin PBXBuildFile section */
-		5C1051CD2CA3AA8A00112C2D /* LlamaStackClient in Frameworks */ = {isa = PBXBuildFile; productRef = 5C1051CC2CA3AA8A00112C2D /* LlamaStackClient */; };
 		5C200C1B2CA3CC3C0026EA40 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5C200C112CA3CC3C0026EA40 /* Preview Assets.xcassets */; };
 		5C200C1C2CA3CC3C0026EA40 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5C200C132CA3CC3C0026EA40 /* Assets.xcassets */; };
 		5C200C1D2CA3CC3C0026EA40 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C200C142CA3CC3C0026EA40 /* ContentView.swift */; };
@@ -16,7 +15,7 @@
 		5C200C202CA3CC3C0026EA40 /* MessageListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C200C172CA3CC3C0026EA40 /* MessageListView.swift */; };
 		5C200C212CA3CC3C0026EA40 /* MessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C200C182CA3CC3C0026EA40 /* MessageView.swift */; };
 		5C200C222CA3CC3C0026EA40 /* iOSCalendarAssistantApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C200C192CA3CC3C0026EA40 /* iOSCalendarAssistantApp.swift */; };
-		5C200C252CA3D2E50026EA40 /* LlamaStackClient in Frameworks */ = {isa = PBXBuildFile; productRef = 5C200C242CA3D2E50026EA40 /* LlamaStackClient */; };
+		5C5E31D22CA4890700A0784C /* LlamaStackClient in Frameworks */ = {isa = PBXBuildFile; productRef = 5C5E31D12CA4890700A0784C /* LlamaStackClient */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -36,8 +35,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5C200C252CA3D2E50026EA40 /* LlamaStackClient in Frameworks */,
-				5C1051CD2CA3AA8A00112C2D /* LlamaStackClient in Frameworks */,
+				5C5E31D22CA4890700A0784C /* LlamaStackClient in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -100,8 +98,7 @@
 			);
 			name = iOSCalendarAssistant;
 			packageProductDependencies = (
-				5C1051CC2CA3AA8A00112C2D /* LlamaStackClient */,
-				5C200C242CA3D2E50026EA40 /* LlamaStackClient */,
+				5C5E31D12CA4890700A0784C /* LlamaStackClient */,
 			);
 			productName = StackSummary;
 			productReference = 5CADB0012CA1345100942A87 /* iOSCalendarAssistant.app */;
@@ -132,7 +129,7 @@
 			);
 			mainGroup = 5CADAFF82CA1345100942A87;
 			packageReferences = (
-				5C200C232CA3D2E50026EA40 /* XCLocalSwiftPackageReference "../../../internal-llama-stack/llama_stack/providers/impls/ios/inference/LocalInference/internal-llama-stack-client-swift" */,
+				5C5E31D02CA4890700A0784C /* XCRemoteSwiftPackageReference "llama-stack-client-swift" */,
 			);
 			productRefGroup = 5CADB0022CA1345100942A87 /* Products */;
 			projectDirPath = "";
@@ -370,20 +367,21 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCLocalSwiftPackageReference section */
-		5C200C232CA3D2E50026EA40 /* XCLocalSwiftPackageReference "../../../internal-llama-stack/llama_stack/providers/impls/ios/inference/LocalInference/internal-llama-stack-client-swift" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = "../../../internal-llama-stack/llama_stack/providers/impls/ios/inference/LocalInference/internal-llama-stack-client-swift";
+/* Begin XCRemoteSwiftPackageReference section */
+		5C5E31D02CA4890700A0784C /* XCRemoteSwiftPackageReference "llama-stack-client-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/meta-llama/llama-stack-client-swift";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
 		};
-/* End XCLocalSwiftPackageReference section */
+/* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		5C1051CC2CA3AA8A00112C2D /* LlamaStackClient */ = {
+		5C5E31D12CA4890700A0784C /* LlamaStackClient */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = LlamaStackClient;
-		};
-		5C200C242CA3D2E50026EA40 /* LlamaStackClient */ = {
-			isa = XCSwiftPackageProductDependency;
+			package = 5C5E31D02CA4890700A0784C /* XCRemoteSwiftPackageReference "llama-stack-client-swift" */;
 			productName = LlamaStackClient;
 		};
 /* End XCSwiftPackageProductDependency section */
