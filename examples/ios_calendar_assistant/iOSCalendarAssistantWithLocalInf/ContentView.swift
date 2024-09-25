@@ -277,8 +277,8 @@ struct ContentView: View {
       }
 
       let bundle = Bundle.main
-      let modelPath = bundle.url(forResource: "llama3_2_8da4w_32g_inference_len_2048", withExtension: "pte")?.absoluteString
-      let tokenizerPath = bundle.url(forResource: "tokenizer", withExtension: "model")?.absoluteString
+      let modelPath = bundle.url(forResource: "llama3_2_8da4w_32g_inference_len_2048", withExtension: "pte")?.relativePath
+      let tokenizerPath = bundle.url(forResource: "tokenizer", withExtension: "model")?.relativePath
       inference.loadModel(
         modelPath: modelPath!,
         tokenizerPath: tokenizerPath!,
