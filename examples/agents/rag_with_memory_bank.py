@@ -12,7 +12,7 @@ import asyncio
 import fire
 from common.client_utils import *  # noqa: F403
 
-from llama_stack_client import LlamaStack
+from llama_stack_client import LlamaStackClient
 from llama_stack_client.types import Attachment
 from llama_stack_client.types.memory_insert_params import Document
 
@@ -38,9 +38,7 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
         for i, url in enumerate(urls)
     ]
 
-    client = LlamaStack(
-        base_url=f"http://{host}:{port}",
-    )
+    client = LlamaStackClient(base_url=f"http://{host}:{port}")
     # create a memory bank
     bank = client.memory.create(
         body={
@@ -48,7 +46,7 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
             "config": {
                 "type": "vector",
                 "bank_id": "test_bank",
-                "embedding_model": "dragon-roberta-query-2",
+                "embedding_model": "all-MiniLM-L6-v2",
                 "chunk_size_in_tokens": 512,
                 "overlap_size_in_tokens": 64,
             },
@@ -63,15 +61,14 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
 
     # now run the agentic system pointing it to the pre-populated memory bank
     agent_config = await make_agent_config_with_custom_tools(
+        model="Llama3.1-8B-Instruct",
         disable_safety=disable_safety,
         tool_config=QuickToolConfig(
+            # enable memory for RAG behavior, provide appropriate bank_id
             memory_bank_id=bank["bank_id"],
-            tool_definitions=[],
-            custom_tools=[],
             attachment_behavior="rag",
         ),
     )
-    print(agent_config)
 
     await execute_turns(
         agent_config=agent_config,

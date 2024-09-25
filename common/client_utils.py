@@ -41,14 +41,23 @@ def load_api_keys_from_env() -> ApiKeys:
     )
 
 
-def search_tool_defn(api_keys: ApiKeys) -> AgentConfigToolSearchToolDefinition:
+def search_tool_defn(
+    api_keys: ApiKeys, engine="brave"
+) -> AgentConfigToolSearchToolDefinition:
     if not api_keys.brave and not api_keys.bing:
         raise ValueError("You must specify either Brave or Bing search API key")
 
+    if engine == "brave":
+        api_key = api_keys.brave
+    elif engine == "bing":
+        api_key = api_keys.bing
+    else:
+        raise ValueError(
+            f"Unknown search engine {engine}. Supported are brave and bing"
+        )
+
     return AgentConfigToolSearchToolDefinition(
-        type="bing" if api_keys.bing else "brave_search",
-        engine="bing" if api_keys.bing else "brave",
-        api_key=api_keys.bing if api_keys.bing else api_keys.brave,
+        type="brave_search", engine=engine, api_key=api_key
     )
 
 
@@ -66,9 +75,9 @@ def default_builtins(api_keys: ApiKeys) -> List[TypedDict]:
 class QuickToolConfig(BaseModel):
     tool_definitions: List[Any] = Field(default_factory=list)
     custom_tools: List[CustomTool] = Field(default_factory=list)
-    prompt_format: Literal["json", "function_tag"] = "json"
-    # use this to control whether you want the model to write code to
-    # process them, or you want to "RAG" them beforehand
+    prompt_format: Literal["json", "function_tag", "python_list"] = "json"
+    # use this to control whether you want the model to read file / write code to
+    # process them, or you want to "RAG" them beforehand (aka chunk and add to index)
     attachment_behavior: Optional[str] = None
     # if you have a memory bank already pre-populated, specify it here
     memory_bank_id: Optional[str] = None
@@ -91,7 +100,7 @@ def enable_memory_tool(cfg: QuickToolConfig) -> bool:
 # ideally be resolved by making another well-scoped utility function instead
 # of adding complex options here.
 async def make_agent_config_with_custom_tools(
-    model: str = "Meta-Llama3.1-8B-Instruct",
+    model: str = "Llama3.1-8B-Instruct",
     disable_safety: bool = False,
     tool_config: QuickToolConfig = QuickToolConfig(),
 ) -> AgentConfig:
@@ -148,7 +157,7 @@ async def make_agent_config_with_custom_tools(
     ]
 
     agent_config = AgentConfig(
-        model="Meta-Llama3.1-8B-Instruct",
+        model=model,
         instructions="You are a helpful assistant",
         sampling_params=SamplingParams(strategy="greedy", temperature=1.0, top_p=0.9),
         tools=tool_config.tool_definitions.copy(),

@@ -36,14 +36,13 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
     ]
 
     agent_config = await make_agent_config_with_custom_tools(
+        model="Llama3.1-8B-Instruct",
         disable_safety=disable_safety,
-        tool_config=QuickToolConfig(
-            tool_definitions=[],
-            custom_tools=[],
-            attachment_behavior="rag",
-        ),
+        # Enable attachements to be chunked and added to memory for RAG
+        # Very useful for long attachments that might not fit in context
+        tool_config=QuickToolConfig(attachment_behavior="rag"),
     )
-    print(agent_config)
+
     await execute_turns(
         agent_config=agent_config,
         custom_tools=[],

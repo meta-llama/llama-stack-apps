@@ -1,3 +1,9 @@
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+# All rights reserved.
+#
+# This source code is licensed under the terms described in the LICENSE file in
+# the root directory of this source tree.
+
 import asyncio
 import os
 
@@ -8,7 +14,7 @@ import gradio as gr
 from examples.agent_store.api import AgentChoice, AgentStore
 
 
-MODEL = "Meta-Llama3.1-8B-Instruct"
+MODEL = "Llama3.1-8B-Instruct"
 CHATBOT = None
 SELECTED_AGENT = None
 BANK_ID = "5f126596-87d8-4b9f-a44d-3a5b93bfc171"

@@ -33,7 +33,7 @@ class AgentWithCustomToolExecutor:
         self,
         messages: List[UserMessage],
         attachments: Optional[List[Attachment]] = None,
-        max_iters: int = 1,
+        max_iters: int = 5,
         stream: bool = True,
     ) -> AsyncGenerator:
         tools_dict = {t.get_name(): t for t in self.custom_tools}
