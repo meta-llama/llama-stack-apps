@@ -40,7 +40,7 @@ We recommend creating an isolated conda Python environment.
 
 ```bash
 # Create and activate a virtual environment
-ENV=app_env
+ENV=stack
 conda create -n $ENV python=3.10
 cd <path-to-llama-stack-apps-repo>
 conda activate $ENV
@@ -49,30 +49,24 @@ conda activate $ENV
 pip install -r requirements.txt
 ```
 
+This will install all dependencies required to (1) Build and start a Llama Stack server (2) Connect your client app to Llama Stack server.
+
 **CLI Packages**
 
-With `llama-toolchain` installed, you should be able to use the Llama Stack CLI and run `llama --help`. Please checkout our [CLI Reference](https://github.com/meta-llama/llama-stack/blob/main/docs/cli_reference.md) for more details.
+
+With `llama-stack` installed, you should be able to use the Llama Stack CLI and run `llama --help`. Please checkout our [CLI Reference](https://github.com/meta-llama/llama-stack/blob/main/docs/cli_reference.md) for more details.
 
 ```bash
-usage: llama [-h] {download,model,api,stack} ...
+usage: llama [-h] {download,model,stack} ...
 
-Welcome to the LLama cli
+Welcome to the Llama CLI
 
 options:
   -h, --help            show this help message and exit
 
 subcommands:
-  {download,model,api,stack}
+  {download,model,stack}
 ```
-
-**bubblewrap**
-
-The code execution environment uses [bubblewrap](https://github.com/containers/bubblewrap) for isolation. This may already be installed on your system; if not, it's likely in your OS's package repository.
-
-**Ollama (optional)**
-
-If you plan to use Ollama for inference, you'll need to install the server [via these instructions](https://ollama.com/download).
-
 
 ## Download Model Checkpoints
 
@@ -127,6 +121,7 @@ ollama pull llama3.1:70b-instruct-fp16
 ## Build, Configure, Run Llama Stack Distribution
 - Please see our [Getting Started Guide](https://github.com/meta-llama/llama-stack/blob/main/docs/getting_started.md) for more details on setting up a Llama Stack distribution and running server to serve API endpoints.
 
+
 ### Step 1. Build
 In the following steps, imagine we'll be working with a `Meta-Llama3.1-8B-Instruct` model. We will name our build `8b-instruct` to help us remember the config. We will start build our distribution (in the form of a Conda environment, or Docker image). In this step, we will specify:
 - `name`: the name for our distribution (e.g. `8b-instruct`)
@@ -139,77 +134,61 @@ In the following steps, imagine we'll be working with a `Meta-Llama3.1-8B-Instru
 #### Build a local distribution with conda
 The following command and specifications allows you to get started with building.
 ```
-llama stack build <path/to/config>
+llama stack build
 ```
-- You will be required to pass in a file path to the build.config file (e.g. `./llama_stack/configs/distributions/conda/local-conda-example-build.yaml`). We provide some example build config files for configuring different types of distributions in the `./llama_stack/configs/distributions/` folder.
+- You'll be prompted to enter build information interactively.
+```
+llama stack build
 
-The file will be of the contents
-```
-$ cat ./llama_stack/configs/distributions/conda/local-conda-example-build.yaml
+> Enter an unique name for identifying your Llama Stack build distribution (e.g. my-local-stack): 8b-instruct
+> Enter the image type you want your distribution to be built with (docker or conda): conda
 
-name: 8b-instruct
-distribution_spec:
-  distribution_type: local
-  description: Use code from `llama_stack` itself to serve all llama stack APIs
-  docker_image: null
-  providers:
-    inference: meta-reference
-    memory: meta-reference-faiss
-    safety: meta-reference
-    agentic_system: meta-reference
-    telemetry: console
-image_type: conda
-```
+ Llama Stack is composed of several APIs working together. Let's configure the providers (implementations) you want to use for these APIs.
+> Enter the API provider for the inference API: (default=meta-reference): meta-reference
+> Enter the API provider for the safety API: (default=meta-reference): meta-reference
+> Enter the API provider for the agents API: (default=meta-reference): meta-reference
+> Enter the API provider for the memory API: (default=meta-reference): meta-reference
+> Enter the API provider for the telemetry API: (default=meta-reference): meta-reference
 
-You may run the `llama stack build` command to generate your distribution with `--name` to override the name for your distribution.
-```
-$ llama stack build ~/.llama/distributions/conda/8b-instruct-build.yaml --name 8b-instruct
-...
-...
-Build spec configuration saved at ~/.llama/distributions/conda/8b-instruct-build.yaml
+ > (Optional) Enter a short description for your Llama Stack distribution:
+
+Build spec configuration saved at ~/.conda/envs/llamastack-my-local-stack/8b-instruct-build.yaml
+You can now run `llama stack configure my-local-stack`
 ```
 
-After this step is complete, a file named `8b-instruct-build.yaml` will be generated and saved at `~/.llama/distributions/conda/8b-instruct-build.yaml`.
+#### (Alternative) Downloading Pre-built Docker image
 
+We provide 2 pre-built Docker image of Llama Stack distribution, which can be found in the following links.
+- [llamastack-local-gpu](https://hub.docker.com/repository/docker/llamastack/llamastack-local-gpu/general)
+  - This is a packaged version with our local meta-reference implementations, where you will be running inference locally with downloaded Llama model checkpoints.
+- [llamastack-local-cpu](https://hub.docker.com/repository/docker/llamastack/llamastack-local-cpu/general)
+   - This is a lite version with remote inference where you can hook up to your favourite remote inference framework (e.g. ollama, fireworks, together, tgi) for running inference without GPU.
 
-#### How to build distribution with different API providers using configs
-To specify a different API provider, we can change the `distribution_spec` in our `<name>-build.yaml` config. For example, the following build spec allows you to build a distribution using TGI as the inference API provider.
-
+> [!NOTE]
+> For GPU inference, you need to set these environment variables for specifying local directory containing your model checkpoints, and enable GPU inference to start running docker container.
 ```
-$ cat ./llama_stack/configs/distributions/conda/local-tgi-conda-example-build.yaml
-
-name: local-tgi-conda-example
-distribution_spec:
-  description: Use TGI (local or with Hugging Face Inference Endpoints for running LLM inference. When using HF Inference Endpoints, you must provide the name of the endpoint).
-  docker_image: null
-  providers:
-    inference: remote::tgi
-    memory: meta-reference-faiss
-    safety: meta-reference
-    agentic_system: meta-reference
-    telemetry: console
-image_type: conda
+export LLAMA_CHECKPOINT_DIR=~/.llama
 ```
 
-The following command allows you to build a distribution with TGI as the inference API provider, with the name `tgi`.
-```
-llama stack build --config ./llama_stack/configs/distributions/conda/local-tgi-conda-example-build.yaml --name tgi
-```
 
-We provide some example build configs to help you get started with building with different API providers.
-
+To download and start running a pre-built docker container, you may use the following commands:
+```
+docker image pull llamastack/llamastack-local-gpu
+llama stack configure llamastack-local-gpu
+llama stack run local-gpu
+```
 
 ### Step 2. Configure
 After our distribution is built (either in form of docker or conda environment), we will run the following command to
 ```
-llama stack configure [<path/to/name.build.yaml> | <docker-image-name>]
+llama stack configure [<name> | <path/to/name.build.yaml> | <docker-image-name>]
 ```
 - For `conda` environments: <path/to/name.build.yaml> would be the generated build spec saved from Step 1.
 - For `docker` images downloaded from Dockerhub, you could also use <docker-image-name> as the argument.
    - Run `docker images` to check list of available images on your machine.
 
 ```
-$ llama stack configure ~/.llama/distributions/conda/8b-instruct-build.yaml
+$ llama stack configure 8b-instruct
 
 Configuring API: inference (meta-reference)
 Enter value for model (existing: Meta-Llama3.1-8B-Instruct) (required):
@@ -257,13 +236,13 @@ Note that all configurations as well as models are stored in `~/.llama`
 Now, let's start the Llama Stack Distribution Server. You will need the YAML configuration file which was written out at the end by the `llama stack configure` step.
 
 ```
-llama stack run ~/.llama/builds/conda/8b-instruct-run.yaml
+llama stack run 8b-instruct
 ```
 
 You should see the Llama Stack server start and print the APIs that it is supporting
 
 ```
-$ llama stack run ~/.llama/builds/local/conda/8b-instruct.yaml
+$ llama stack run 8b-instruct
 
 > initializing model parallel with size 1
 > initializing ddp with size 1
@@ -304,7 +283,31 @@ INFO:     Uvicorn running on http://[::]:5000 (Press CTRL+C to quit)
 
 This server is running a Llama model locally.
 
+## Test agents demo script
 
+We have built sample demo scripts for interating with the Stack server.
+
+With the server running, you may run to test out an simple Agent
+```
+python -m examples.agents.hello localhost 5000
+```
+
+You will see outputs of the form --
+```
+> created agents with agent_id=d050201b-0ca1-4abd-8eee-3cba2b8c0fbc
+User> Hello
+shield_call> No Violation
+inference> How can I assist you today?
+shield_call> No Violation
+User> Which players played in the winning team of the NBA western conference semifinals of 2024, please use tools
+shield_call> No Violation
+inference> brave_search.call(query="NBA Western Conference Semifinals 2024 winning team players")
+tool_execution> Tool:brave_search Args:{'query': 'NBA Western Conference Semifinals 2024 winning team players'}
+tool_execution> Tool:brave_search Response:{"query": "NBA Western Conference Semifinals 2024 winning team players", "top_k": [{"title": "2024 NBA Western Conference Semifinals - Mavericks vs. Thunder | Basketball-Reference.com", "url": "https://www.basketball-reference.com/playoffs/2024-nba-western-conference-semifinals-mavericks-vs-thunder.html", "description": "Summary and statistics for the <strong>2024</strong> <strong>NBA</strong> <strong>Western</strong> <strong>Conference</strong> <strong>Semifinals</strong> - Mavericks vs. Thunder", "type": "search_result"}, {"title": "2024 NBA playoffs - Wikipedia", "url": "https://en.wikipedia.org/wiki/2024_NBA_playoffs", "description": "Aged 20 years and 96 days old, ... youngest <strong>player</strong> <strong>in</strong> <strong>NBA</strong> history to record 10+ points and 15+ rebounds in a playoff game, coming during game 6 of the Maverick&#x27;s <strong>Western</strong> <strong>Conference</strong> <strong>Semifinal</strong> <strong>win</strong> against the Thunder on May 18. The Timberwolves overcame a 20\u2013point deficit to <strong>win</strong> game 7 against the Nuggets, the largest game 7 comeback in <strong>NBA</strong> playoffs history. With the defending champion Nuggets losing to the Minnesota Timberwolves, the <strong>2024</strong> playoffs marked ...", "type": "search_result"}, {"title": "2024 NBA Playoffs | Official Bracket, Schedule and Series Matchups", "url": "https://www.nba.com/playoffs/2024", "description": "The official site of the <strong>2024</strong> <strong>NBA</strong> Playoffs. Latest news, schedules, matchups, highlights, bracket and more.", "type": "search_result"}]}
+shield_call> No Violation
+inference> The players who played in the winning team of the NBA Western Conference Semifinals of 2024 are not specified in the search results provided. However, the search results suggest that the Mavericks played against the Thunder in the Western Conference Semifinals, and the Mavericks won the series.
+shield_call> No Violation
+```
 
 ## Start an App and Interact with the Server
 
@@ -314,7 +317,7 @@ We have built sample scripts, notebooks and a UI chat interface ( using [Mesop](
 
 Start an app (local) and interact with it by running the following command:
 ```bash
-mesop app/main.py
+PYTHONPATH=. mesop app/main.py
 ```
 This will start a mesop app and you can go to `localhost:32123` to play with the chat interface.
 
@@ -335,7 +338,7 @@ NOTE: Ensure that Stack server is still running.
 ```bash
 cd <path-to-llama-agentic-system>
 conda activate $ENV
-llama stack run local-ollama --name 8b --port 5000 # If not already started
+llama stack run <name> # If not already started
 
 PYTHONPATH=. python examples/scripts/vacation.py localhost 5000
 ```

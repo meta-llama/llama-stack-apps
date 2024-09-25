@@ -24,28 +24,22 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
     api_keys = load_api_keys_from_env()
     tool_definitions = [
         search_tool_defn(api_keys),
-        AgentConfigToolWolframAlphaToolDefinition(
-            type="wolfram_alpha",
-            api_key=api_keys.wolfram_alpha,
-        ),
+        # Adding code_interpreter enables file analysis
         AgentConfigToolCodeInterpreterToolDefinition(type="code_interpreter"),
     ]
-
-    # add ticker data as custom tool
-    custom_tools = [TickerDataTool()]
 
     agent_config = await make_agent_config_with_custom_tools(
         disable_safety=disable_safety,
         tool_config=QuickToolConfig(
             tool_definitions=tool_definitions,
-            custom_tools=custom_tools,
+            custom_tools=[],
             attachment_behavior="code_interpreter",
         ),
     )
 
     await execute_turns(
         agent_config=agent_config,
-        custom_tools=custom_tools,
+        custom_tools=[],
         turn_inputs=[
             prompt_to_turn(
                 "Here is a csv, can you describe it ?",
@@ -61,12 +55,6 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
                 "What macro economic situations that led to such high inflation in that period?"
             ),
             prompt_to_turn("Plot average yearly inflation as a time series"),
-            prompt_to_turn(
-                "Using provided functions, get ticker data for META for the past 10 years?"
-            ),
-            prompt_to_turn(
-                "Can you take Meta's year over year growth data and put it in the same inflation timeseries as above ?"
-            ),
         ],
         host=host,
         port=port,

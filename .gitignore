@@ -160,3 +160,9 @@ cython_debug/
 #.idea/
 
 app/uploads/
+
+# iOS
+.DS_Store
+xcuserdata/
+*.pte
+*.model

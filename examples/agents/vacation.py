@@ -26,6 +26,7 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
         search_tool_defn(api_keys),
     ]
     agent_config = await make_agent_config_with_custom_tools(
+        model="Llama3.1-8B-Instruct",
         disable_safety=disable_safety,
         tool_config=QuickToolConfig(
             tool_definitions=tool_definitions,

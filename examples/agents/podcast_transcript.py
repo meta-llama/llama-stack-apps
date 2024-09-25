@@ -21,24 +21,22 @@ from .multi_turn import execute_turns, prompt_to_turn
 
 async def run_main(host: str, port: int, disable_safety: bool = False):
     api_keys = load_api_keys_from_env()
-    tool_definitions = [
-        search_tool_defn(api_keys),
-        AgentConfigToolWolframAlphaToolDefinition(
-            type="wolfram_alpha",
-            api_key=api_keys.wolfram_alpha,
-        ),
-        AgentConfigToolCodeInterpreterToolDefinition(type="code_interpreter"),
-    ]
     agent_config = await make_agent_config_with_custom_tools(
+        model="Llama3.1-8B-Instruct",
         disable_safety=disable_safety,
         tool_config=QuickToolConfig(
-            tool_definitions=tool_definitions,
+            # Enable builtin tools
+            tool_definitions=[
+                # web search ( search the web for current info)
+                search_tool_defn(api_keys),
+                # code interpreter (allowing for loading attachements and reading them)
+                AgentConfigToolCodeInterpreterToolDefinition(type="code_interpreter"),
+            ],
             custom_tools=[],
+            # Enables file ananlysis mode ( instead of RAG mode )
             attachment_behavior="code_interpreter",
         ),
     )
-
-    print(agent_config)
 
     transcript_path = "https://raw.githubusercontent.com/meta-llama/llama-stack-apps/main/examples/resources/transcript_shorter.txt"
 

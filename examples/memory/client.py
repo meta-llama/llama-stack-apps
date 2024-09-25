@@ -1,3 +1,9 @@
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+# All rights reserved.
+#
+# This source code is licensed under the terms described in the LICENSE file in
+# the root directory of this source tree.
+
 import asyncio
 import base64
 import json
@@ -39,7 +45,7 @@ async def run_main(host: str, port: int, stream: bool = True):
             "config": {
                 "type": "vector",
                 "bank_id": "test_bank",
-                "embedding_model": "dragon-roberta-query-2",
+                "embedding_model": "all-MiniLM-L6-v2",
                 "chunk_size_in_tokens": 512,
                 "overlap_size_in_tokens": 64,
             },
