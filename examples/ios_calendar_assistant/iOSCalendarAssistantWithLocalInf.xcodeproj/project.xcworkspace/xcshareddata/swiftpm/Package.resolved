@@ -1,5 +1,5 @@
 {
-  "originHash" : "b91397087adb6188ac0fad092436deabeb52b103e743cc42049b9edc161a5268",
+  "originHash" : "7337b6207c0401c56bdb17b83ac67fcf6be8dbe52e4db90f1b31936d7624dafb",
   "pins" : [
     {
       "identity" : "executorch",
@@ -8,6 +8,15 @@
       "state" : {
         "branch" : "latest",
         "revision" : "308512d938b2b6bb97d18f83e950d2765b053581"
+      }
+    },
+    {
+      "identity" : "llama-stack-client-swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/meta-llama/llama-stack-client-swift",
+      "state" : {
+        "branch" : "main",
+        "revision" : "133ee7832624601aee6d0633726fbdaeaeed015c"
       }
     },
     {
