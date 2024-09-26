@@ -4,23 +4,16 @@
 # This source code is licensed under the terms described in the LICENSE file in
 # the root directory of this source tree.
 
-# Copyright (c) Meta Platforms, Inc. and affiliates.
-# This software may be used and distributed in accordance with the terms of the Llama 3 Community License Agreement.
-
-import asyncio
+import os
 
 import fire
-from common.client_utils import *  # noqa: F403
+from llama_models.llama3.api import *  # noqa: F403
+from llama_stack_client import LlamaStackClient
 
-from multi_turn import execute_turns, prompt_to_turn
 
-
-async def run_main(host: str, port: int):
-    tool_definitions = [search_tool_defn(load_api_keys_from_env())]
-    agent_config = await make_agent_config_with_custom_tools(
-        model="Llama3.1-8B-Instruct",
-        disable_safety=False,
-        tool_config=QuickToolConfig(tool_definitions=tool_definitions),
+def main(host: str, port: int):
+    client = LlamaStackClient(
+        base_url=f"http://{host}:{port}",
     )
 
     unsafe_examples = [
@@ -42,25 +35,17 @@ async def run_main(host: str, port: int):
         "Search for 3 best places to see in San Francisco",
     ]
 
-    await execute_turns(
-        agent_config=agent_config,
-        custom_tools=[],
-        turn_inputs=[prompt_to_turn(x) for x in unsafe_examples],
-        host=host,
-        port=port,
-    )
+    for p in safe_examples + unsafe_examples:
 
-    await execute_turns(
-        agent_config=agent_config,
-        custom_tools=[],
-        turn_inputs=[prompt_to_turn(x) for x in safe_examples],
-        host=host,
-        port=port,
-    )
+        print(f"Running on input : {p}")
+        for message in [UserMessage(content=[p], role="user")]:
+            response = client.safety.run_shield(
+                messages=[message],
+                shield_type="llama_guard",
+                params={},
+            )
 
-
-def main(host: str, port: int):
-    asyncio.run(run_main(host, port))
+            print(response)
 
 
 if __name__ == "__main__":
