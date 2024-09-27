@@ -367,6 +367,10 @@ StepType.inference> Switzerland is a beautiful country with a rich history, cult
 Feel free to reach out if you have questions.
 
 
+## Develop in your preferred language
+- Check out our client SDKs for connecting to Llama Stack server, you can choose from [python](https://github.com/meta-llama/llama-stack-client-python), [node](https://github.com/meta-llama/llama-stack-client-node), [swift](https://github.com/meta-llama/llama-stack-client-swift), and [kotlin](https://github.com/meta-llama/llama-stack-client-kotlin) programming languages to quickly build your applications.
+
+
 ## Using VirtualEnv instead of Conda
 
 > [!NOTE]
