@@ -75,10 +75,10 @@ subcommands:
 Download the required checkpoints using the following commands:
 ```bash
 # download the 8B model, this can be run on a single GPU
-llama download --source meta --model-id Meta-Llama3.1-8B-Instruct --meta-url META_URL
+llama download --source meta --model-id Llama3.1-8B-Instruct --meta-url META_URL
 
 # you can also get the 70B model, this will require 8 GPUs however
-llama download --source meta --model-id Meta-Llama3.1-70B-Instruct --meta-url META_URL
+llama download --source meta --model-id Llama3.1-70B-Instruct --meta-url META_URL
 
 # llama-agents have safety enabled by default. For this, you will need
 # safety models -- Llama-Guard and Prompt-Guard
