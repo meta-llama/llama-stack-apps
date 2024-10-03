@@ -7,5 +7,5 @@ setuptools
 uvicorn
 yfinance
 gradio
-llama-stack>=0.0.38
+llama-stack>=0.0.39
 llama-stack-client
