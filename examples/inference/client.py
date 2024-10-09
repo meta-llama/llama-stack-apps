@@ -34,8 +34,11 @@ async def run_main(host: str, port: int, stream: bool = True):
         stream=stream,
     )
 
-    async for log in EventLogger().log(iterator):
-        log.print()
+    if stream:
+        cprint("> Assistant", "cyan")
+    else:
+        async for log in EventLogger().log(iterator):
+            log.print()
 
     # query models endpoint
     models_response = client.models.list()
