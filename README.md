@@ -313,7 +313,7 @@ shield_call> No Violation
 
 Now that the Stack server is setup, the next thing would be to run an agentic app using Agents APIs.
 
-We have built sample scripts, notebooks and a UI chat interface ( using [Mesop]([url](https://google.github.io/mesop/)) ! ) to help you get started.
+We have built sample scripts, notebooks and a UI chat interface ( using [Gradio]([url](https://www.gradio.app/)) ! ) to help you get started.
 
 Start an app (local) and interact with it by running the following command:
 ```bash
