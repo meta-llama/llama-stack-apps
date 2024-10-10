@@ -309,6 +309,26 @@ inference> The players who played in the winning team of the NBA Western Confere
 shield_call> No Violation
 ```
 
+## Start an App and Interact with the Server
+
+Now that the Stack server is setup, the next thing would be to run an agentic app using Agents APIs.
+
+We have built sample scripts, notebooks and a UI chat interface ( using [Mesop]([url](https://google.github.io/mesop/)) ! ) to help you get started.
+
+Start an app (local) and interact with it by running the following command:
+```bash
+PYTHONPATH=. python examples/agent_store/app.py localhost 5000
+```
+This will start a mesop app and you can go to `localhost:7860` to play with the chat interface.
+
+<img src="demo.png" alt="Chat App" width="600"/>
+
+Optionally, you can setup API keys for custom tools:
+- [WolframAlpha](https://developer.wolframalpha.com/): store in `WOLFRAM_ALPHA_API_KEY` environment variable
+- [Brave Search](https://brave.com/search/api/): store in `BRAVE_SEARCH_API_KEY` environment variable
+
+You may see other ways of interating in [Agent Store README.md](https://github.com/meta-llama/llama-stack-apps/tree/registry/examples/agent_store)
+
 ## Create agentic systems and interact with the Stack server
 
 NOTE: Ensure that Stack server is still running.
