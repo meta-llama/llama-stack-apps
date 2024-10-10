@@ -313,13 +313,13 @@ shield_call> No Violation
 
 Now that the Stack server is setup, the next thing would be to run an agentic app using Agents APIs.
 
-We have built sample scripts, notebooks and a UI chat interface ( using [Mesop]([url](https://google.github.io/mesop/)) ! ) to help you get started.
+We have built sample scripts, notebooks and a UI chat interface ( using [Gradio]([url](https://www.gradio.app/)) ! ) to help you get started.
 
 Start an app (local) and interact with it by running the following command:
 ```bash
-PYTHONPATH=. mesop app/main.py
+PYTHONPATH=. python examples/agent_store/app.py localhost 5000
 ```
-This will start a mesop app and you can go to `localhost:32123` to play with the chat interface.
+This will start a mesop app and you can go to `localhost:7860` to play with the chat interface.
 
 <img src="demo.png" alt="Chat App" width="600"/>
 
@@ -327,9 +327,7 @@ Optionally, you can setup API keys for custom tools:
 - [WolframAlpha](https://developer.wolframalpha.com/): store in `WOLFRAM_ALPHA_API_KEY` environment variable
 - [Brave Search](https://brave.com/search/api/): store in `BRAVE_SEARCH_API_KEY` environment variable
 
-Similar to this main app, you can also try other variants
-- `PYTHONPATH=. mesop app/chat_with_custom_tools.py`  to showcase how custom tools are integrated
-- `PYTHONPATH=. mesop app/chat_moderation_with_llama_guard.py`  to showcase how the app is modified to act as a chat moderator for safety
+You may see other ways of interating in [Agent Store README.md](https://github.com/meta-llama/llama-stack-apps/tree/registry/examples/agent_store)
 
 ## Create agentic systems and interact with the Stack server
 

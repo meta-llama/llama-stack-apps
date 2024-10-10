@@ -14,7 +14,7 @@ from llama_stack_client.types.agent_create_params import (
     AgentConfigToolMemoryToolDefinitionMemoryBankConfigUnionMember0,
     AgentConfigToolSearchToolDefinition,
 )
-from llama_stack_client.types.agents import AgentsTurnStreamChunk
+from llama_stack_client.types.agents.agents_turn_stream_chunk import AgentsTurnStreamChunk
 from llama_stack_client.types.memory_insert_params import Document
 from termcolor import cprint
 
@@ -48,21 +48,20 @@ class AgentStore:
         self.bank_ids = bank_ids
         self.agents[AgentChoice.Memory] = await self.get_agent(
             agent_type=AgentChoice.Memory,
-            agent_params={"bank_ids": self.bank_ids + [self.live_bank["bank_id"]]},
+            agent_params={"bank_ids": self.bank_ids + [self.live_bank]},
         )
         self.create_session(AgentChoice.Memory)
 
     def create_live_bank(self):
-        self.live_bank = self.client.memory.create(
-            body={
-                "name": "live_bank",
-                "config": {
-                    "bank_id": "live_bank",
-                    "embedding_model": "all-MiniLM-L6-v2",
-                    "chunk_size_in_tokens": 512,
-                    "overlap_size_in_tokens": 64,
-                },
-            },
+        self.live_bank = "live_bank"
+        self.client.memory_banks.register(
+            memory_bank={
+                "identifier": self.live_bank,
+                "embedding_model": "all-MiniLM-L6-v2",
+                "chunk_size_in_tokens": 512,
+                "overlap_size_in_tokens": 64,
+                "provider_id": "meta-reference",
+            }
         )
         # FIXME: To avoid empty banks
         self.append_to_live_memory_bank(
@@ -159,7 +158,7 @@ class AgentStore:
     def create_session(self, agent_choice: str) -> str:
         agent_id = self.agents[agent_choice]
         self.first_turn[agent_id] = True
-        response = self.client.agents.sessions.create(
+        response = self.client.agents.session.create(
             agent_id=agent_id,
             session_name=f"Session-{uuid.uuid4()}",
         )
@@ -181,7 +180,16 @@ class AgentStore:
                 },
             },
         )
-        cprint(f"Created bank: {json.dumps(bank, indent=4)}", color="green")
+        client.memory_banks.register(
+            memory_bank={
+                "identifier": "memory_bank",
+                "embedding_model": "all-MiniLM-L6-v2",
+                "chunk_size_in_tokens": 512,
+                "overlap_size_in_tokens": 64,
+                "provider_id": "meta-reference",
+            }
+        )
+        # cprint(f"Created bank: {json.dumps(bank, indent=4)}", color="green")
 
         # 2. load pdfs from directory as raw text
         paths = []
@@ -198,9 +206,9 @@ class AgentStore:
             for path in paths
         ]
         # insert some documents
-        self.client.memory.insert(bank_id=bank["bank_id"], documents=documents)
+        self.client.memory.insert(bank_id="memory_bank", documents=documents)
 
-        return bank["bank_id"]
+        return "memory_bank"
 
     async def chat(self, agent_choice, message, attachments) -> str:
         assert (
@@ -229,7 +237,7 @@ class AgentStore:
                     )
                 )
         messages.append(UserMessage(role="user", content=message))
-        generator = self.client.agents.turns.create(
+        generator = self.client.agents.turn.create(
             agent_id=self.agents[agent_choice],
             session_id=self.sessions[agent_choice],
             messages=messages,
@@ -237,8 +245,6 @@ class AgentStore:
             stream=True,
         )
         for chunk in generator:
-            if not isinstance(chunk, AgentsTurnStreamChunk):
-                continue
             event = chunk.event
             event_type = event.payload.event_type
             # FIXME: Use the correct event type
@@ -261,7 +267,7 @@ class AgentStore:
             content=text,
         )
         self.client.memory.insert(
-            bank_id=self.live_bank["bank_id"], documents=[document]
+            bank_id=self.live_bank, documents=[document]
         )
 
     async def clear_live_bank(self) -> None:
@@ -270,6 +276,6 @@ class AgentStore:
         self.live_bank = self.create_live_bank()
         self.agents[AgentChoice.Memory] = await self.get_agent(
             agent_type=AgentChoice.Memory,
-            agent_params={"bank_ids": self.bank_ids + [self.live_bank["bank_id"]]},
+            agent_params={"bank_ids": self.bank_ids + [self.live_bank]},
         )
         self.create_session(AgentChoice.Memory)

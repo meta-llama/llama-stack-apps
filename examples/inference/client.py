@@ -23,7 +23,7 @@ async def run_main(host: str, port: int, stream: bool = True):
         content="hello world, write me a 2 sentence poem about the moon", role="user"
     )
     cprint(f"User>{message.content}", "green")
-    iterator = client.inference.chat_completion(
+    response = client.inference.chat_completion(
         messages=[
             UserMessage(
                 content="hello world, write me a 2 sentence poem about the moon",
@@ -34,8 +34,11 @@ async def run_main(host: str, port: int, stream: bool = True):
         stream=stream,
     )
 
-    async for log in EventLogger().log(iterator):
-        log.print()
+    if not stream:
+        cprint(f"> Response: {response}", "cyan")
+    else:
+        async for log in EventLogger().log(response):
+            log.print()
 
     # query models endpoint
     models_response = client.models.list()

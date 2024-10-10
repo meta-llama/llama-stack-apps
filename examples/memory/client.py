@@ -39,24 +39,19 @@ async def run_main(host: str, port: int, stream: bool = True):
     )
 
     # create a memory bank
-    bank = client.memory.create(
-        body={
-            "name": "test_bank",
-            "config": {
-                "type": "vector",
-                "bank_id": "test_bank",
-                "embedding_model": "all-MiniLM-L6-v2",
-                "chunk_size_in_tokens": 512,
-                "overlap_size_in_tokens": 64,
-            },
-        },
+    client.memory_banks.register(
+        memory_bank={
+            "identifier": "test_bank",
+            "embedding_model": "all-MiniLM-L6-v2",
+            "chunk_size_in_tokens": 512,
+            "overlap_size_in_tokens": 64,
+            "provider_id": "meta-reference",
+        }
     )
-    cprint(f"> /memory/create: {bank}", "green")
 
-    retrieved_bank = client.memory.retrieve(
-        bank_id=bank["bank_id"],
-    )
-    cprint(f"> /memory/get: {retrieved_bank}", "blue")
+    # list to check memory bank is successfully registered
+    memory_banks_response = client.memory_banks.list()
+    cprint(f"> /memory_banks/list: {memory_banks_response}", "blue")
 
     urls = [
         "memory_optimizations.rst",
@@ -89,13 +84,13 @@ async def run_main(host: str, port: int, stream: bool = True):
 
     # insert some documents
     client.memory.insert(
-        bank_id=bank["bank_id"],
+        bank_id="test_bank",
         documents=documents,
     )
 
     # query the documents
     response = client.memory.query(
-        bank_id=bank["bank_id"],
+        bank_id="test_bank",
         query=[
             "How do I use lora",
         ],
@@ -105,7 +100,7 @@ async def run_main(host: str, port: int, stream: bool = True):
         print(f"Chunk:\n========\n{chunk}\n========\n")
 
     response = client.memory.query(
-        bank_id=bank["bank_id"],
+        bank_id="test_bank",
         query=[
             "Tell me more about llama3 and torchtune",
         ],
@@ -115,7 +110,7 @@ async def run_main(host: str, port: int, stream: bool = True):
         print(f"Chunk:\n========\n{chunk}\n========\n")
 
     response = client.memory.query(
-        bank_id=bank["bank_id"],
+        bank_id="test_bank",
         query=[
             "Tell me more about llama models",
         ],
