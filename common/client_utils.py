@@ -187,7 +187,7 @@ async def get_agent_with_custom_tools(
     cprint(f"> created agents with agent_id={agent_id}", "green")
 
     name = f"Session-{uuid.uuid4()}"
-    session_response = client.agents.sessions.create(
+    session_response = client.agents.session.create(
         agent_id=agent_id,
         session_name=name,
     )

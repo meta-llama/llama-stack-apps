@@ -48,21 +48,20 @@ class AgentStore:
         self.bank_ids = bank_ids
         self.agents[AgentChoice.Memory] = await self.get_agent(
             agent_type=AgentChoice.Memory,
-            agent_params={"bank_ids": self.bank_ids + [self.live_bank["bank_id"]]},
+            agent_params={"bank_ids": self.bank_ids + [self.live_bank]},
         )
         self.create_session(AgentChoice.Memory)
 
     def create_live_bank(self):
-        self.live_bank = self.client.memory.create(
-            body={
-                "name": "live_bank",
-                "config": {
-                    "bank_id": "live_bank",
-                    "embedding_model": "all-MiniLM-L6-v2",
-                    "chunk_size_in_tokens": 512,
-                    "overlap_size_in_tokens": 64,
-                },
-            },
+        self.live_bank = "live_bank"
+        self.client.memory_banks.register(
+            memory_bank={
+                "identifier": self.live_bank,
+                "embedding_model": "all-MiniLM-L6-v2",
+                "chunk_size_in_tokens": 512,
+                "overlap_size_in_tokens": 64,
+                "provider_id": "meta-reference",
+            }
         )
         # FIXME: To avoid empty banks
         self.append_to_live_memory_bank(
@@ -261,7 +260,7 @@ class AgentStore:
             content=text,
         )
         self.client.memory.insert(
-            bank_id=self.live_bank["bank_id"], documents=[document]
+            bank_id=self.live_bank, documents=[document]
         )
 
     async def clear_live_bank(self) -> None:
@@ -270,6 +269,6 @@ class AgentStore:
         self.live_bank = self.create_live_bank()
         self.agents[AgentChoice.Memory] = await self.get_agent(
             agent_type=AgentChoice.Memory,
-            agent_params={"bank_ids": self.bank_ids + [self.live_bank["bank_id"]]},
+            agent_params={"bank_ids": self.bank_ids + [self.live_bank]},
         )
         self.create_session(AgentChoice.Memory)

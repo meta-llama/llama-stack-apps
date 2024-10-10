@@ -15,11 +15,11 @@ from common.client_utils import *  # noqa: F403
 from llama_stack_client import LlamaStackClient
 from llama_stack_client.lib.agents.event_logger import EventLogger
 
-from llama_stack_client.types import SamplingParams, UserMessage
+from llama_stack_client.types import *  # noqa: F403
 from llama_stack_client.types.agent_create_params import AgentConfig
 from termcolor import cprint
 
-from .multi_turn import execute_turns, prompt_to_turn
+from .multi_turn import *  # noqa: F403
 
 
 class Agent:
@@ -33,14 +33,14 @@ class Agent:
             agent_config=agent_config,
         )
         self.agent_id = agentic_system_create_response.agent_id
-        agentic_system_create_session_response = self.client.agents.sessions.create(
+        agentic_system_create_session_response = self.client.agents.session.create(
             agent_id=agentic_system_create_response.agent_id,
             session_name="test_session",
         )
         self.session_id = agentic_system_create_session_response.session_id
 
     async def execute_turn(self, content: str):
-        response = self.client.agents.turns.create(
+        response = self.client.agents.turn.create(
             agent_id=self.agent_id,
             session_id=self.session_id,
             messages=[
@@ -48,7 +48,6 @@ class Agent:
             ],
             stream=True,
         )
-
         for chunk in response:
             if chunk.event.payload.event_type != "turn_complete":
                 yield chunk

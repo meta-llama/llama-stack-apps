@@ -43,7 +43,7 @@ class AgentWithCustomToolExecutor:
 
         while n_iter < max_iters:
             n_iter += 1
-            response = self.client.agents.turns.create(
+            response = self.client.agents.turn.create(
                 agent_id=self.agent_id,
                 session_id=self.session_id,
                 messages=current_messages,
