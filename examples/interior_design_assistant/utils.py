@@ -27,13 +27,13 @@ def create_single_turn(client, agent_config, messages):
     response = client.agents.create(agent_config=agent_config)
     agent_id = response.agent_id
 
-    response = client.agents.sessions.create(
+    response = client.agents.session.create(
         agent_id=agent_id,
         session_name=uuid.uuid4().hex,
     )
     session_id = response.session_id
 
-    generator = client.agents.turns.create(
+    generator = client.agents.turn.create(
         agent_id=agent_id,
         session_id=session_id,
         messages=messages,

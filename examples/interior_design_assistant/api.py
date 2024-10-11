@@ -28,7 +28,7 @@ from llama_stack_client.types.agent_create_params import (
     AgentConfig,
     AgentConfigToolMemoryToolDefinition,
 )
-from llama_stack_client.types.agents import AgentsTurnStreamChunk
+from llama_stack_client.types.agents.agents_turn_stream_chunk import AgentsTurnStreamChunk
 from llama_stack_client.types.memory_insert_params import Document
 from termcolor import cprint
 
@@ -86,7 +86,7 @@ class InterioAgent:
             Return JSON as suggested, Do not return any other text or explanations.
             """
         )
-        resposne = self.client.agents.sessions.create(
+        resposne = self.client.agents.session.create(
             agent_id=self.agent_id,
             session_name=uuid.uuid4().hex,
         )
@@ -97,7 +97,7 @@ class InterioAgent:
             "content": [{"image": {"uri": data_url}}, text],
         }
 
-        generator = self.client.agents.turns.create(
+        generator = self.client.agents.turn.create(
             agent_id=self.agent_id,
             session_id=resposne.session_id,
             messages=[message],
@@ -110,8 +110,9 @@ class InterioAgent:
             if payload.event_type == "turn_complete":
                 turn = payload.turn
                 break
-
-        result = turn["output_message"]["content"]
+                
+        # print(turn.output_message.content)
+        result = turn.output_message.content
         d = json.loads(result.strip())
         return d
 
@@ -140,11 +141,11 @@ class InterioAgent:
                 }},
                 {{
                     "description": second alternative suggestion of the item
-                }}
+                }},
             ]
 
             Only provide {n} alternative descriptions, nothing else.
-            Return JSON as suggested, Do not return any other text or explanations.
+            Return JSON as suggested, Do not return any other text or explanations. Don't forget the ',' at the end of each description.
             """
         )
 
@@ -156,11 +157,11 @@ class InterioAgent:
             "content": [{"image": {"uri": data_url}}, text],
         }
 
-        resposne = self.client.agents.sessions.create(
+        resposne = self.client.agents.session.create(
             agent_id=self.agent_id,
             session_name=uuid.uuid4().hex,
         )
-        generator = self.client.agents.turns.create(
+        generator = self.client.agents.turn.create(
             agent_id=self.agent_id,
             session_id=resposne.session_id,
             messages=[message],
@@ -172,7 +173,8 @@ class InterioAgent:
             if payload.event_type == "turn_complete":
                 turn = payload.turn
 
-        result = turn["output_message"]["content"]
+        result = turn.output_message.content
+        print(result)
         return [r["description"].strip() for r in json.loads(result.strip())]
 
     async def retrieve_images(self, description: str) -> List[ImageMedia]:
@@ -258,19 +260,17 @@ class InterioAgent:
         """
         Build a memory bank that can be used to store and retrieve images.
         """
-        bank = self.client.memory.create(
-            body={
-                "name": "interio_bank",
-                "config": {
-                    "bank_id": "memory_bank",
-                    "embedding_model": "all-MiniLM-L6-v2",
-                    "chunk_size_in_tokens": 512,
-                    "overlap_size_in_tokens": 64,
-                },
+        self.live_bank = "interio_bank"
+        self.client.memory_banks.register(
+            memory_bank={
+                "identifier": self.live_bank,
+                "embedding_model": "all-MiniLM-L6-v2",
+                "chunk_size_in_tokens": 512,
+                "overlap_size_in_tokens": 64,
+                "provider_id": "meta-reference",
             }
         )
-        cprint(f"Created bank: {json.dumps(bank, indent=4)}", color="green")
-
+    
         local_dir = Path(local_dir)
         # read all files in the provided local_dir
         # amd add each file as a document in the memory bank
@@ -288,11 +288,11 @@ class InterioAgent:
         # insert the documents into the memory bank
         assert len(documents) > 0, "No documents found in the provided directory"
         self.client.memory.insert(
-            bank_id=bank["bank_id"],
+            bank_id="interio_bank",
             documents=documents,
         )
 
-        return bank["bank_id"]
+        return "interio_bank"
 
 
 async def async_main(host: str, port: int, memory_path: str, image_dir: str):
