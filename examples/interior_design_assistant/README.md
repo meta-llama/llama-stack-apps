@@ -4,7 +4,7 @@ The Interior Design Assistant app is an example of how to leverage Llama3.2-Visi
 
 ![Example Screenshot](https://github.com/meta-llama/llama-stack-apps/blob/main/examples/interior_design_assistant/resources/demo.png)
 
-The app has 3 interesting parts -
+The app has 3 interesting parts:
 
 1. Multimodal understanding of the provided image. This agent describes the image in detail and identifies major objects.
 2. Multimodal understanding for analyzing the theme, architecture, design of the image and suggest alternatives that might fit well in the overall theme.
@@ -25,7 +25,7 @@ pip install -r requirements.txt
 
 ## Starting the app
 
-1. Start your favorite llama stack distro ie. `llama stack run ...`
+1. Start your favorite Llama Stack distro (`llama stack run ...`)
 2. Run the app script
 ```
 # Script to test the api
@@ -35,7 +35,7 @@ PYTHONPATH=. python examples/interior_design_assistant/api.py localhost 5000 exa
 PYTHONPATH=. python examples/interior_design_assistant/app.py
 
 ```
-The script takes 4 args - host and port where the distro is running. Path for documents which are used to build and index ( on the fly ) and path to the image index. Both are added to resources/ directory for ease of start.
+The script takes 4 args - host and port where the distro is running. Path for documents which are used to build and index (on the fly) and path to the image index. Both are added to resources/ directory for ease of start.
 
 
 ## Generating descriptions
