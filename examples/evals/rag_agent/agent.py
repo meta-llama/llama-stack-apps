@@ -74,25 +74,17 @@ class Agent:
 
     async def execute_turn_non_streaming(self, content: str) -> str:
         # Temporary hack to get around Agents only have streaming
-        response = self.client.agents.turns.create(
+        response = self.client.agents.turn.create(
             agent_id=self.agent_id,
             session_id=self.session_id,
             messages=[
                 UserMessage(content=content, role="user"),
             ],
-            stream=False,
+            stream=True,
         )
-        if not response.startswith("data:"):
-            raise RuntimeError("Invalid response")
-
-        split = response.split("data: ")
-        for event in split:
-            if len(event) < 1:
-                continue
-            event_json = json.loads(event.strip())
-            payload = event_json["event"]["payload"]
-            if payload["event_type"] == "turn_complete":
-                return payload["turn"]["output_message"]
+        for chunk in response:
+            if chunk.event.payload.event_type == "turn_complete":
+                return chunk.event.payload.turn.output_message
 
     async def build_index(self, file_dir: str) -> str:
         """Build a memory bank from a directory of pdf files"""
@@ -160,8 +152,8 @@ async def get_rag_agent(host: str, port: int, file_dir: str) -> Agent:
     )
 
     agent_config = AgentConfig(
-        model="Llama3.1-8B-Instruct",
-        instructions="You are a helpful assistant capable of answering questions about the contents of a document. You have access to a memory bank that contains the contents of the document. ",
+        model="Llama3.2-3B-Instruct",
+        instructions="You are a helpful assistant capable of answering questions about the contents of a document.",
         sampling_params=SamplingParams(strategy="greedy", temperature=1.0, top_p=0.9),
         tools=tool_definitions,
         tool_choices="auto",
