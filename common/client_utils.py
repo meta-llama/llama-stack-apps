@@ -109,9 +109,9 @@ async def make_agent_config_with_custom_tools(
     if not disable_safety:
         for t in tool_config.tool_definitions:
             t["input_shields"] = ["llama_guard"]
-            t["output_shields"] = ["llama_guard", "injection_shield"]
+            t["output_shields"] = ["llama_guard"]
 
-        input_shields = ["llama_guard", "jailbreak_shield"]
+        input_shields = ["llama_guard"]
         output_shields = ["llama_guard"]
 
     # ensure code interpreter is enabled if attachments need it
