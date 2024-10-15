@@ -94,9 +94,22 @@ def eval(host: str, port: int, eval_dataset_path: str):
         },
         eval_scoring_config={
             "scorer_config_list": [
+                # Scorer 1: LLM Judge, where judge is model hosted by LlamaStack distribution
+                #   - processor: formats into correctness response 0-5
+                #   - judge_model: llama3.1-8b-instruct
                 {
-                    "scorer_name": "accuracy",
+                    "scorer_name": "llamastack-llm-judge",
+                    "llm_judge_config": {
+                        "judge_processor_config": {
+                            "processor_identifier": "judge",
+                        },
+                        "judge_model_generation_config": {
+                            "model": "Llama3.1-8B-Instruct",
+                        },
+                        "judge_scoring_config": {},
+                    },
                 },
+                # Scorer 2: LLM Judge, where braintrust autoevals AnswerCorrectness() used as score evaluator
                 {
                     "scorer_name": "braintrust::answer-correctness",
                 }

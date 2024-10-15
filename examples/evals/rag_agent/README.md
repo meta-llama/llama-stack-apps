@@ -32,6 +32,7 @@ python -m examples.evals.rag_agent.main <host> <port> \
 
 **Example Output**
 ```
-datasets/create: DatasetCreateResponse(status='success', msg="Dataset 'rag-evals' registered")
-BraintrustAnswerCorrectnessScorer:avg_correctness_score: 0.5854842144057206
+datasets/create: DatasetCreateResponse(status='fail', msg='Dataset rag-evals already exists.')
+LlamaStackLLMJudgeScorer:avg_judge_score: 3.1666666666666665
+BraintrustAnswerCorrectnessScorer:avg_correctness_score: 0.565270561846977
 ```
