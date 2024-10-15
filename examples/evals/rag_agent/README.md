@@ -16,7 +16,7 @@ python -m examples.evals.rag_agent.main <host> <port> \
 - `file_dir` is directory containing *.pdf files for
 - `app_dataset_path` is the app evaluation dataset file containing input_query for generation and the expected_answer
 
-This will prepare a evaluation dataset to be used for metrics computation with the following columns
+This will prepare a evaluation dataset to be used for metrics computation with the following columns saved to `rag_evals.xlsx`.
 - `generated_answer`
 - `expected_answer`
 - `input_query`
