@@ -5,7 +5,7 @@
 # the root directory of this source tree.
 
 
-from typing import AsyncGenerator, List, Optional
+from typing import AsyncGenerator, List, Optional, Union
 
 from .custom_tools import CustomTool, Message, ToolResponseMessage
 
@@ -31,7 +31,7 @@ class AgentWithCustomToolExecutor:
 
     async def execute_turn(
         self,
-        messages: List[UserMessage],
+        messages: List[Union[UserMessage, ToolResponseMessage]],
         attachments: Optional[List[Attachment]] = None,
         max_iters: int = 5,
         stream: bool = True,
