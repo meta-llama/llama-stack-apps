@@ -1,3 +1,6 @@
+<img src="logo.png" width="300" title="Llama Stack Logo" alt="Llama Stack Logo"/>
+
+
 # llama-stack-apps
 
 [![Discord](https://img.shields.io/discord/1257833999603335178)](https://discord.gg/llama-stack)
@@ -52,9 +55,9 @@ This will install all dependencies required to (1) Build and start a Llama Stack
 
 
 ### 2. Starting a Llama Stack Server
-- Please see our [llama-stack](https://github.com/meta-llama/llama-stack) repo's [Getting Started Guide](https://github.com/meta-llama/llama-stack/blob/main/docs/getting_started.md) for setting up a Llama Stack distribution and running server to serve API endpoints. You should have a server endpoint for building your client apps. 
+- Please see our [llama-stack](https://github.com/meta-llama/llama-stack) repo's [Getting Started Guide](https://github.com/meta-llama/llama-stack/blob/main/docs/getting_started.md) for setting up a Llama Stack distribution and running server to serve API endpoints. You should have a server endpoint for building your client apps.
 
-You may use this one-line command to quickly spin up an server endpoint if you have GPU. 
+You may use this one-line command to quickly spin up an server endpoint if you have GPU.
 ```
 docker run -it -p 5000:5000 -v ~/.llama:/root/.llama --gpus=all llamastack/llamastack-local-gpu
 ```
