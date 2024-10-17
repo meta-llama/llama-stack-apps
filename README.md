@@ -21,18 +21,17 @@ An agentic app requires a few components:
 
 All of these components are now offered by a single Llama Stack Distribution. The [Llama Stack](https://github.com/meta-llama/llama-stack) defines and standardizes these components and many others that are needed to make building Generative AI applications smoother. Various implementations of these APIs are then assembled together via a **Llama Stack Distribution**.
 
-# Getting started with the Llama Stack Distributions
+## Getting started with the Llama Stack Apps
 
-To get started with Llama Stack Distributions, you'll need to:
+To get started with Llama Stack Apps, you'll need to:
 
 1. Install prerequisites
-2. Download the model checkpoints
-3. Build and start a Llama Stack server
+3. Start a Llama Stack server
 4. Connect your client agentic app to Llama Stack server
 
 Once started, you can then just point your agentic app to the URL for this server (e.g. `http://localhost:5000`).
 
-## 1. Install Prerequisites
+### 1. Install Prerequisites
 
 **Python Packages**
 
@@ -51,239 +50,50 @@ pip install -r requirements.txt
 
 This will install all dependencies required to (1) Build and start a Llama Stack server (2) Connect your client app to Llama Stack server.
 
-**CLI Packages**
 
+### 2. Starting a Llama Stack Server
+- Please see our [llama-stack](https://github.com/meta-llama/llama-stack) repo's [Getting Started Guide](https://github.com/meta-llama/llama-stack/blob/main/docs/getting_started.md) for setting up a Llama Stack distribution and running server to serve API endpoints. You should have a server endpoint for building your client apps. 
 
-With `llama-stack` installed, you should be able to use the Llama Stack CLI and run `llama --help`. Please checkout our [CLI Reference](https://github.com/meta-llama/llama-stack/blob/main/docs/cli_reference.md) for more details.
-
-```bash
-usage: llama [-h] {download,model,stack} ...
-
-Welcome to the Llama CLI
-
-options:
-  -h, --help            show this help message and exit
-
-subcommands:
-  {download,model,stack}
+You may use this one-line command to quickly spin up an server endpoint if you have GPU. 
+```
+docker run -it -p 5000:5000 -v ~/.llama:/root/.llama --gpus=all llamastack/llamastack-local-gpu
 ```
 
-## Download Model Checkpoints
-
-#### Downloading from [Meta](https://llama.meta.com/llama-downloads/)
-
-Download the required checkpoints using the following commands:
-```bash
-# download the 8B model, this can be run on a single GPU
-llama download --source meta --model-id Llama3.1-8B-Instruct --meta-url META_URL
-
-# you can also get the 70B model, this will require 8 GPUs however
-llama download --source meta --model-id Llama3.1-70B-Instruct --meta-url META_URL
-
-# llama-agents have safety enabled by default. For this, you will need
-# safety models -- Llama-Guard and Prompt-Guard
-llama download --source meta --model-id Prompt-Guard-86M --meta-url META_URL
-llama download --source meta --model-id Llama-Guard-3-8B --meta-url META_URL
-```
-
-For all the above, you will need to provide a URL (META_URL) which can be obtained from https://llama.meta.com/llama-downloads/ after signing an agreement.
-
-#### Downloading from [Huggingface](https://huggingface.co/meta-llama)
-
-Essentially, the same commands above work, just replace `--source meta` with `--source huggingface`.
-
-```bash
-llama download --source huggingface --model-id  Meta-Llama3.1-8B-Instruct --hf-token <HF_TOKEN>
-
-llama download --source huggingface --model-id Meta-Llama3.1-70B-Instruct --hf-token <HF_TOKEN>
-
-llama download --source huggingface --model-id Llama-Guard-3-8B --ignore-patterns *original*
-llama download --source huggingface --model-id Prompt-Guard-86M --ignore-patterns *original*
-```
-
-**Important:** Set your environment variable `HF_TOKEN` or pass in `--hf-token` to the command to validate your access. You can find your token at [https://huggingface.co/settings/tokens](https://huggingface.co/settings/tokens).
-
-> **Tip:** Default for `llama download` is to run with `--ignore-patterns *.safetensors` since we use the `.pth` files in the `original` folder. For Llama Guard and Prompt Guard, however, we need safetensors. Hence, please run with `--ignore-patterns original` so that safetensors are downloaded and `.pth` files are ignored.
-
-#### Downloading via Ollama
-
-If you're already using ollama, we also have a supported Llama Stack distribution `local-ollama` and you can continue to use ollama for managing model downloads.
+Once your your server started, you should have see outputs --
 
 ```
-ollama pull llama3.1:8b-instruct-fp16
-ollama pull llama3.1:70b-instruct-fp16
-```
-
-> [!NOTE]
-> Only the above two models are currently supported by Ollama.
-
-
-## Build, Configure, Run Llama Stack Distribution
-- Please see our [Getting Started Guide](https://github.com/meta-llama/llama-stack/blob/main/docs/getting_started.md) for more details on setting up a Llama Stack distribution and running server to serve API endpoints.
-
-
-### Step 1. Build
-In the following steps, imagine we'll be working with a `Meta-Llama3.1-8B-Instruct` model. We will name our build `8b-instruct` to help us remember the config. We will start build our distribution (in the form of a Conda environment, or Docker image). In this step, we will specify:
-- `name`: the name for our distribution (e.g. `8b-instruct`)
-- `image_type`: our build image type (`conda | docker`)
-- `distribution_spec`: our distribution specs for specifying API providers
-  - `description`: a short description of the configurations for the distribution
-  - `providers`: specifies the underlying implementation for serving each API endpoint
-  - `image_type`: `conda` | `docker` to specify whether to build the distribution in the form of Docker image or Conda environment.
-
-#### Build a local distribution with conda
-The following command and specifications allows you to get started with building.
-```
-llama stack build
-```
-- You'll be prompted to enter build information interactively.
-```
-llama stack build
-
-> Enter an unique name for identifying your Llama Stack build distribution (e.g. my-local-stack): 8b-instruct
-> Enter the image type you want your distribution to be built with (docker or conda): conda
-
- Llama Stack is composed of several APIs working together. Let's configure the providers (implementations) you want to use for these APIs.
-> Enter the API provider for the inference API: (default=meta-reference): meta-reference
-> Enter the API provider for the safety API: (default=meta-reference): meta-reference
-> Enter the API provider for the agents API: (default=meta-reference): meta-reference
-> Enter the API provider for the memory API: (default=meta-reference): meta-reference
-> Enter the API provider for the telemetry API: (default=meta-reference): meta-reference
-
- > (Optional) Enter a short description for your Llama Stack distribution:
-
-Build spec configuration saved at ~/.conda/envs/llamastack-my-local-stack/8b-instruct-build.yaml
-You can now run `llama stack configure my-local-stack`
-```
-
-#### (Alternative) Downloading Pre-built Docker image
-
-We provide 2 pre-built Docker image of Llama Stack distribution, which can be found in the following links.
-- [llamastack-local-gpu](https://hub.docker.com/repository/docker/llamastack/llamastack-local-gpu/general)
-  - This is a packaged version with our local meta-reference implementations, where you will be running inference locally with downloaded Llama model checkpoints.
-- [llamastack-local-cpu](https://hub.docker.com/repository/docker/llamastack/llamastack-local-cpu/general)
-   - This is a lite version with remote inference where you can hook up to your favourite remote inference framework (e.g. ollama, fireworks, together, tgi) for running inference without GPU.
-
-> [!NOTE]
-> For GPU inference, you need to set these environment variables for specifying local directory containing your model checkpoints, and enable GPU inference to start running docker container.
-```
-export LLAMA_CHECKPOINT_DIR=~/.llama
-```
-
-
-To download and start running a pre-built docker container, you may use the following commands:
-```
-docker image pull llamastack/llamastack-local-gpu
-llama stack configure llamastack-local-gpu
-llama stack run local-gpu
-```
-
-### Step 2. Configure
-After our distribution is built (either in form of docker or conda environment), we will run the following command to
-```
-llama stack configure [<name> | <path/to/name.build.yaml> | <docker-image-name>]
-```
-- For `conda` environments: <path/to/name.build.yaml> would be the generated build spec saved from Step 1.
-- For `docker` images downloaded from Dockerhub, you could also use <docker-image-name> as the argument.
-   - Run `docker images` to check list of available images on your machine.
-
-```
-$ llama stack configure 8b-instruct
-
-Configuring API: inference (meta-reference)
-Enter value for model (existing: Meta-Llama3.1-8B-Instruct) (required):
-Enter value for quantization (optional):
-Enter value for torch_seed (optional):
-Enter value for max_seq_len (existing: 4096) (required):
-Enter value for max_batch_size (existing: 1) (required):
-
-Configuring API: memory (meta-reference-faiss)
-
-Configuring API: safety (meta-reference)
-Do you want to configure llama_guard_shield? (y/n): y
-Entering sub-configuration for llama_guard_shield:
-Enter value for model (default: Llama-Guard-3-8B) (required):
-Enter value for excluded_categories (default: []) (required):
-Enter value for disable_input_check (default: False) (required):
-Enter value for disable_output_check (default: False) (required):
-Do you want to configure prompt_guard_shield? (y/n): y
-Entering sub-configuration for prompt_guard_shield:
-Enter value for model (default: Prompt-Guard-86M) (required):
-
-Configuring API: agentic_system (meta-reference)
-Enter value for brave_search_api_key (optional):
-Enter value for bing_search_api_key (optional):
-Enter value for wolfram_api_key (optional):
-
-Configuring API: telemetry (console)
-
-YAML configuration has been written to ~/.llama/builds/conda/8b-instruct-run.yaml
-```
-
-After this step is successful, you should be able to find a run configuration spec in `~/.llama/builds/conda/8b-instruct-run.yaml` with the following contents. You may edit this file to change the settings.
-
-As you can see, we did basic configuration above and configured:
-- inference to run on model `Meta-Llama3.1-8B-Instruct` (obtained from `llama model list`)
-- Llama Guard safety shield with model `Llama-Guard-3-8B`
-- Prompt Guard safety shield with model `Prompt-Guard-86M`
-
-For how these configurations are stored as yaml, checkout the file printed at the end of the configuration.
-
-Note that all configurations as well as models are stored in `~/.llama`
-
-
-### Step 3. Run
-Now, let's start the Llama Stack Distribution Server. You will need the YAML configuration file which was written out at the end by the `llama stack configure` step.
-
-```
-llama stack run 8b-instruct
-```
-
-You should see the Llama Stack server start and print the APIs that it is supporting
-
-```
-$ llama stack run 8b-instruct
-
-> initializing model parallel with size 1
-> initializing ddp with size 1
-> initializing pipeline with size 1
-Loaded in 19.28 seconds
-NCCL version 2.20.5+cuda12.4
-Finished model load YES READY
-Serving POST /inference/batch_chat_completion
-Serving POST /inference/batch_completion
+...
 Serving POST /inference/chat_completion
 Serving POST /inference/completion
-Serving POST /safety/run_shields
-Serving POST /agents/memory_bank/attach
-Serving POST /agents/create
-Serving POST /agents/session/create
-Serving POST /agents/turn/create
-Serving POST /agents/delete
-Serving POST /agents/session/delete
-Serving POST /agents/memory_bank/detach
-Serving POST /agents/session/get
-Serving POST /agents/step/get
-Serving POST /agents/turn/get
+Serving POST /inference/embeddings
+Serving POST /memory_banks/create
+Serving DELETE /memory_bank/documents/delete
+Serving DELETE /memory_banks/drop
+Serving GET /memory_bank/documents/get
+Serving GET /memory_banks/get
+Serving POST /memory_bank/insert
+Serving GET /memory_banks/list
+Serving POST /memory_bank/query
+Serving POST /memory_bank/update
+Serving POST /safety/run_shield
+Serving POST /agentic_system/create
+Serving POST /agentic_system/session/create
+Serving POST /agentic_system/turn/create
+Serving POST /agentic_system/delete
+Serving POST /agentic_system/session/delete
+Serving POST /agentic_system/session/get
+Serving POST /agentic_system/step/get
+Serving POST /agentic_system/turn/get
+Serving GET /telemetry/get_trace
+Serving POST /telemetry/log_event
 Listening on :::5000
-INFO:     Started server process [453333]
+INFO:     Started server process [587053]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://[::]:5000 (Press CTRL+C to quit)
 ```
 
-> [!NOTE]
-> Configuration is in `~/.llama/builds/local/conda/8b-instruct.yaml`. Feel free to increase `max_seq_len`.
-
-> [!IMPORTANT]
-> The "local" distribution inference server currently only supports CUDA. It will not work on Apple Silicon machines.
-
-> [!TIP]
-> You might need to use the flag `--disable-ipv6` to  Disable IPv6 support
-
-This server is running a Llama model locally.
-
-## Test agents demo script
+### 3. Test agents demo script
 
 We have built sample demo scripts for interating with the Stack server.
 
