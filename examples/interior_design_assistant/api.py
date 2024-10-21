@@ -28,7 +28,9 @@ from llama_stack_client.types.agent_create_params import (
     AgentConfig,
     AgentConfigToolMemoryToolDefinition,
 )
-from llama_stack_client.types.agents.agents_turn_stream_chunk import AgentsTurnStreamChunk
+from llama_stack_client.types.agents.agents_turn_stream_chunk import (
+    AgentsTurnStreamChunk,
+)
 from llama_stack_client.types.memory_insert_params import Document
 from termcolor import cprint
 
@@ -110,7 +112,7 @@ class InterioAgent:
             if payload.event_type == "turn_complete":
                 turn = payload.turn
                 break
-                
+
         # print(turn.output_message.content)
         result = turn.output_message.content
         d = json.loads(result.strip())
@@ -261,16 +263,17 @@ class InterioAgent:
         Build a memory bank that can be used to store and retrieve images.
         """
         self.live_bank = "interio_bank"
+        providers = client.providers.list()
         self.client.memory_banks.register(
             memory_bank={
                 "identifier": self.live_bank,
                 "embedding_model": "all-MiniLM-L6-v2",
                 "chunk_size_in_tokens": 512,
                 "overlap_size_in_tokens": 64,
-                "provider_id": "meta-reference",
+                "provider_id": providers["memory"][0].provider_id,
             }
         )
-    
+
         local_dir = Path(local_dir)
         # read all files in the provided local_dir
         # amd add each file as a document in the memory bank

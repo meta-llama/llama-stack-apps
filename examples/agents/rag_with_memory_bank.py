@@ -39,6 +39,7 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
     ]
 
     client = LlamaStackClient(base_url=f"http://{host}:{port}")
+    providers = client.providers.list()
     # create a memory bank
     client.memory_banks.register(
         memory_bank={
@@ -46,7 +47,7 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
             "embedding_model": "all-MiniLM-L6-v2",
             "chunk_size_in_tokens": 512,
             "overlap_size_in_tokens": 64,
-            "provider_id": "meta-reference",
+            "provider_id": providers["memory"][0].provider_id,
         }
     )
 

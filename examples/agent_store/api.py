@@ -14,7 +14,9 @@ from llama_stack_client.types.agent_create_params import (
     AgentConfigToolMemoryToolDefinitionMemoryBankConfigUnionMember0,
     AgentConfigToolSearchToolDefinition,
 )
-from llama_stack_client.types.agents.agents_turn_stream_chunk import AgentsTurnStreamChunk
+from llama_stack_client.types.agents.agents_turn_stream_chunk import (
+    AgentsTurnStreamChunk,
+)
 from llama_stack_client.types.memory_insert_params import Document
 from termcolor import cprint
 
@@ -54,13 +56,14 @@ class AgentStore:
 
     def create_live_bank(self):
         self.live_bank = "live_bank"
+        providers = client.providers.list()
         self.client.memory_banks.register(
             memory_bank={
                 "identifier": self.live_bank,
                 "embedding_model": "all-MiniLM-L6-v2",
                 "chunk_size_in_tokens": 512,
                 "overlap_size_in_tokens": 64,
-                "provider_id": "meta-reference",
+                "provider_id": providers["memory"][0].provider_id,
             }
         )
         # FIXME: To avoid empty banks
@@ -266,9 +269,7 @@ class AgentStore:
             document_id=uuid.uuid4().hex,
             content=text,
         )
-        self.client.memory.insert(
-            bank_id=self.live_bank, documents=[document]
-        )
+        self.client.memory.insert(bank_id=self.live_bank, documents=[document])
 
     async def clear_live_bank(self) -> None:
         # FIXME: This is a hack, ideally we should
