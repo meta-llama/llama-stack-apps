@@ -10,7 +10,6 @@
 import asyncio
 
 import fire
-from examples.custom_tools.ticker_data import TickerDataTool
 
 from llama_stack_client.types import Attachment, SamplingParams, UserMessage
 from llama_stack_client.types.agent_create_params import *  # noqa: F403
