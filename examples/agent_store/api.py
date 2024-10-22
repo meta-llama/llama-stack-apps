@@ -56,7 +56,7 @@ class AgentStore:
 
     def create_live_bank(self):
         self.live_bank = "live_bank"
-        providers = client.providers.list()
+        providers = self.client.providers.list()
         self.client.memory_banks.register(
             memory_bank={
                 "identifier": self.live_bank,
