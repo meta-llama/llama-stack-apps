@@ -263,7 +263,7 @@ class InterioAgent:
         Build a memory bank that can be used to store and retrieve images.
         """
         self.live_bank = "interio_bank"
-        providers = client.providers.list()
+        providers = self.client.providers.list()
         self.client.memory_banks.register(
             memory_bank={
                 "identifier": self.live_bank,
