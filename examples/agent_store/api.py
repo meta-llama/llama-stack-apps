@@ -172,24 +172,15 @@ class AgentStore:
         """Build a memory bank from a directory of pdf files."""
 
         # 1. create memory bank
-        bank = self.client.memory.create(
-            body={
-                "name": "memory_bank",
-                "config": {
-                    "bank_id": "memory_bank",
-                    "embedding_model": "all-MiniLM-L6-v2",
-                    "chunk_size_in_tokens": 512,
-                    "overlap_size_in_tokens": 64,
-                },
-            },
-        )
-        client.memory_banks.register(
+        providers = self.client.providers.list()
+        # create a memory bank
+        self.client.memory_banks.register(
             memory_bank={
                 "identifier": "memory_bank",
                 "embedding_model": "all-MiniLM-L6-v2",
                 "chunk_size_in_tokens": 512,
                 "overlap_size_in_tokens": 64,
-                "provider_id": "meta-reference",
+                "provider_id": providers["memory"][0].provider_id,
             }
         )
         # cprint(f"Created bank: {json.dumps(bank, indent=4)}", color="green")
