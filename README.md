@@ -55,28 +55,11 @@ This will install all dependencies required to (1) Build and start a Llama Stack
 
 
 ### 2. Starting a Llama Stack Server
-- Please see our [llama-stack](https://github.com/meta-llama/llama-stack) repo's [Getting Started Guide](https://github.com/meta-llama/llama-stack/blob/main/docs/getting_started.md) for setting up a Llama Stack distribution and running server to serve API endpoints. You should have a server endpoint for building your client apps.
+- Please see our [llama-stack](https://github.com/meta-llama/llama-stack) repo's [Developer Guide](https://github.com/meta-llama/llama-stack/blob/main/docs/developer_cookbook.md) for setting up a Llama Stack distribution and running server to serve API endpoints. You should have a server endpoint for building your client apps.
 
 Once your your server started, you should have see outputs --
 ```
 ...
-Serving POST /inference/chat_completion
-Serving POST /inference/completion
-Serving POST /inference/embeddings
-Serving POST /memory_banks/create
-Serving DELETE /memory_bank/documents/delete
-Serving DELETE /memory_banks/drop
-Serving GET /memory_bank/documents/get
-Serving GET /memory_banks/get
-Serving POST /memory_bank/insert
-Serving GET /memory_banks/list
-Serving POST /memory_bank/query
-Serving POST /memory_bank/update
-Serving POST /safety/run_shield
-Serving POST /agentic_system/create
-Serving POST /agentic_system/session/create
-Serving POST /agentic_system/turn/create
-Serving POST /agentic_system/delete
 Serving POST /agentic_system/session/delete
 Serving POST /agentic_system/session/get
 Serving POST /agentic_system/step/get
