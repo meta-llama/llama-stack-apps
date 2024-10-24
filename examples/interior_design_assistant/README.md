@@ -10,7 +10,7 @@ The app has 3 interesting parts:
 2. Multimodal understanding for analyzing the theme, architecture, design of the image and suggest alternatives that might fit well in the overall theme.
 3. A RAG element that can take suggestion from [2] and find relevant items from a catalog ( or bank )
 
-## Installtion
+## Installation
 1. Git clone this repo
 ```
 git clone https://github.com/meta-llama/llama-stack-apps.git
@@ -22,6 +22,11 @@ conda activate agentstore
 cd <path/to/llama-stack-apps>
 pip install -r requirements.txt
 ```
+
+## Pre-requisite
+
+1. You are required to download Llama3.2-11B-Vision-Instruct model to run this demo, follow the steps to download [here](https://github.com/meta-llama/llama-stack/blob/main/docs/cli_reference.md#step-1-get-the-models).
+
 
 ## Starting the app
 

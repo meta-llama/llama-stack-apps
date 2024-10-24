@@ -21,8 +21,8 @@ from examples.interior_design_assistant.utils import (
     data_url_from_image,
 )
 
-from llama_stack import LlamaStack
-from llama_stack.types import agent_create_params
+from llama_stack_client import LlamaStackClient
+from llama_stack_client.types import agent_create_params
 
 
 MODEL = "Llama3.2-11B-Vision-Instruct"
@@ -49,7 +49,7 @@ def main(host: str, port: int, image_dir: str, output_dir: str):
 
     memory_dir = Path(output_dir)
 
-    client = LlamaStack(base_url=f"http://{host}:{port}")
+    client = LlamaStackClient(base_url=f"http://{host}:{port}")
 
     paths = sorted(paths)
     for p in paths:
