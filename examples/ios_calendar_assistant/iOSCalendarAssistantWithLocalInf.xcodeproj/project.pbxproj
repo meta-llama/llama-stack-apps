@@ -7,25 +7,27 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		5C5E31DC2CA48A8E00A0784C /* LlamaStackClient in Frameworks */ = {isa = PBXBuildFile; productRef = 5C5E31DB2CA48A8E00A0784C /* LlamaStackClient */; };
 		5C5E31DD2CA48AB900A0784C /* LocalInferenceImpl.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C5E31D92CA48A5800A0784C /* LocalInferenceImpl.framework */; };
 		5C5E31DE2CA48AB900A0784C /* LocalInferenceImpl.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 5C5E31D92CA48A5800A0784C /* LocalInferenceImpl.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		5C5E31E02CA48BBE00A0784C /* llama3_2_8da4w_32g_inference_len_2048.pte in Resources */ = {isa = PBXBuildFile; fileRef = 5C5E31DF2CA48BBE00A0784C /* llama3_2_8da4w_32g_inference_len_2048.pte */; };
-		5C5E31E22CA48BC400A0784C /* tokenizer.model in Resources */ = {isa = PBXBuildFile; fileRef = 5C5E31E12CA48BC400A0784C /* tokenizer.model */; };
-		5C5E31EF2CA48FEE00A0784C /* backend_coreml in Frameworks */ = {isa = PBXBuildFile; productRef = 5C5E31EE2CA48FEE00A0784C /* backend_coreml */; };
-		5C5E31F12CA48FEE00A0784C /* backend_coreml_debug in Frameworks */ = {isa = PBXBuildFile; productRef = 5C5E31F02CA48FEE00A0784C /* backend_coreml_debug */; };
-		5C5E31F32CA48FEE00A0784C /* backend_mps in Frameworks */ = {isa = PBXBuildFile; productRef = 5C5E31F22CA48FEE00A0784C /* backend_mps */; };
-		5C5E31F52CA48FEE00A0784C /* backend_mps_debug in Frameworks */ = {isa = PBXBuildFile; productRef = 5C5E31F42CA48FEE00A0784C /* backend_mps_debug */; };
-		5C5E31F72CA48FEE00A0784C /* backend_xnnpack in Frameworks */ = {isa = PBXBuildFile; productRef = 5C5E31F62CA48FEE00A0784C /* backend_xnnpack */; };
-		5C5E31F92CA48FEE00A0784C /* backend_xnnpack_debug in Frameworks */ = {isa = PBXBuildFile; productRef = 5C5E31F82CA48FEE00A0784C /* backend_xnnpack_debug */; };
-		5C5E31FB2CA48FEE00A0784C /* kernels_custom in Frameworks */ = {isa = PBXBuildFile; productRef = 5C5E31FA2CA48FEE00A0784C /* kernels_custom */; };
-		5C5E31FD2CA48FEE00A0784C /* kernels_custom_debug in Frameworks */ = {isa = PBXBuildFile; productRef = 5C5E31FC2CA48FEE00A0784C /* kernels_custom_debug */; };
-		5C5E31FF2CA48FEE00A0784C /* kernels_optimized in Frameworks */ = {isa = PBXBuildFile; productRef = 5C5E31FE2CA48FEE00A0784C /* kernels_optimized */; };
-		5C5E32012CA48FEE00A0784C /* kernels_optimized_debug in Frameworks */ = {isa = PBXBuildFile; productRef = 5C5E32002CA48FEE00A0784C /* kernels_optimized_debug */; };
-		5C5E32032CA48FEE00A0784C /* kernels_portable in Frameworks */ = {isa = PBXBuildFile; productRef = 5C5E32022CA48FEE00A0784C /* kernels_portable */; };
-		5C5E32052CA48FEE00A0784C /* kernels_portable_debug in Frameworks */ = {isa = PBXBuildFile; productRef = 5C5E32042CA48FEE00A0784C /* kernels_portable_debug */; };
-		5C5E32072CA48FEE00A0784C /* kernels_quantized in Frameworks */ = {isa = PBXBuildFile; productRef = 5C5E32062CA48FEE00A0784C /* kernels_quantized */; };
-		5C5E32092CA48FEE00A0784C /* kernels_quantized_debug in Frameworks */ = {isa = PBXBuildFile; productRef = 5C5E32082CA48FEE00A0784C /* kernels_quantized_debug */; };
+		5C9644892CC8CE2000B80462 /* tokenizer.model in Resources */ = {isa = PBXBuildFile; fileRef = 5C9644882CC8CE2000B80462 /* tokenizer.model */; };
+		5C9644B22CCAC34500B80462 /* LlamaStackClient in Frameworks */ = {isa = PBXBuildFile; productRef = 5C9644B12CCAC34500B80462 /* LlamaStackClient */; };
+		5C9644B42CCAC34900B80462 /* backend_coreml in Frameworks */ = {isa = PBXBuildFile; productRef = 5C9644B32CCAC34900B80462 /* backend_coreml */; };
+		5C9644B62CCAC34900B80462 /* backend_coreml_debug in Frameworks */ = {isa = PBXBuildFile; productRef = 5C9644B52CCAC34900B80462 /* backend_coreml_debug */; };
+		5C9644B82CCAC34900B80462 /* backend_mps in Frameworks */ = {isa = PBXBuildFile; productRef = 5C9644B72CCAC34900B80462 /* backend_mps */; };
+		5C9644BA2CCAC34900B80462 /* backend_mps_debug in Frameworks */ = {isa = PBXBuildFile; productRef = 5C9644B92CCAC34900B80462 /* backend_mps_debug */; };
+		5C9644BC2CCAC34900B80462 /* backend_xnnpack in Frameworks */ = {isa = PBXBuildFile; productRef = 5C9644BB2CCAC34900B80462 /* backend_xnnpack */; };
+		5C9644BE2CCAC34900B80462 /* backend_xnnpack_debug in Frameworks */ = {isa = PBXBuildFile; productRef = 5C9644BD2CCAC34900B80462 /* backend_xnnpack_debug */; };
+		5C9644C02CCAC34D00B80462 /* kernels_custom in Frameworks */ = {isa = PBXBuildFile; productRef = 5C9644BF2CCAC34D00B80462 /* kernels_custom */; };
+		5C9644C22CCAC34D00B80462 /* kernels_custom_debug in Frameworks */ = {isa = PBXBuildFile; productRef = 5C9644C12CCAC34D00B80462 /* kernels_custom_debug */; };
+		5C9644C42CCAC34D00B80462 /* kernels_optimized in Frameworks */ = {isa = PBXBuildFile; productRef = 5C9644C32CCAC34D00B80462 /* kernels_optimized */; };
+		5C9644C62CCAC34D00B80462 /* kernels_optimized_debug in Frameworks */ = {isa = PBXBuildFile; productRef = 5C9644C52CCAC34D00B80462 /* kernels_optimized_debug */; };
+		5C9644C82CCAC34D00B80462 /* kernels_portable in Frameworks */ = {isa = PBXBuildFile; productRef = 5C9644C72CCAC34D00B80462 /* kernels_portable */; };
+		5C9644CA2CCAC34D00B80462 /* kernels_portable_debug in Frameworks */ = {isa = PBXBuildFile; productRef = 5C9644C92CCAC34D00B80462 /* kernels_portable_debug */; };
+		5C9644CC2CCAC34D00B80462 /* kernels_quantized in Frameworks */ = {isa = PBXBuildFile; productRef = 5C9644CB2CCAC34D00B80462 /* kernels_quantized */; };
+		5C9644CE2CCAC34D00B80462 /* kernels_quantized_debug in Frameworks */ = {isa = PBXBuildFile; productRef = 5C9644CD2CCAC34D00B80462 /* kernels_quantized_debug */; };
+		5C9644D32CCAC6A100B80462 /* LLaMARunner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C9644D22CCAC6A100B80462 /* LLaMARunner.framework */; };
+		5C9644D42CCAC6DE00B80462 /* LLaMARunner.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 5C9644D22CCAC6A100B80462 /* LLaMARunner.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		5C9644D62CCAC72C00B80462 /* executorch_debug in Frameworks */ = {isa = PBXBuildFile; productRef = 5C9644D52CCAC72C00B80462 /* executorch_debug */; };
 		5CADC7012CA45670007662D2 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5CADC6F72CA45670007662D2 /* Preview Assets.xcassets */; };
 		5CADC7022CA45670007662D2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5CADC6F92CA45670007662D2 /* Assets.xcassets */; };
 		5CADC7032CA45670007662D2 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CADC6FA2CA45670007662D2 /* ContentView.swift */; };
@@ -55,6 +57,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				5C9644D42CCAC6DE00B80462 /* LLaMARunner.framework in Embed Frameworks */,
 				5C5E31DE2CA48AB900A0784C /* LocalInferenceImpl.framework in Embed Frameworks */,
 				5CADC71D2CA4741B007662D2 /* LocalInferenceImpl.framework in Embed Frameworks */,
 			);
@@ -65,8 +68,8 @@
 
 /* Begin PBXFileReference section */
 		5C5E31D32CA48A5800A0784C /* LocalInferenceImpl.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = LocalInferenceImpl.xcodeproj; path = "iOSCalendarAssistantWithLocalInf/llama-stack/llama_stack/providers/impls/ios/inference/LocalInferenceImpl.xcodeproj"; sourceTree = "<group>"; };
-		5C5E31DF2CA48BBE00A0784C /* llama3_2_8da4w_32g_inference_len_2048.pte */ = {isa = PBXFileReference; lastKnownFileType = file; name = llama3_2_8da4w_32g_inference_len_2048.pte; path = iOSCalendarAssistantWithLocalInf/llama3_2_8da4w_32g_inference_len_2048.pte; sourceTree = "<group>"; };
-		5C5E31E12CA48BC400A0784C /* tokenizer.model */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = tokenizer.model; path = iOSCalendarAssistantWithLocalInf/tokenizer.model; sourceTree = "<group>"; };
+		5C9644882CC8CE2000B80462 /* tokenizer.model */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = tokenizer.model; sourceTree = "<group>"; };
+		5C9644D22CCAC6A100B80462 /* LLaMARunner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = LLaMARunner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		5CADB0012CA1345100942A87 /* iOSCalendarAssistantWithLocalInf.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iOSCalendarAssistantWithLocalInf.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5CADC6F72CA45670007662D2 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		5CADC6F92CA45670007662D2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -84,23 +87,25 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5C5E31F92CA48FEE00A0784C /* backend_xnnpack_debug in Frameworks */,
-				5C5E31DC2CA48A8E00A0784C /* LlamaStackClient in Frameworks */,
-				5C5E31F72CA48FEE00A0784C /* backend_xnnpack in Frameworks */,
-				5C5E32012CA48FEE00A0784C /* kernels_optimized_debug in Frameworks */,
-				5C5E32052CA48FEE00A0784C /* kernels_portable_debug in Frameworks */,
-				5C5E31F12CA48FEE00A0784C /* backend_coreml_debug in Frameworks */,
-				5C5E32092CA48FEE00A0784C /* kernels_quantized_debug in Frameworks */,
-				5C5E31FB2CA48FEE00A0784C /* kernels_custom in Frameworks */,
-				5C5E31FF2CA48FEE00A0784C /* kernels_optimized in Frameworks */,
-				5C5E31F52CA48FEE00A0784C /* backend_mps_debug in Frameworks */,
-				5C5E32072CA48FEE00A0784C /* kernels_quantized in Frameworks */,
+				5C9644D32CCAC6A100B80462 /* LLaMARunner.framework in Frameworks */,
+				5C9644BE2CCAC34900B80462 /* backend_xnnpack_debug in Frameworks */,
+				5C9644BC2CCAC34900B80462 /* backend_xnnpack in Frameworks */,
+				5C9644C62CCAC34D00B80462 /* kernels_optimized_debug in Frameworks */,
+				5C9644D62CCAC72C00B80462 /* executorch_debug in Frameworks */,
+				5C9644CA2CCAC34D00B80462 /* kernels_portable_debug in Frameworks */,
+				5C9644B62CCAC34900B80462 /* backend_coreml_debug in Frameworks */,
+				5C9644CE2CCAC34D00B80462 /* kernels_quantized_debug in Frameworks */,
+				5C9644C02CCAC34D00B80462 /* kernels_custom in Frameworks */,
+				5C9644C42CCAC34D00B80462 /* kernels_optimized in Frameworks */,
+				5C9644BA2CCAC34900B80462 /* backend_mps_debug in Frameworks */,
+				5C9644CC2CCAC34D00B80462 /* kernels_quantized in Frameworks */,
+				5C9644B22CCAC34500B80462 /* LlamaStackClient in Frameworks */,
+				5C9644C22CCAC34D00B80462 /* kernels_custom_debug in Frameworks */,
+				5C9644B82CCAC34900B80462 /* backend_mps in Frameworks */,
+				5C9644C82CCAC34D00B80462 /* kernels_portable in Frameworks */,
+				5C9644B42CCAC34900B80462 /* backend_coreml in Frameworks */,
 				5C5E31DD2CA48AB900A0784C /* LocalInferenceImpl.framework in Frameworks */,
 				5CADC71C2CA4741B007662D2 /* LocalInferenceImpl.framework in Frameworks */,
-				5C5E31FD2CA48FEE00A0784C /* kernels_custom_debug in Frameworks */,
-				5C5E31F32CA48FEE00A0784C /* backend_mps in Frameworks */,
-				5C5E32032CA48FEE00A0784C /* kernels_portable in Frameworks */,
-				5C5E31EF2CA48FEE00A0784C /* backend_coreml in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -118,8 +123,7 @@
 		5CADAFF82CA1345100942A87 = {
 			isa = PBXGroup;
 			children = (
-				5C5E31E12CA48BC400A0784C /* tokenizer.model */,
-				5C5E31DF2CA48BBE00A0784C /* llama3_2_8da4w_32g_inference_len_2048.pte */,
+				5C9644882CC8CE2000B80462 /* tokenizer.model */,
 				5C5E31D32CA48A5800A0784C /* LocalInferenceImpl.xcodeproj */,
 				5CADC7002CA45670007662D2 /* iOSCalendarAssistantWithLocalInf */,
 				5CADB0022CA1345100942A87 /* Products */,
@@ -161,6 +165,7 @@
 		5CADC7142CA467C4007662D2 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				5C9644D22CCAC6A100B80462 /* LLaMARunner.framework */,
 				5CADC71B2CA4741B007662D2 /* LocalInferenceImpl.framework */,
 			);
 			name = Frameworks;
@@ -184,21 +189,22 @@
 			);
 			name = iOSCalendarAssistantWithLocalInf;
 			packageProductDependencies = (
-				5C5E31DB2CA48A8E00A0784C /* LlamaStackClient */,
-				5C5E31EE2CA48FEE00A0784C /* backend_coreml */,
-				5C5E31F02CA48FEE00A0784C /* backend_coreml_debug */,
-				5C5E31F22CA48FEE00A0784C /* backend_mps */,
-				5C5E31F42CA48FEE00A0784C /* backend_mps_debug */,
-				5C5E31F62CA48FEE00A0784C /* backend_xnnpack */,
-				5C5E31F82CA48FEE00A0784C /* backend_xnnpack_debug */,
-				5C5E31FA2CA48FEE00A0784C /* kernels_custom */,
-				5C5E31FC2CA48FEE00A0784C /* kernels_custom_debug */,
-				5C5E31FE2CA48FEE00A0784C /* kernels_optimized */,
-				5C5E32002CA48FEE00A0784C /* kernels_optimized_debug */,
-				5C5E32022CA48FEE00A0784C /* kernels_portable */,
-				5C5E32042CA48FEE00A0784C /* kernels_portable_debug */,
-				5C5E32062CA48FEE00A0784C /* kernels_quantized */,
-				5C5E32082CA48FEE00A0784C /* kernels_quantized_debug */,
+				5C9644B12CCAC34500B80462 /* LlamaStackClient */,
+				5C9644B32CCAC34900B80462 /* backend_coreml */,
+				5C9644B52CCAC34900B80462 /* backend_coreml_debug */,
+				5C9644B72CCAC34900B80462 /* backend_mps */,
+				5C9644B92CCAC34900B80462 /* backend_mps_debug */,
+				5C9644BB2CCAC34900B80462 /* backend_xnnpack */,
+				5C9644BD2CCAC34900B80462 /* backend_xnnpack_debug */,
+				5C9644BF2CCAC34D00B80462 /* kernels_custom */,
+				5C9644C12CCAC34D00B80462 /* kernels_custom_debug */,
+				5C9644C32CCAC34D00B80462 /* kernels_optimized */,
+				5C9644C52CCAC34D00B80462 /* kernels_optimized_debug */,
+				5C9644C72CCAC34D00B80462 /* kernels_portable */,
+				5C9644C92CCAC34D00B80462 /* kernels_portable_debug */,
+				5C9644CB2CCAC34D00B80462 /* kernels_quantized */,
+				5C9644CD2CCAC34D00B80462 /* kernels_quantized_debug */,
+				5C9644D52CCAC72C00B80462 /* executorch_debug */,
 			);
 			productName = StackSummary;
 			productReference = 5CADB0012CA1345100942A87 /* iOSCalendarAssistantWithLocalInf.app */;
@@ -263,9 +269,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				5CADC7022CA45670007662D2 /* Assets.xcassets in Resources */,
-				5C5E31E22CA48BC400A0784C /* tokenizer.model in Resources */,
-				5C5E31E02CA48BBE00A0784C /* llama3_2_8da4w_32g_inference_len_2048.pte in Resources */,
 				5CADC7012CA45670007662D2 /* Preview Assets.xcassets in Resources */,
+				5C9644892CC8CE2000B80462 /* tokenizer.model in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -427,7 +432,22 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				OTHER_LDFLAGS = (
+				OTHER_LDFLAGS = "";
+				"OTHER_LDFLAGS[sdk=iphoneos*]" = (
+					"-force_load",
+					"$(BUILT_PRODUCTS_DIR)/libkernels_optimized-ios-release.a",
+					"-force_load",
+					"$(BUILT_PRODUCTS_DIR)/libkernels_custom-ios-release.a",
+					"-force_load",
+					"$(BUILT_PRODUCTS_DIR)/libkernels_quantized-ios-release.a",
+					"-force_load",
+					"$(BUILT_PRODUCTS_DIR)/libbackend_xnnpack-ios-release.a",
+					"-force_load",
+					"$(BUILT_PRODUCTS_DIR)/libbackend_coreml-ios-release.a",
+					"-force_load",
+					"$(BUILT_PRODUCTS_DIR)/libbackend_mps-ios-release.a",
+				);
+				"OTHER_LDFLAGS[sdk=iphonesimulator*]" = (
 					"-force_load",
 					"$(BUILT_PRODUCTS_DIR)/libkernels_optimized-simulator-release.a",
 					"-force_load",
@@ -469,7 +489,22 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				OTHER_LDFLAGS = (
+				OTHER_LDFLAGS = "";
+				"OTHER_LDFLAGS[sdk=iphoneos*]" = (
+					"-force_load",
+					"$(BUILT_PRODUCTS_DIR)/libkernels_optimized-ios-release.a",
+					"-force_load",
+					"$(BUILT_PRODUCTS_DIR)/libkernels_custom-ios-release.a",
+					"-force_load",
+					"$(BUILT_PRODUCTS_DIR)/libkernels_quantized-ios-release.a",
+					"-force_load",
+					"$(BUILT_PRODUCTS_DIR)/libbackend_xnnpack-ios-release.a",
+					"-force_load",
+					"$(BUILT_PRODUCTS_DIR)/libbackend_coreml-ios-release.a",
+					"-force_load",
+					"$(BUILT_PRODUCTS_DIR)/libbackend_mps-ios-release.a",
+				);
+				"OTHER_LDFLAGS[sdk=iphonesimulator*]" = (
 					"-force_load",
 					"$(BUILT_PRODUCTS_DIR)/libkernels_optimized-simulator-release.a",
 					"-force_load",
@@ -534,80 +569,85 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		5C5E31DB2CA48A8E00A0784C /* LlamaStackClient */ = {
+		5C9644B12CCAC34500B80462 /* LlamaStackClient */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 5C5E31DA2CA48A8E00A0784C /* XCRemoteSwiftPackageReference "llama-stack-client-swift" */;
 			productName = LlamaStackClient;
 		};
-		5C5E31EE2CA48FEE00A0784C /* backend_coreml */ = {
+		5C9644B32CCAC34900B80462 /* backend_coreml */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 5C5E31ED2CA48FEE00A0784C /* XCRemoteSwiftPackageReference "executorch" */;
 			productName = backend_coreml;
 		};
-		5C5E31F02CA48FEE00A0784C /* backend_coreml_debug */ = {
+		5C9644B52CCAC34900B80462 /* backend_coreml_debug */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 5C5E31ED2CA48FEE00A0784C /* XCRemoteSwiftPackageReference "executorch" */;
 			productName = backend_coreml_debug;
 		};
-		5C5E31F22CA48FEE00A0784C /* backend_mps */ = {
+		5C9644B72CCAC34900B80462 /* backend_mps */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 5C5E31ED2CA48FEE00A0784C /* XCRemoteSwiftPackageReference "executorch" */;
 			productName = backend_mps;
 		};
-		5C5E31F42CA48FEE00A0784C /* backend_mps_debug */ = {
+		5C9644B92CCAC34900B80462 /* backend_mps_debug */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 5C5E31ED2CA48FEE00A0784C /* XCRemoteSwiftPackageReference "executorch" */;
 			productName = backend_mps_debug;
 		};
-		5C5E31F62CA48FEE00A0784C /* backend_xnnpack */ = {
+		5C9644BB2CCAC34900B80462 /* backend_xnnpack */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 5C5E31ED2CA48FEE00A0784C /* XCRemoteSwiftPackageReference "executorch" */;
 			productName = backend_xnnpack;
 		};
-		5C5E31F82CA48FEE00A0784C /* backend_xnnpack_debug */ = {
+		5C9644BD2CCAC34900B80462 /* backend_xnnpack_debug */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 5C5E31ED2CA48FEE00A0784C /* XCRemoteSwiftPackageReference "executorch" */;
 			productName = backend_xnnpack_debug;
 		};
-		5C5E31FA2CA48FEE00A0784C /* kernels_custom */ = {
+		5C9644BF2CCAC34D00B80462 /* kernels_custom */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 5C5E31ED2CA48FEE00A0784C /* XCRemoteSwiftPackageReference "executorch" */;
 			productName = kernels_custom;
 		};
-		5C5E31FC2CA48FEE00A0784C /* kernels_custom_debug */ = {
+		5C9644C12CCAC34D00B80462 /* kernels_custom_debug */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 5C5E31ED2CA48FEE00A0784C /* XCRemoteSwiftPackageReference "executorch" */;
 			productName = kernels_custom_debug;
 		};
-		5C5E31FE2CA48FEE00A0784C /* kernels_optimized */ = {
+		5C9644C32CCAC34D00B80462 /* kernels_optimized */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 5C5E31ED2CA48FEE00A0784C /* XCRemoteSwiftPackageReference "executorch" */;
 			productName = kernels_optimized;
 		};
-		5C5E32002CA48FEE00A0784C /* kernels_optimized_debug */ = {
+		5C9644C52CCAC34D00B80462 /* kernels_optimized_debug */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 5C5E31ED2CA48FEE00A0784C /* XCRemoteSwiftPackageReference "executorch" */;
 			productName = kernels_optimized_debug;
 		};
-		5C5E32022CA48FEE00A0784C /* kernels_portable */ = {
+		5C9644C72CCAC34D00B80462 /* kernels_portable */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 5C5E31ED2CA48FEE00A0784C /* XCRemoteSwiftPackageReference "executorch" */;
 			productName = kernels_portable;
 		};
-		5C5E32042CA48FEE00A0784C /* kernels_portable_debug */ = {
+		5C9644C92CCAC34D00B80462 /* kernels_portable_debug */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 5C5E31ED2CA48FEE00A0784C /* XCRemoteSwiftPackageReference "executorch" */;
 			productName = kernels_portable_debug;
 		};
-		5C5E32062CA48FEE00A0784C /* kernels_quantized */ = {
+		5C9644CB2CCAC34D00B80462 /* kernels_quantized */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 5C5E31ED2CA48FEE00A0784C /* XCRemoteSwiftPackageReference "executorch" */;
 			productName = kernels_quantized;
 		};
-		5C5E32082CA48FEE00A0784C /* kernels_quantized_debug */ = {
+		5C9644CD2CCAC34D00B80462 /* kernels_quantized_debug */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 5C5E31ED2CA48FEE00A0784C /* XCRemoteSwiftPackageReference "executorch" */;
 			productName = kernels_quantized_debug;
+		};
+		5C9644D52CCAC72C00B80462 /* executorch_debug */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5C5E31ED2CA48FEE00A0784C /* XCRemoteSwiftPackageReference "executorch" */;
+			productName = executorch_debug;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
