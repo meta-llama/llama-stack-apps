@@ -128,7 +128,7 @@ cd <path-to-llama-agentic-system>
 conda activate $ENV
 llama stack run <name> # If not already started
 
-PYTHONPATH=. python examples/scripts/vacation.py localhost 5000
+PYTHONPATH=. python -m examples.agents.rag_with_memory_bank localhost 5000
 ```
 
 You should see outputs to stdout of the form --
