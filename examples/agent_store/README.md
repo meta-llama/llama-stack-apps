@@ -56,7 +56,15 @@ PYTHONPATH=. python examples/agent_store/app.py localhost 5000
 PYTHONPATH=. python examples/agent_store/app.py [::] 5000
 
 # start with an existing bank-id
-PYTHONPATH=. python examples/agent_store/app.py localhost 5000 --bank-ids ef9226ff-c27c-45ef-923b-f5e96b35c747
+$ llama-stack-client memory_banks list
+
++--------------+---------------+--------+-------------------+------------------------+--------------------------+
+| identifier   | provider_id   | type   | embedding_model   |   chunk_size_in_tokens |   overlap_size_in_tokens |
++==============+===============+========+===================+========================+==========================+
+| memory_bank  | meta0         | vector | all-MiniLM-L6-v2  |                    512 |                       64 |
++--------------+---------------+--------+-------------------+------------------------+--------------------------+
+
+$ PYTHONPATH=. python examples/agent_store/app.py localhost 5000 --bank-ids memory_bank
 ```
 
 ## How to create a Bank ? 
@@ -89,20 +97,21 @@ PYTHONPATH=. python examples/agent_store/build_index.py localhost 5000 ~/resourc
 
 # Sample output
 PYTHONPATH=. python examples/agent_store/build_index.py localhost 5000 ~/resources/
-Created bank: {
-    "bank_id": "ef9226ff-c27c-45ef-923b-f5e96b35c747",
-    "name": "memory_bank",
-    "config": {
-        "type": "vector",
-        "embedding_model": "all-MiniLM-L6-v2",
-        "chunk_size_in_tokens": 512,
-        "overlap_size_in_tokens": 64
-    },
-    "url": null
-}
-Successfully created bank: ef9226ff-c27c-45ef-923b-f5e96b35c747
+
+Successfully created bank: memory_bank
 ```
 You can then start the app with this pre-filled bank(s) using 
 ```
-PYTHONPATH=. python examples/agent_store/app.py localhost 5000 --bank-ids ef9226ff-c27c-45ef-923b-f5e96b35c747
+PYTHONPATH=. python examples/agent_store/app.py localhost 5000 --bank-ids memory_bank
+```
+
+The bank-ids can be obtained by running
+```
+$ llama-stack-client memory_banks list
+
++--------------+---------------+--------+-------------------+------------------------+--------------------------+
+| identifier   | provider_id   | type   | embedding_model   |   chunk_size_in_tokens |   overlap_size_in_tokens |
++==============+===============+========+===================+========================+==========================+
+| memory_bank  | meta0         | vector | all-MiniLM-L6-v2  |                    512 |                       64 |
++--------------+---------------+--------+-------------------+------------------------+--------------------------+
 ```

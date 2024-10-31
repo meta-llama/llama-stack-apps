@@ -1,0 +1,3 @@
+[submodule "examples/ios_calendar_assistant/iOSCalendarAssistantWithLocalInf/llama-stack"]
+	path = examples/ios_calendar_assistant/iOSCalendarAssistantWithLocalInf/llama-stack
+	url = https://github.com/meta-llama/llama-stack
