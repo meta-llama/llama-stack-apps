@@ -79,25 +79,6 @@ async def run_main(host: str, port: int, file_path: str):
     )
     cprint(eval_rows, "green")
 
-    # # check scoring functions available
-    # score_fn_list = client.scoring_functions.list()
-    # cprint([x.identifier for x in score_fn_list], "green")
-
-    # score_rows = client.scoring.score(
-    #     input_rows=rows_paginated.rows,
-    #     scoring_functions=["meta-reference::equality"],
-    # )
-    # cprint(f"Score Rows: {score_rows}", "red")
-
-    # # test scoring batch with dataset id
-    # score_batch = client.scoring.score_batch(
-    #     dataset_id="test-dataset",
-    #     scoring_functions=[x.identifier for x in score_fn_list],
-    #     save_results_dataset=False,
-    # )
-
-    # cprint(f"Score Batch: {score_batch}", "yellow")
-
 
 def main(host: str, port: int, file_path: str):
     asyncio.run(run_main(host, port, file_path))
