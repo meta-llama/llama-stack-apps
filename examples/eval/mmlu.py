@@ -15,6 +15,7 @@ from datasets import load_dataset
 
 from llama_stack_client import LlamaStackClient
 from termcolor import cprint
+from tqdm import tqdm
 
 from .client import data_url_from_file
 
@@ -114,7 +115,7 @@ def run_eval(host: str, port: int, file_path: str, strict: bool):
     # test eval with individual rows
     rows_paginated = client.datasetio.get_rows_paginated(
         dataset_id="eval-mmlu-{suffix}",
-        rows_in_page=3,
+        rows_in_page=-1,
         page_token=None,
         filter_condition=None,
     )
@@ -137,16 +138,34 @@ def run_eval(host: str, port: int, file_path: str, strict: bool):
     else:
         scoring_functions = ["meta-reference::answer_parsing_multiple_choice"]
 
-    eval_rows = client.eval.evaluate(
-        input_rows=rows_paginated.rows,
-        candidate=eval_candidate,
-        scoring_functions=scoring_functions,
-    )
+    output_res = {
+        "chat_completion_input": [],
+        "generated_output": [],
+        "expected_output": [],
+    }
+    for x in scoring_functions:
+        output_res[x] = []
+
+    # for i in tqdm(range(len(rows_paginated.rows))):
+    for i in tqdm(range(10)):
+        row = rows_paginated.rows[i]
+        eval_rows = client.eval.evaluate(
+            input_rows=[row],
+            candidate=eval_candidate,
+            scoring_functions=scoring_functions,
+        )
+        output_res["chat_completion_input"].append(row["chat_completion_input"])
+        output_res["expected_output"].append(row["expected_answer"])
+        output_res["generated_output"].append(
+            eval_rows.generations[0]["generated_answer"]
+        )
+        for scoring_fn in scoring_functions:
+            output_res[scoring_fn].append(eval_rows.scores[scoring_fn].score_rows[0])
 
     # dump results
     save_path = Path(os.path.abspath(__file__)).parent / "eval-result.json"
     with open(save_path, "w") as f:
-        json.dump(eval_rows.to_dict(), f, indent=4)
+        json.dump(output_res, f, indent=4)
 
     print(f"Eval result saved at {save_path}!")
 
