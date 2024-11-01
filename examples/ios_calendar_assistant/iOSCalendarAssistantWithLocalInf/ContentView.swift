@@ -27,7 +27,10 @@ struct ContentView: View {
   @State var isShowingEventModal = false
 
   private let inference: LocalInference
-  private let agents: LocalAgents
+  private let localAgents: LocalAgents
+  private let remoteAgents: RemoteAgents
+  @State private var isUsingLocalAgents = true
+  
   @State var agentId = ""
   @State var agenticSystemSessionId = ""
 
@@ -35,9 +38,14 @@ struct ContentView: View {
 
   public init () {
     self.inference = LocalInference(queue: runnerQueue)
-    self.agents = LocalAgents(inference: self.inference)
+    self.localAgents = LocalAgents(inference: self.inference)
+    self.remoteAgents = RemoteAgents(url: URL(string: "http://localhost:5000")!)
   }
 
+  var agents: Agents {
+    get { isUsingLocalAgents ? self.localAgents : self.remoteAgents }
+  }
+  
   private var placeholder: String {
     "Ask Llama to summarize..."
   }
@@ -51,14 +59,14 @@ struct ContentView: View {
   var body: some View {
     NavigationView {
       VStack {
-        MessageListView(messages: $messages)
-          .gesture(
-            DragGesture().onChanged { value in
-              if value.translation.height > 10 {
-                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-              }
-            }
-          )
+        Picker("Agent Type", selection: $isUsingLocalAgents) {
+          Text("Local").tag(true)
+          Text("Remote").tag(false)
+        }
+        .pickerStyle(.segmented)
+        .padding()
+        Spacer()
+        
         HStack {
           TextField(placeholder, text: $prompt, axis: .vertical)
             .padding(8)
