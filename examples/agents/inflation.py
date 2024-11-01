@@ -86,47 +86,6 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
         async for log in EventLogger().log(response):
             log.print()
 
-    # api_keys = load_api_keys_from_env()
-    # tool_definitions = [
-    #     search_tool_defn(api_keys),
-    #     # Adding code_interpreter enables file analysis
-    #     AgentConfigToolCodeInterpreterToolDefinition(type="code_interpreter"),
-    # ]
-
-    # agent_config = await make_agent_config_with_custom_tools(
-    #     disable_safety=disable_safety,
-    #     tool_config=QuickToolConfig(
-    #         tool_definitions=tool_definitions,
-    #         custom_tools=[],
-    #         attachment_behavior="code_interpreter",
-    #     ),
-    # )
-
-    # print(agent_config)
-
-    # await execute_turns(
-    #     agent_config=agent_config,
-    #     custom_tools=[],
-    #     turn_inputs=[
-    #         prompt_to_turn(
-    #             "Here is a csv, can you describe it ?",
-    #             attachments=[
-    #                 Attachment(
-    #                     content="https://raw.githubusercontent.com/meta-llama/llama-stack-apps/main/examples/resources/inflation.csv",
-    #                     mime_type="text/csv",
-    #                 ),
-    #             ],
-    #         ),
-    #         prompt_to_turn("Which year ended with the highest inflation ?"),
-    #         prompt_to_turn(
-    #             "What macro economic situations that led to such high inflation in that period?"
-    #         ),
-    #         prompt_to_turn("Plot average yearly inflation as a time series"),
-    #     ],
-    #     host=host,
-    #     port=port,
-    # )
-
 
 def main(host: str, port: int, disable_safety: bool = False):
     asyncio.run(run_main(host, port, disable_safety))
