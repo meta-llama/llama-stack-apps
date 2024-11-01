@@ -108,8 +108,8 @@ def run_eval(host: str, port: int, file_path: str):
     for x in scoring_functions:
         output_res[x] = []
 
-    # for i in tqdm(range(len(rows_paginated.rows))):
-    for i in tqdm(range(10)):
+    for i in tqdm(range(len(rows_paginated.rows))):
+        # for i in tqdm(range(10)):
         row = rows_paginated.rows[i]
         eval_rows = client.eval.evaluate(
             input_rows=[row],
@@ -125,11 +125,23 @@ def run_eval(host: str, port: int, file_path: str):
             output_res[scoring_fn].append(eval_rows.scores[scoring_fn].score_rows[0])
 
     # dump results
-    save_path = Path(os.path.abspath(__file__)).parent / "eval-result.json"
+    save_path = Path(os.path.abspath(__file__)).parent / "simpleqa-eval-result.json"
     with open(save_path, "w") as f:
         json.dump(output_res, f, indent=4)
 
     print(f"Eval result saved at {save_path}!")
+
+    # print stats
+    scores = output_res["meta-reference::llm_as_judge_openai_simpleqa"]
+
+    num_correct = sum([x["judge_feedback"] == "A" for x in scores])
+    num_incorrect = sum([x["judge_feedback"] == "B" for x in scores])
+    num_not_attempted = sum([x["judge_feedback"] == "C" for x in scores])
+
+    cprint(
+        f"Num Correct: {num_correct}, Num Incorrect: {num_incorrect}, Num Not Attempted: {num_not_attempted}",
+        "green",
+    )
 
 
 def main(
