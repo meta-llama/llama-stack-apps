@@ -30,7 +30,7 @@ struct ContentView: View {
   private let localAgents: LocalAgents
   private let remoteAgents: RemoteAgents
   @State private var isUsingLocalAgents = true
-  
+
   @State var agentId = ""
   @State var agenticSystemSessionId = ""
 
@@ -45,7 +45,7 @@ struct ContentView: View {
   var agents: Agents {
     get { isUsingLocalAgents ? self.localAgents : self.remoteAgents }
   }
-  
+
   private var placeholder: String {
     "Ask Llama to summarize..."
   }
@@ -65,8 +65,16 @@ struct ContentView: View {
         }
         .pickerStyle(.segmented)
         .padding()
+        MessageListView(messages: $messages)
+                  .gesture(
+                    DragGesture().onChanged { value in
+                      if value.translation.height > 10 {
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                      }
+                    }
+                  )
         Spacer()
-        
+
         HStack {
           TextField(placeholder, text: $prompt, axis: .vertical)
             .padding(8)
@@ -295,7 +303,6 @@ struct ContentView: View {
 
       Task {
         messages.append(Message(text: text))
-        messages.append(Message(type: .summary))
 
         do {
           let createSystemResponse = try await self.agents.create(
@@ -306,9 +313,9 @@ struct ContentView: View {
                 max_infer_iters: 1,
                 model: "Llama3.1-8B-Instruct",
                 tools: [
-                  Components.Schemas.AgentConfig.toolsPayloadPayload.FunctionCallToolDefinition(
-                    CustomTools.getCreateEventTool()
-                  )
+                 Components.Schemas.AgentConfig.toolsPayloadPayload.FunctionCallToolDefinition(
+                   CustomTools.getCreateEventTool()
+                 )
                 ]
               )
             )
@@ -320,12 +327,13 @@ struct ContentView: View {
           )
           self.agenticSystemSessionId = createSessionResponse.session_id
 
+          messages.append(Message(type: .summary))
           try await summarizeConversation(prompt: text)
 
-          messages.append(Message(type: .actionItems))
-          try await actionItems(prompt: text)
+         messages.append(Message(type: .actionItems))
+         try await actionItems(prompt: text)
 
-          try await callTools(prompt: text)
+         try await callTools(prompt: text)
         } catch {
           print("Error: \(error)")
         }
