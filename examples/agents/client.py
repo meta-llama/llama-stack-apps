@@ -46,6 +46,8 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
     )
 
     agent = Agent(client, agent_config)
+    session_id = agent.create_session("test-session")
+    print(f"Created session_id={session_id} for Agent({agent.agent_id})")
 
     user_prompts = [
         "I am planning a trip to Switzerland, what are the top 3 places to visit?",
@@ -53,9 +55,6 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
         "What other countries should I consider to club?",
         "What is the capital of France?",
     ]
-
-    session_id = agent.create_session("test-session")
-    print(f"Created session_id={session_id} for Agent({agent.agent_id})")
 
     for prompt in user_prompts:
         response = agent.create_turn(
