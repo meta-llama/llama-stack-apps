@@ -304,7 +304,7 @@ struct ContentView: View {
                 enable_session_persistence: false,
                 instructions: "You are a helpful assistant",
                 max_infer_iters: 1,
-                model: "Meta-Llama3.1-8B-Instruct",
+                model: "Llama3.1-8B-Instruct",
                 tools: [
                   Components.Schemas.AgentConfig.toolsPayloadPayload.FunctionCallToolDefinition(
                     CustomTools.getCreateEventTool()
