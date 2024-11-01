@@ -166,3 +166,4 @@ app/uploads/
 xcuserdata/
 *.pte
 *.model
+Package.resolved
