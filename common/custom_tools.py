@@ -100,5 +100,5 @@ class SingleMessageCustomTool(CustomTool):
         return [message]
 
     @abstractmethod
-    async def run_impl(self, *args, **kwargs):
+    def run_impl(self, *args, **kwargs):
         raise NotImplementedError()
