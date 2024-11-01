@@ -8,40 +8,63 @@
 # This software may be used and distributed in accordance with the terms of the Llama 3 Community License Agreement.
 
 import asyncio
+import os
 
 import fire
-from common.client_utils import *  # noqa: F403
 
 from llama_stack_client import LlamaStackClient
-
-from llama_stack_client.types import SamplingParams, UserMessage
+from llama_stack_client.lib.agents.agent import Agent
+from llama_stack_client.lib.agents.event_logger import EventLogger
 from llama_stack_client.types.agent_create_params import AgentConfig
-from termcolor import cprint
-
-from .multi_turn import execute_turns, prompt_to_turn
 
 
 async def run_main(host: str, port: int, disable_safety: bool = False):
-    tool_definitions = [search_tool_defn(load_api_keys_from_env())]
-    agent_config = await make_agent_config_with_custom_tools(
-        disable_safety=disable_safety,
-        tool_config=QuickToolConfig(tool_definitions=tool_definitions),
+    client = LlamaStackClient(
+        base_url=f"http://{host}:{port}",
     )
 
-    await execute_turns(
-        agent_config=agent_config,
-        custom_tools=[],
-        turn_inputs=[
-            prompt_to_turn(
-                "Hello",
-            ),
-            prompt_to_turn(
-                "Which players played in the winning team of the NBA western conference semifinals of 2024, please use tools"
-            ),
+    agent_config = AgentConfig(
+        model="Llama3.1-8B-Instruct",
+        instructions="You are a helpful assistant",
+        sampling_params={
+            "strategy": "greedy",
+            "temperature": 1.0,
+            "top_p": 0.9,
+        },
+        tools=[
+            {
+                "type": "brave_search",
+                "engine": "brave",
+                "api_key": os.getenv("BRAVE_SEARCH_API_KEY"),
+            }
         ],
-        host=host,
-        port=port,
+        tool_choice="auto",
+        tool_prompt_format="json",
+        input_shields=[] if disable_safety else ["llama_guard"],
+        output_shields=[] if disable_safety else ["llama_guard"],
+        enable_session_persistence=False,
     )
+    agent = Agent(client, agent_config)
+    user_prompts = [
+        "Hello",
+        "Which players played in the winning team of the NBA western conference semifinals of 2024, please use tools",
+    ]
+
+    session_id = agent.create_session("test-session")
+
+    for prompt in user_prompts:
+        response = agent.create_turn(
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt,
+                }
+            ],
+            session_id=session_id,
+        )
+
+        async for log in EventLogger().log(response):
+            log.print()
 
 
 def main(host: str, port: int, disable_safety: bool = False):
