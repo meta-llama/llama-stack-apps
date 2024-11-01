@@ -3,6 +3,7 @@
 #
 # This source code is licensed under the terms described in the LICENSE file in
 # the root directory of this source tree.
+import json
 import os
 from pathlib import Path
 from typing import Optional
@@ -22,10 +23,10 @@ Given the following question and candidate answers, choose the best answer.
 
 Question: {question}
 
-A) {A}
-B) {B}
-C) {C}
-D) {D}
+A. {A}
+B. {B}
+C. {C}
+D. {D}
 
 The last line of your response should be of the following format: 'Answer: $LETTER' (without quotes) where LETTER is one of ABCD.
 """
@@ -35,10 +36,10 @@ Given the following question and candidate answers, choose the best answer.
 
 Question: {question}
 
-A) {A}
-B) {B}
-C) {C}
-D) {D}
+A. {A}
+B. {B}
+C. {C}
+D. {D}
 
 Your response should only contain a single letter '$LETTER' (without quotes) where LETTER is one of ABCD.
 """
@@ -113,7 +114,7 @@ def run_eval(host: str, port: int, file_path: str, strict: bool):
     # test eval with individual rows
     rows_paginated = client.datasetio.get_rows_paginated(
         dataset_id="eval-mmlu-{suffix}",
-        rows_in_page=3,
+        rows_in_page=30,
         page_token=None,
         filter_condition=None,
     )
@@ -142,7 +143,12 @@ def run_eval(host: str, port: int, file_path: str, strict: bool):
         scoring_functions=scoring_functions,
     )
 
-    cprint(eval_rows, "green")
+    # dump results
+    save_path = Path(os.path.abspath(__file__)).parent / "eval-result.json"
+    with open(save_path, "w") as f:
+        json.dump(eval_rows.to_dict(), f, indent=4)
+
+    print(f"Eval result saved at {save_path}!")
 
 
 def main(
