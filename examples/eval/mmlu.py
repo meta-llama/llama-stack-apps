@@ -114,7 +114,7 @@ def run_eval(host: str, port: int, file_path: str, strict: bool):
     # test eval with individual rows
     rows_paginated = client.datasetio.get_rows_paginated(
         dataset_id="eval-mmlu-{suffix}",
-        rows_in_page=30,
+        rows_in_page=3,
         page_token=None,
         filter_condition=None,
     )
