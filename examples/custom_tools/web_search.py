@@ -6,10 +6,11 @@
 
 from typing import Dict
 
-from common.custom_tools import SingleMessageCustomTool
 from llama_stack_client.types.tool_param_definition_param import (
     ToolParamDefinitionParam,
 )
+
+from .single_message import SingleMessageCustomTool
 
 
 class BraveSearch:
