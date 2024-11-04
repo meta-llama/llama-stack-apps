@@ -4,19 +4,15 @@
 # This source code is licensed under the terms described in the LICENSE file in
 # the root directory of this source tree.
 
-# Copyright (c) Meta Platforms, Inc. and affiliates.
-# This software may be used and distributed in accordance with the terms of the Llama 3 Community License Agreement.
-
 import asyncio
 
 import fire
-from common.client_utils import *  # noqa: F403
 
 from llama_stack_client import LlamaStackClient
-from llama_stack_client.types import Attachment
+from llama_stack_client.lib.agents.agent import Agent
+from llama_stack_client.lib.agents.event_logger import EventLogger
+from llama_stack_client.types.agent_create_params import AgentConfig
 from llama_stack_client.types.memory_insert_params import Document
-
-from .multi_turn import execute_turns, prompt_to_turn
 
 
 async def run_main(host: str, port: int, disable_safety: bool = False):
@@ -57,35 +53,57 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
         documents=documents,
     )
 
-    # now run the agentic system pointing it to the pre-populated memory bank
-    agent_config = await make_agent_config_with_custom_tools(
+    input_shields = [] if disable_safety else ["llama_guard"]
+    output_shields = [] if disable_safety else ["llama_guard"]
+
+    agent_config = AgentConfig(
         model="Llama3.1-8B-Instruct",
-        disable_safety=disable_safety,
-        tool_config=QuickToolConfig(
-            # enable memory for RAG behavior, provide appropriate bank_id
-            memory_bank_id="test_bank",
-            attachment_behavior="rag",
-        ),
+        instructions="You are a helpful assistant",
+        sampling_params={
+            "strategy": "greedy",
+            "temperature": 1.0,
+            "top_p": 0.9,
+        },
+        tools=[
+            {
+                "type": "memory",
+                "memory_bank_configs": [{"bank_id": "test_bank", "type": "vector"}],
+                "query_generator_config": {"type": "default", "sep": " "},
+                "max_tokens_in_context": 4096,
+                "max_chunks": 10,
+            }
+        ],
+        tool_choice="auto",
+        tool_prompt_format="json",
+        input_shields=input_shields,
+        output_shields=output_shields,
+        enable_session_persistence=False,
     )
 
-    await execute_turns(
-        agent_config=agent_config,
-        custom_tools=[],
-        turn_inputs=[
-            prompt_to_turn(
-                "What are the top 5 topics that were explained in the documentation? Only list succinct bullet points.",
-            ),
-            prompt_to_turn("Was anything related to 'Llama3' discussed, if so what?"),
-            prompt_to_turn(
-                "Tell me how to use LoRA",
-            ),
-            prompt_to_turn(
-                "What about Quantization?",
-            ),
-        ],
-        host=host,
-        port=port,
-    )
+    agent = Agent(client, agent_config)
+    session_id = agent.create_session("test-session")
+    print(f"Created session_id={session_id} for Agent({agent.agent_id})")
+
+    user_prompts = [
+        "What are the top 5 topics that were explained in the documentation? Only list succinct bullet points.",
+        "Was anything related to 'Llama3' discussed, if so what?",
+        "Tell me how to use LoRA",
+        "What about Quantization?",
+    ]
+
+    for prompt in user_prompts:
+        response = agent.create_turn(
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt,
+                }
+            ],
+            session_id=session_id,
+        )
+
+        async for log in EventLogger().log(response):
+            log.print()
 
 
 def main(host: str, port: int, disable_safety: bool = False):
