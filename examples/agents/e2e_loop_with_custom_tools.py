@@ -83,7 +83,6 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
         enable_session_persistence=False,
     )
     custom_tools = [TickerDataTool(), WebSearchTool(os.getenv("BRAVE_SEARCH_API_KEY"))]
-    print(custom_tools)
 
     agent = Agent(client, agent_config, custom_tools)
     session_id = agent.create_session("test-session")
