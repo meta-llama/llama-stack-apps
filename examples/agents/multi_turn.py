@@ -10,10 +10,16 @@ import os
 import sys
 from typing import List, Optional
 
-from pydantic import BaseModel
+
+# from llama_stack_client.lib.agents.agents import Attachment
+# from llama_stack.apis.agents import AgentConfig
+# from llama_stack.tools.custom.datatypes import CustomTool
 
 from common.client_utils import *  # noqa: F403
+
 from llama_stack_client.lib.agents.event_logger import EventLogger
+from llama_stack_client.types import Attachment, UserMessage
+from pydantic import BaseModel
 from termcolor import cprint
 
 
