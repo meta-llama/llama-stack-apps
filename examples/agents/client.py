@@ -3,25 +3,37 @@
 #
 # This source code is licensed under the terms described in the LICENSE file in
 # the root directory of this source tree.
-
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # This software may be used and distributed in accordance with the terms of the Llama 3 Community License Agreement.
 
 import asyncio
 import os
-
 import fire
-
+from typing import Optional
+from urllib.parse import urlparse
 from llama_stack_client import LlamaStackClient
 from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.lib.agents.event_logger import EventLogger
 from llama_stack_client.types.agent_create_params import AgentConfig
 
 
-async def run_main(host: str, port: int, disable_safety: bool = False):
-    client = LlamaStackClient(
-        base_url=f"http://{host}:{port}",
-    )
+async def run_main(
+    host: str,
+    port: int,
+    use_https: bool = False,
+    disable_safety: bool = False,
+    cert_path: Optional[str] = None,
+):
+    # Construct the base URL with the appropriate protocol
+    protocol = "https" if use_https else "http"
+    base_url = f"{protocol}://{host}:{port}"
+
+    # Configure client with SSL certificate if provided
+    client_kwargs = {"base_url": base_url}
+    if use_https and cert_path:
+        client_kwargs["verify"] = cert_path
+
+    client = LlamaStackClient(**client_kwargs)
 
     agent_config = AgentConfig(
         model="Llama3.1-8B-Instruct",
@@ -66,13 +78,18 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
             ],
             session_id=session_id,
         )
-
         async for log in EventLogger().log(response):
             log.print()
 
 
-def main(host: str, port: int, disable_safety: bool = False):
-    asyncio.run(run_main(host, port, disable_safety))
+def main(
+    host: str,
+    port: int,
+    use_https: bool = False,
+    disable_safety: bool = False,
+    cert_path: Optional[str] = None,
+):
+    asyncio.run(run_main(host, port, use_https, disable_safety, cert_path))
 
 
 if __name__ == "__main__":
