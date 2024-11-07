@@ -18,6 +18,28 @@ async def run_main(host: str, port: int, stream: bool = True):
     client = LlamaStackClient(
         base_url=f"http://{host}:{port}",
     )
+    try:
+        models_response = client.models.list()  # Fetch models list from server
+        available_models = [model.identifier for model in models_response]
+        if not available_models:
+            print("No available models in the distribution endpoint.")
+            return
+    except Exception as e:
+        print(f"Failed to fetch models: {e}")
+        return
+    
+    print("Available Models:")
+    for idx, model_name in enumerate(available_models, start=1):
+        print(f"{idx}. {model_name}")
+    model_input = input(f"Select a model by number (or press Enter for default - {available_models[0]}): ")
+
+    try:
+        model_index = int(model_input) - 1 if model_input else 0
+        selected_model = available_models[model_index]
+    except (ValueError, IndexError):
+        print("Invalid selection. Using default model.")
+        selected_model = available_models[0]
+
 
     message = UserMessage(
         content="hello world, write me a 2 sentence poem about the moon", role="user"
@@ -25,7 +47,7 @@ async def run_main(host: str, port: int, stream: bool = True):
     cprint(f"User>{message.content}", "green")
     response = client.inference.chat_completion(
         messages=[message],
-        model="Llama3.1-8B-Instruct",
+        model=selected_model,
         stream=stream,
     )
 
