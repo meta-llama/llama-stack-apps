@@ -18,14 +18,10 @@ async def run_main(host: str, port: int, stream: bool = True):
     client = LlamaStackClient(
         base_url=f"http://{host}:{port}",
     )
-    try:
-        models_response = client.models.list()  # Fetch models list from server
-        available_models = [model.identifier for model in models_response]
-        if not available_models:
-            print("No available models in the distribution endpoint.")
-            return
-    except Exception as e:
-        print(f"Failed to fetch models: {e}")
+    models_response = client.models.list()  # Fetch models list from server
+    available_models = [model.identifier for model in models_response]
+    if not available_models:
+        cprint("No available models in the distribution endpoint.", "red")
         return
     
     print("Available Models:")
@@ -33,12 +29,14 @@ async def run_main(host: str, port: int, stream: bool = True):
         print(f"{idx}. {model_name}")
     model_input = input(f"Select a model by number (or press Enter for default - {available_models[0]}): ")
 
-    try:
-        model_index = int(model_input) - 1 if model_input else 0
-        selected_model = available_models[model_index]
-    except (ValueError, IndexError):
-        print("Invalid selection. Using default model.")
-        selected_model = available_models[0]
+    selected_model = None
+    while selected_model is None:
+        model_input = input(f"Select a model by number (or press Enter for default - {available_models[0]}): ")
+        try:
+            model_index = int(model_input) - 1 if model_input else 0
+            selected_model = available_models[model_index]
+        except (ValueError, IndexError):
+            cprint("Invalid selection. Please try again.", "red")
 
 
     message = UserMessage(
