@@ -39,15 +39,15 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
         agent_config=agent_config,
         custom_tools=[],
         turn_inputs=[
-            # prompt_to_turn(
-            #     "Here is a csv, can you describe it ?",
-            #     attachments=[
-            #         Attachment(
-            #             content="https://raw.githubusercontent.com/meta-llama/llama-stack-apps/main/examples/resources/inflation.csv",
-            #             mime_type="text/csv",
-            #         ),
-            #     ],
-            # ),
+            prompt_to_turn(
+                "Here is a csv, can you describe it ?",
+                attachments=[
+                    Attachment(
+                        content="https://raw.githubusercontent.com/meta-llama/llama-stack-apps/main/examples/resources/inflation.csv",
+                        mime_type="text/csv",
+                    ),
+                ],
+            ),
             prompt_to_turn("Which year ended with the highest inflation ?"),
             prompt_to_turn(
                 "What macro economic situations that led to such high inflation in that period?"
