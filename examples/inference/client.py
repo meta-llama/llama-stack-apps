@@ -19,9 +19,20 @@ async def run_main(host: str, port: int, stream: bool = True):
         base_url=f"http://{host}:{port}",
     )
 
-    message = UserMessage(
-        content="hello world, write me a 2 sentence poem about the moon", role="user"
+    client.models.register(
+        model={
+            "identifier": "Llama3.1-8B-Instruct",
+            "llama_model": "Llama3.1-8B-Instruct",
+            "provider_id": "meta-reference-0",
+            "metadata": {},
+        }
     )
+
+    message = {
+        "role": "user",
+        "content": "hello world, write me a 2 sentence poem about the moon",
+    }
+
     cprint(f"User>{message.content}", "green")
     response = client.inference.chat_completion(
         messages=[message],

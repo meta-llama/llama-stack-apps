@@ -32,13 +32,20 @@ async def run_main(host: str, port: int, stream: bool = True):
 
     data_url = f"data:{mime_type};base64,{encoded_string}"
 
-    message = UserMessage(
-        role="user",
-        content=[
-            {"image": {"uri": data_url}},
-            "Describe what is in this image.",
-        ],
+    client.models.register(
+        model={
+            "identifier": "Llama3.2-11B-Vision-Instruct",
+            "llama_model": "Llama3.2-11B-Vision-Instruct",
+            "provider_id": "meta-reference-0",
+            "metadata": {},
+        }
     )
+
+    message = {
+        "role": "user",
+        "content": [{"image": {"uri": data_url}}, "Describe what is in this image."],
+    }
+
     cprint(f"User>{message.content}", "green")
     response = client.inference.chat_completion(
         messages=[message],
