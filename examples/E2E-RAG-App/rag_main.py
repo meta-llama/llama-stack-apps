@@ -5,11 +5,11 @@
 # the root directory of this source tree.
 
 import asyncio
-
 import base64
 import mimetypes
 import os
 import uuid
+import json
 
 import fire
 import pandas as pd
@@ -21,6 +21,18 @@ from llama_stack_client.types.agent_create_params import AgentConfig
 from llama_stack_client.types.memory_insert_params import Document
 from termcolor import cprint
 from tqdm import tqdm
+
+
+def save_memory_bank(bank_id: str, memory_bank_data: dict, file_path: str):
+    with open(file_path, 'w') as f:
+        json.dump(memory_bank_data, f)
+
+
+def load_memory_bank(file_path: str):
+    if os.path.exists(file_path):
+        with open(file_path, 'r') as f:
+            return json.load(f)
+    return None
 
 
 def data_url_from_file(file_path: str) -> str:
@@ -38,50 +50,69 @@ def data_url_from_file(file_path: str) -> str:
     return data_url
 
 
-def build_index(client: LlamaStackClient, file_dir: str, bank_id: str) -> str:
+def build_index(client: LlamaStackClient, file_dir: str, bank_id: str, memory_bank_file: str) -> str:
     """Build a memory bank from a directory of pdf files"""
-    # 1. create memory bank
-    providers = client.providers.list()
-    client.memory_banks.register(
-        memory_bank={
+    # Check if a saved memory bank exists
+    memory_bank_data = load_memory_bank(memory_bank_file)
+    if memory_bank_data:
+        # Load the memory bank from the file
+        print(f"Loaded memory bank from {memory_bank_file}")
+        # Assuming you have a method to register the loaded memory bank
+        client.memory_banks.register(memory_bank=memory_bank_data)
+    else:
+        # 1. create memory bank
+        providers = client.providers.list()
+        client.memory_banks.register(
+            memory_bank={
+                "identifier": bank_id,
+                "embedding_model": "all-MiniLM-L6-v2",
+                "chunk_size_in_tokens": 512,
+                "overlap_size_in_tokens": 64,
+                "provider_id": providers["memory"][0].provider_id,
+            }
+        )
+
+        # 2. load pdf,text,md from directory as raw text
+        paths = []
+        documents = []
+        for filename in os.listdir(file_dir):
+            if filename.endswith(".pdf"):
+                file_path = os.path.join(file_dir, filename)
+                paths.append(file_path)
+
+                documents.append(
+                    Document(
+                        document_id=os.path.basename(file_path),
+                        content=data_url_from_file(file_path),
+                        mime_type="application/pdf",
+                    )
+                )
+            elif filename.endswith(".txt") or filename.endswith(".md"):
+                file_path = os.path.join(file_dir, filename)
+                paths.append(file_path)
+                documents.append(
+                    Document(
+                        document_id=os.path.basename(file_path),
+                        content=data_url_from_file(file_path),
+                        mime_type="text/plain",
+                    )
+                )
+
+        # insert some documents
+        client.memory.insert(bank_id=bank_id, documents=documents)
+        print(f"Inserted {len(documents)} documents into bank: {bank_id}")
+
+        # Save the memory bank to a file after building it
+        memory_bank_data = {
             "identifier": bank_id,
             "embedding_model": "all-MiniLM-L6-v2",
             "chunk_size_in_tokens": 512,
             "overlap_size_in_tokens": 64,
             "provider_id": providers["memory"][0].provider_id,
         }
-    )
+        save_memory_bank(bank_id, memory_bank_data, memory_bank_file)
+        print(f"Saved memory bank to {memory_bank_file}")
 
-    # 2. load pdf,text,md from directory as raw text
-    paths = []
-    documents = []
-    for filename in os.listdir(file_dir):
-        if filename.endswith(".pdf"):
-            file_path = os.path.join(file_dir, filename)
-            paths.append(file_path)
-
-            documents.append(
-                Document(
-                    document_id=os.path.basename(file_path),
-                    content=data_url_from_file(file_path),
-                    mime_type="application/pdf",
-                )
-            )
-        elif filename.endswith(".txt") or filename.endswith(".md"):
-            file_path = os.path.join(file_dir, filename)
-            paths.append(file_path)
-            documents.append(
-                Document(
-                    document_id=os.path.basename(file_path),
-                    content=data_url_from_file(file_path),
-                    mime_type="text/plain",
-                )
-            )
-
-    # insert some documents
-    client.memory.insert(bank_id=bank_id, documents=documents)
-    print(f"Inserted {len(documents)} documents into bank: {bank_id}")
-    # TODO: add a way to check if the bank is created successfully
     return bank_id
 
 
@@ -111,7 +142,8 @@ async def run_main(host: str, port: int, docs_dir: str):
     client = LlamaStackClient(base_url=f"http://{host}:{port}")
 
     bank_id = "rag_agent_docs"
-    build_index(client, docs_dir, bank_id)
+    memory_bank_file = 'path/to/memory_bank.json'  # Define the path to your memory bank file
+    build_index(client, docs_dir, bank_id, memory_bank_file)
     print(f"Created bank: {bank_id}")
     models_response = client.models.list()
     print(f"Found {len(models_response)} models", models_response)
@@ -130,7 +162,6 @@ async def run_main(host: str, port: int, docs_dir: str):
             "top_p": 0.9,
         },
         tools=[
-            # TODO: save the bank to local file and load it from local file
             {
                 "type": "memory",
                 "memory_bank_configs": [{"bank_id": bank_id, "type": "vector"}],
