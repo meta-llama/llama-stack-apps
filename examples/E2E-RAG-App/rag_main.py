@@ -9,6 +9,7 @@ import asyncio
 import base64
 import mimetypes
 import os
+import uuid
 
 import fire
 import pandas as pd
@@ -84,16 +85,16 @@ def build_index(client: LlamaStackClient, file_dir: str, bank_id: str) -> str:
     return bank_id
 
 
-async def get_response_row(agent: Agent, input_query: str) -> str:
-    # single turn, each prompt is a new session
-    session_id = agent.create_session(f"session-{input_query}")
+async def get_response_row(agent: Agent, input_query: str, session_id) -> str:
+    messages = [
+        {
+            "role": "user",
+            "content": input_query,
+        }
+    ]
+    print("messages", messages)
     response = agent.create_turn(
-        messages=[
-            {
-                "role": "user",
-                "content": input_query,
-            }
-        ],
+        messages=messages,
         session_id=session_id,
     )
 
@@ -101,6 +102,8 @@ async def get_response_row(agent: Agent, input_query: str) -> str:
         event = chunk.event
         event_type = event.payload.event_type
         if event_type == "turn_complete":
+            print("----input_query-------", input_query)
+            print(event.payload.turn)
             return event.payload.turn.output_message.content
 
 
@@ -120,7 +123,7 @@ async def run_main(host: str, port: int, docs_dir: str):
     assert model_name is not None, "No model found"
     agent_config = AgentConfig(
         model=model_name,
-        instructions="You are a helpful assistant",
+        instructions="You are a helpful assistant that can answer questions with the provided documents. Read the documents carefully and answer the question based on the documents. If you don't know the answer, just say that you don't know.",
         sampling_params={
             "strategy": "greedy",
             "temperature": 1.0,
@@ -132,28 +135,32 @@ async def run_main(host: str, port: int, docs_dir: str):
                 "type": "memory",
                 "memory_bank_configs": [{"bank_id": bank_id, "type": "vector"}],
                 "query_generator_config": {"type": "default", "sep": " "},
-                "max_tokens_in_context": 4096,
-                "max_chunks": 50,
+                "max_tokens_in_context": 1024,
+                "max_chunks": 5,
+                "score_threshold": 0.8,
             }
         ],
         tool_choice="auto",
         tool_prompt_format="json",
         input_shields=[],
         output_shields=[],
-        enable_session_persistence=False,
+        enable_session_persistence=True,
     )
 
     agent = Agent(client, agent_config)
 
     # load dataset and generate responses for the RAG agent
-    user_prompts = ["What methods are best for finetuning llama models?"]
+    user_prompts = [
+        "What is the name of the llama model released on October 24, 2024?",
+        "What about Llama 3.1 model, what is the release date for it?",
+    ]
 
     llamastack_generated_responses = []
-
+    session_id = agent.create_session(f"session-{uuid.uuid4()}")
     for prompt in tqdm(user_prompts):
         print(f"Generating response for: {prompt}")
         try:
-            generated_response = await get_response_row(agent, prompt)
+            generated_response = await get_response_row(agent, prompt, session_id)
             llamastack_generated_responses.append(generated_response)
         except Exception as e:
             print(f"Error generating response for {prompt}: {e}")
