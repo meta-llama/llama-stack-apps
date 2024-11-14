@@ -39,22 +39,23 @@ def chunk_text(content: str, chunk_size: int = 500) -> List[str]:
     return chunks
 
 
-def insert_documents_to_chromadb(file_dir: str, chunk_size: int = 500) -> None:
+def insert_documents_to_chromadb(file_dir: str, chunk_size: int = 1000) -> None:
     """Inserts text documents from a directory into ChromaDB."""
     collection_name = "documents"
     existing_collections = chroma_client.list_collections()
     collection_names = [col.name for col in existing_collections]
 
     if collection_name in collection_names:
-        print(
-            f"Collection '{collection_name}' already exists. Skipping document insertion."
+        cprint(
+            f"Collection '{collection_name}' already exists. Skipping document insertion.",
+            "yellow",
         )
         return
 
     collection = chroma_client.create_collection(
         name=collection_name, embedding_function=embedding_function
     )
-    print(f"Collection '{collection_name}' created.")
+    cprint(f"Collection '{collection_name}' created.", "green")
 
     for filename in os.listdir(file_dir):
         if filename.endswith((".txt", ".md")):
@@ -73,15 +74,16 @@ def insert_documents_to_chromadb(file_dir: str, chunk_size: int = 500) -> None:
                         ],
                     )
 
-    print(f"Inserted documents from {file_dir} into ChromaDB.")
+    cprint(f"Inserted documents from {file_dir} into ChromaDB.", "green")
 
 
 def query_chromadb(query: str) -> Optional[dict]:
     """Queries ChromaDB for relevant context based on input query."""
+    cprint(f"Querying ChromaDB with: {query}", "cyan")
     collection = chroma_client.get_collection(
         name="documents", embedding_function=embedding_function
     )
-    results = collection.query(query_texts=[query], n_results=1)
+    results = collection.query(query_texts=[query], n_results=5)
     return results if results else None
 
 
@@ -99,13 +101,14 @@ async def get_response_with_context(
     messages = [
         {"role": "user", "content": f"Context: {context}\n\nQuestion: {input_query}"}
     ]
-    print("Sending messages to agent:", messages)
+    cprint("Embedding retrieval completed. Sending these context to agent:", "cyan")
+    cprint(context, "cyan")
 
     response = agent.create_turn(messages=messages, session_id=session_id)
 
     async for chunk in response:
         if chunk.event.payload.event_type == "turn_complete":
-            print("----input_query-------", input_query)
+            cprint(f"----input_query------- {input_query}", "magenta")
             return chunk.event.payload.turn.output_message.content
 
     return "No response generated."
@@ -127,7 +130,7 @@ async def run_main(host: str, port: int, docs_dir: str) -> None:
         "metadata": None,
     }
     response = requests.post(url, headers=headers, data=json.dumps(data))
-    print("Model registration status:", response.status_code)
+    cprint(f"Model registration status: {response.status_code}", "blue")
 
     agent_config = AgentConfig(
         model=model_name,
@@ -138,18 +141,19 @@ async def run_main(host: str, port: int, docs_dir: str) -> None:
     agent = Agent(client, agent_config)
 
     user_prompts = [
-        "What is the name of the llama model released on October 24, 2024?",
+        "What is the name of the llama model released on Oct 24, 2024?",
         "What about Llama 3.1 model, what is the release date for it?",
+        "When was llama 3.3 released?",
     ]
 
     session_id = agent.create_session(f"session-{uuid.uuid4()}")
     for prompt in tqdm(user_prompts, desc="Generating responses"):
-        print(f"Generating response for: {prompt}")
+        cprint(f"Generating response for: {prompt}", "green")
         try:
             response = await get_response_with_context(agent, prompt, session_id)
-            print(response)
+            cprint(f"Response: {response}", "green")
         except Exception as e:
-            print(f"Error generating response for {prompt}: {e}")
+            cprint(f"Error generating response for {prompt}: {e}", "red")
 
 
 def main(host: str, port: int, docs_dir: str) -> None:

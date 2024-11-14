@@ -167,3 +167,8 @@ xcuserdata/
 *.pte
 *.model
 Package.resolved
+
+#embeddings
+**/faiss_index.index
+**/faiss_index.index.json
+**/chroma
