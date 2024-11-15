@@ -8,7 +8,7 @@ TODO:
 2. Make the chat inference multi-turn
 3. Front-end + docker
 
-To run the `ingestion.py` script, please make sure there is a /DATA and /OUTPUT folder at its relative root. It will ingest ALL documents in /DATA and output BOTH markdown and JSON dump in /OUTPUT folder
+To run the `ingestion_script.py` script, please make sure there is a /DATA and /OUTPUT folder at its relative root. It will ingest ALL documents in /DATA and output BOTH markdown and JSON dump in /OUTPUT folder
 
 
 
