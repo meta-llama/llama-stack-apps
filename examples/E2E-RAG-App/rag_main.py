@@ -22,16 +22,19 @@ chroma_client = chromadb.PersistentClient(path="chroma")
 
 
 def chunk_text(content: str, chunk_size: int = 500) -> List[str]:
-    """Splits content into chunks of approximately `chunk_size` characters."""
+    """Splits content into chunks with overlap."""
     chunks = []
     current_chunk = []
+    overlap = 100
 
     for paragraph in content.split("\n\n"):
         if sum(len(p) for p in current_chunk) + len(paragraph) <= chunk_size:
             current_chunk.append(paragraph)
         else:
             chunks.append("\n\n".join(current_chunk).strip())
-            current_chunk = [paragraph]
+            current_chunk = (
+                [current_chunk[-1], paragraph] if current_chunk else [paragraph]
+            )
 
     if current_chunk:
         chunks.append("\n\n".join(current_chunk).strip())
@@ -39,7 +42,7 @@ def chunk_text(content: str, chunk_size: int = 500) -> List[str]:
     return chunks
 
 
-def insert_documents_to_chromadb(file_dir: str, chunk_size: int = 250) -> None:
+def insert_documents_to_chromadb(file_dir: str, chunk_size: int = 350) -> None:
     """Inserts text documents from a directory into ChromaDB."""
     collection_name = "documents"
     existing_collections = chroma_client.list_collections()
@@ -84,8 +87,35 @@ def query_chromadb(query: str) -> Optional[dict]:
     collection = chroma_client.get_collection(
         name="documents", embedding_function=embedding_function
     )
-    print(collection.count())  # returns the number of items in the collection
-    results = collection.query(query_texts=[query], n_results=10)
+    print(collection.count())
+
+    results = collection.query(
+        query_texts=[query],
+        n_results=10,
+        include=["documents", "metadatas", "distances"],
+    )
+
+    if (
+        results
+        and results.get("distances")
+        and results.get("documents")
+        and results.get("metadatas")
+    ):
+
+        for i, (doc, distance, metadata) in enumerate(
+            zip(
+                results["documents"][0],
+                results["distances"][0],
+                results["metadatas"][0],
+            )
+        ):
+            print(f"\nResult {i + 1}")
+            print(f"Distance Score: {distance:.4f}")
+            print(f"Filename: {metadata['filename']}")
+            print(f"Chunk index: {metadata['chunk_index']}")
+            print(f"Context: {doc}")
+            print("-" * 50)
+
     return results if results else None
 
 
@@ -94,20 +124,20 @@ async def get_response_with_context(
 ) -> str:
     """Fetches response from the agent with context from ChromaDB."""
     results = query_chromadb(input_query)
-    context = (
-        "No relevant context found."
-        if not results or not results["metadatas"]
-        else "\n".join(
-            "\n".join(metadata["content"] for metadata in metadata_list)
+    if results and results["metadatas"]:
+        context = "\n".join(
+            f"Filename: {metadata['filename']}, Chunk index: {metadata['chunk_index']}\n{metadata['content']}"
             for metadata_list in results["metadatas"]
+            for metadata in metadata_list
         )
-    )
+    else:
+        context = "No relevant context found."
 
     messages = [
         {"role": "user", "content": f"Context: {context}\n\nQuestion: {input_query}"}
     ]
-    cprint("Embedding retrieval completed. Sending these context to agent:", "cyan")
-    cprint(context, "cyan")
+    # cprint("Embedding retrieval completed. Sending these context to agent:", "cyan")
+    # cprint(context, "cyan")
 
     response = agent.create_turn(messages=messages, session_id=session_id)
 
@@ -146,7 +176,7 @@ async def run_main(host: str, port: int, docs_dir: str) -> None:
     agent = Agent(client, agent_config)
 
     user_prompts = [
-        "What is the name of the llama model released on Oct 24, 2024?",
+        "On the day of Oct 24, 2024, which llama model was released?",
         "What about Llama 3.1 model, what is the release date for it?",
         "When was llama 3.3 released?",
     ]
