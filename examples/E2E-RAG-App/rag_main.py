@@ -39,7 +39,7 @@ def chunk_text(content: str, chunk_size: int = 500) -> List[str]:
     return chunks
 
 
-def insert_documents_to_chromadb(file_dir: str, chunk_size: int = 1000) -> None:
+def insert_documents_to_chromadb(file_dir: str, chunk_size: int = 250) -> None:
     """Inserts text documents from a directory into ChromaDB."""
     collection_name = "documents"
     existing_collections = chroma_client.list_collections()
@@ -55,6 +55,7 @@ def insert_documents_to_chromadb(file_dir: str, chunk_size: int = 1000) -> None:
     collection = chroma_client.create_collection(
         name=collection_name, embedding_function=embedding_function
     )
+
     cprint(f"Collection '{collection_name}' created.", "green")
 
     for filename in os.listdir(file_dir):
@@ -83,7 +84,8 @@ def query_chromadb(query: str) -> Optional[dict]:
     collection = chroma_client.get_collection(
         name="documents", embedding_function=embedding_function
     )
-    results = collection.query(query_texts=[query], n_results=5)
+    print(collection.count())  # returns the number of items in the collection
+    results = collection.query(query_texts=[query], n_results=10)
     return results if results else None
 
 
@@ -94,8 +96,11 @@ async def get_response_with_context(
     results = query_chromadb(input_query)
     context = (
         "No relevant context found."
-        if not results or not results["metadatas"][0]
-        else "\n".join(metadata["content"] for metadata in results["metadatas"][0])
+        if not results or not results["metadatas"]
+        else "\n".join(
+            "\n".join(metadata["content"] for metadata in metadata_list)
+            for metadata_list in results["metadatas"]
+        )
     )
 
     messages = [
