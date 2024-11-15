@@ -8,6 +8,10 @@ TODO:
 2. Make the chat inference multi-turn
 3. Front-end + docker
 
+To run the `ingestion.py` script, please make sure there is a /DATA and /OUTPUT folder at its relative root. It will ingest ALL documents in /DATA and output BOTH markdown and JSON dump in /OUTPUT folder
+
+
+
 ```
 ~/work/llama-stack-apps/examples/E2E-RAG-App (rag-app)]$ python rag_main.py localhost 5000 ./example_data/
 Inserted 1 documents into bank: rag_agent_docs
