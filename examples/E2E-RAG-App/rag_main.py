@@ -17,7 +17,9 @@ from tqdm import tqdm
 
 # Initialization
 load_dotenv()
-embedding_function = SentenceTransformerEmbeddingFunction(model_name="all-MiniLM-L6-v2")
+embedding_function = SentenceTransformerEmbeddingFunction(
+    model_name="all-mpnet-base-v2"
+)
 chroma_client = chromadb.PersistentClient(path="chroma")
 
 
@@ -91,7 +93,7 @@ def query_chromadb(query: str) -> Optional[dict]:
 
     results = collection.query(
         query_texts=[query],
-        n_results=10,
+        n_results=5,
         include=["documents", "metadatas", "distances"],
     )
 
