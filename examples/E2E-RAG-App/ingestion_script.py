@@ -11,3 +11,5 @@ from docling.document_converter import (
     PdfFormatOption,
     WordFormatOption,
 )
+from docling.pipeline.simple_pipeline import SimplePipeline
+from docling.pipeline.standard_pdf_pipeline import StandardPdfPipeline
