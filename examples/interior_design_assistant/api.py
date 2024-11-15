@@ -26,8 +26,11 @@ from llama_stack_client import LlamaStackClient
 from llama_stack_client.types import SamplingParams, UserMessage
 from llama_stack_client.types.agent_create_params import (
     AgentConfig,
-    AgentConfigToolMemoryToolDefinition,
 )
+from llama_stack_client.types.shared_params.function_call_tool_definition import (
+    FunctionCallToolDefinition,
+)
+
 from llama_stack_client.types.agents.agents_turn_stream_chunk import (
     AgentsTurnStreamChunk,
 )
@@ -194,8 +197,9 @@ class InterioAgent:
             sampling_params=SamplingParams(strategy="greedy", temperature=0.0),
             tools=[
                 # Enable memory as a tool for RAG
-                AgentConfigToolMemoryToolDefinition(
-                    type="memory",
+                FunctionCallToolDefinition(
+                    function_name="memory",
+                    description="Use this tool to search for images in the memory bank",
                     max_chunks=5,
                     max_tokens_in_context=2048,
                     memory_bank_configs=[
@@ -265,13 +269,14 @@ class InterioAgent:
         self.live_bank = "interio_bank"
         providers = self.client.providers.list()
         self.client.memory_banks.register(
-            memory_bank={
-                "identifier": self.live_bank,
+            memory_bank_id=self.live_bank,
+            params={
+                "type": "vector",
                 "embedding_model": "all-MiniLM-L6-v2",
                 "chunk_size_in_tokens": 512,
                 "overlap_size_in_tokens": 64,
-                "provider_id": providers["memory"][0].provider_id,
-            }
+            },
+            provider_id=providers["memory"][0].provider_id,
         )
 
         local_dir = Path(local_dir)

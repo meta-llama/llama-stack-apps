@@ -58,13 +58,13 @@ class AgentStore:
         self.live_bank = "live_bank"
         providers = self.client.providers.list()
         self.client.memory_banks.register(
-            memory_bank={
-                "identifier": self.live_bank,
+            memory_bank_id=self.live_bank,
+            params={
                 "embedding_model": "all-MiniLM-L6-v2",
                 "chunk_size_in_tokens": 512,
                 "overlap_size_in_tokens": 64,
-                "provider_id": providers["memory"][0].provider_id,
-            }
+            },
+            provider_id=providers["memory"][0].provider_id,
         )
         # FIXME: To avoid empty banks
         self.append_to_live_memory_bank(
@@ -175,13 +175,13 @@ class AgentStore:
         providers = self.client.providers.list()
         # create a memory bank
         self.client.memory_banks.register(
-            memory_bank={
-                "identifier": "memory_bank",
+            memory_bank_id="memory_bank",
+            params={
                 "embedding_model": "all-MiniLM-L6-v2",
                 "chunk_size_in_tokens": 512,
                 "overlap_size_in_tokens": 64,
-                "provider_id": providers["memory"][0].provider_id,
-            }
+            },
+            provider_id=providers["memory"][0].provider_id,
         )
         # cprint(f"Created bank: {json.dumps(bank, indent=4)}", color="green")
 
