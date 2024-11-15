@@ -38,13 +38,13 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
     providers = client.providers.list()
     # create a memory bank
     client.memory_banks.register(
-        memory_bank={
-            "identifier": "test_bank",
+        memory_bank_id="test_bank",
+        params={
             "embedding_model": "all-MiniLM-L6-v2",
             "chunk_size_in_tokens": 512,
             "overlap_size_in_tokens": 64,
-            "provider_id": providers["memory"][0].provider_id,
-        }
+        },
+        provider_id=providers["memory"][0].provider_id,
     )
 
     # insert some documents
