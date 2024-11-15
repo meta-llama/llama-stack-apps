@@ -119,7 +119,6 @@ async def get_response_with_context(
             for metadata_list in results["metadatas"]
             for metadata in metadata_list
         )
-        # Collect the contexts into a list
         contexts = [
             metadata["content"]
             for metadata_list in results["metadatas"]
@@ -208,7 +207,6 @@ async def run_main(host: str, port: int, docs_dir: str) -> None:
         },
     ]
 
-    # Prepare lists to collect data
     questions = []
     generated_answers = []
     retrieved_contexts = []
@@ -226,7 +224,6 @@ async def run_main(host: str, port: int, docs_dir: str) -> None:
             )
             cprint(f"Response: {generated_answer}", "green")
 
-            # Append data to lists
             questions.append(question)
             generated_answers.append(generated_answer)
             retrieved_contexts.append(contexts)
@@ -244,7 +241,6 @@ async def run_main(host: str, port: int, docs_dir: str) -> None:
         }
     )
 
-    # Run evaluation
     result = evaluate(
         eval_data,
         metrics=[
