@@ -178,9 +178,9 @@ async def run_main(host: str, port: int, docs_dir: str) -> None:
     agent = Agent(client, agent_config)
 
     user_prompts = [
-        "On the day of Oct 24, 2024, which llama model was released?",
-        "What about Llama 3.1 model, what is the release date for it?",
-        "When was llama 3.3 released?",
+        "What is the policy regarding smoking in City offices?",
+        "How many days of paid sick leave do most full-time employees earn per year under Civil Service Rules?",
+        "What are the three categories of employees eligible for health coverage?",
     ]
 
     session_id = agent.create_session(f"session-{uuid.uuid4()}")
