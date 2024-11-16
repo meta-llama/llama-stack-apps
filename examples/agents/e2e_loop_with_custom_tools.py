@@ -21,8 +21,11 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
         base_url=f"http://{host}:{port}",
     )
 
-    input_shields = [] if disable_safety else ["llama_guard"]
-    output_shields = [] if disable_safety else ["llama_guard"]
+    available_shields = [shield.identifier for shield in client.shields.list()]
+    if not available_shields:
+        print(f"No available shields. Disable safety.")
+    else:
+        print(f"Available shields found: {available_shields}")
 
     agent_config = AgentConfig(
         model="Llama3.2-3B-Instruct",
@@ -78,8 +81,8 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
         ],
         tool_choice="auto",
         tool_prompt_format="python_list",
-        input_shields=input_shields,
-        output_shields=output_shields,
+        input_shields=available_shields if available_shields else [],
+        output_shields=available_shields if available_shields else [],
         enable_session_persistence=False,
     )
     custom_tools = [TickerDataTool(), WebSearchTool(os.getenv("BRAVE_SEARCH_API_KEY"))]
@@ -107,8 +110,8 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
             log.print()
 
 
-def main(host: str, port: int, disable_safety: bool = False):
-    asyncio.run(run_main(host, port, disable_safety))
+def main(host: str, port: int):
+    asyncio.run(run_main(host, port))
 
 
 if __name__ == "__main__":

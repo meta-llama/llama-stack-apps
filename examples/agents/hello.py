@@ -20,8 +20,14 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
         base_url=f"http://{host}:{port}",
     )
 
+    available_shields = [shield.identifier for shield in client.shields.list()]
+    if not available_shields:
+        print(f"No available shields. Disable safety.")
+    else:
+        print(f"Available shields found: {available_shields}")
+
     agent_config = AgentConfig(
-        model="Llama3.1-8B-Instruct",
+        model="Llama3.2-1B-Instruct",
         instructions="You are a helpful assistant",
         sampling_params={
             "strategy": "greedy",
@@ -37,8 +43,8 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
         ],
         tool_choice="auto",
         tool_prompt_format="json",
-        input_shields=[] if disable_safety else ["llama_guard"],
-        output_shields=[] if disable_safety else ["llama_guard"],
+        input_shields=available_shields if available_shields else [],
+        output_shields=available_shields if available_shields else [],
         enable_session_persistence=False,
     )
     agent = Agent(client, agent_config)
@@ -64,8 +70,8 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
             log.print()
 
 
-def main(host: str, port: int, disable_safety: bool = False):
-    asyncio.run(run_main(host, port, disable_safety))
+def main(host: str, port: int):
+    asyncio.run(run_main(host, port))
 
 
 if __name__ == "__main__":
