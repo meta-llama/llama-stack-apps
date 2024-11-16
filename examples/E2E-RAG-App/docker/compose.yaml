@@ -1,0 +1,38 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    network_mode: "host"
+    environment:
+      - MODEL_NAME=${MODEL_NAME}
+    volumes:
+      - ollama:/root/.ollama # this solution synchronizes with the docker volume and loads the model rocket fast
+      - ./ollama_start.sh:/root/ollama_start.sh  
+      - ./RAG_service.json:/root/RAG_service.json 
+    ports:
+      - "11434:11434"
+    entrypoint: bash /root/ollama_start.sh 
+  llamastack:
+    depends_on:
+    - ollama
+    image: llamastack/distribution-ollama
+    network_mode: "host"
+    volumes:
+      - ~/.llama:/root/.llama
+      # Link to ollama run.yaml file
+      - ./run.yaml:/root/my-run.yaml
+      - ~/llama-stack-apps:/root/llama-stack-apps
+      - ./RAG_service.json:/root/RAG_service.json
+      - ${DOC_PATH}:/root/rag_data/
+      - ~/local/llama-stack:/root/llama-stack
+      - ./llama_stack_start.sh:/root/llama_stack_start.sh
+    ports:
+      - "5000:5000"
+      - "1234:1234"
+    # Hack: wait for ollama server to start before starting docker
+    entrypoint: bash /root/llama_stack_start.sh
+    #entrypoint: bash -c "sleep 60; python -m llama_stack.distribution.server.server --yaml_config /root/my-run.yaml"
+    deploy:
+      restart_policy:
+        condition: "no"
+volumes:
+  ollama:
