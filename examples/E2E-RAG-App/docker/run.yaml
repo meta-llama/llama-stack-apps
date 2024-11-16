@@ -1,0 +1,52 @@
+version: '2'
+built_at: '2024-10-08T17:40:45.325529'
+image_name: local
+docker_image: null
+conda_env: local
+apis:
+- shields
+- agents
+- models
+- memory
+- memory_banks
+- inference
+- safety
+providers:
+  inference:
+  - provider_id: ollama0
+    provider_type: remote::ollama
+    config:
+      url: http://127.0.0.1:14343
+  memory:
+  - provider_id: inline::faiss-0
+    provider_type: inline::faiss
+    config:
+      kvstore:
+        namespace: null
+        type: sqlite
+        db_path: /home/kaiwu/.llama/runtime/faiss_store.db
+  safety:
+  - provider_id: inline::llama-guard-0
+    provider_type: inline::llama-guard
+    config:
+      excluded_categories: []
+  agents:
+  - provider_id: inline::meta-reference-0
+    provider_type: inline::meta-reference
+    config:
+      persistence_store:
+        namespace: null
+        type: sqlite
+        db_path: /home/kaiwu/.llama/runtime/kvstore.db
+  telemetry:
+  - provider_id: inline::meta-reference-0
+    provider_type: inline::meta-reference
+    config: {}
+metadata_store: null
+models: []
+shields: []
+memory_banks: []
+datasets: []
+scoring_fns: []
+eval_tasks: []
+
