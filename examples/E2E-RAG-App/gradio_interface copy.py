@@ -17,14 +17,67 @@ from llama_stack_client.types.memory_insert_params import Document
 load_dotenv()
 
 class LlamaChatInterface:
-    def __init__(self, host: str, port: int):
+    def __init__(self, host: str, port: int, docs_dir: str):
         self.host = host
         self.port = port
+        self.docs_dir = docs_dir
         self.client = LlamaStackClient(base_url=f"http://{host}:{port}")
         self.agent = None
         self.session_id = None
         self.memory_bank_id = "test_bank_6"
         
+    async def initialize_system(self):
+        """Initialize the entire system including memory bank and agent."""
+        await self.setup_memory_bank()
+        await self.load_documents()
+        await self.initialize_agent()
+
+    def is_memory_bank_present(self, target_identifier):
+        """Checks if a memory bank exists."""
+        return any(
+            bank.identifier == target_identifier for bank in self.client.memory_banks.list()
+        )
+
+    async def setup_memory_bank(self):
+        """Set up the memory bank if it doesn't exist."""
+        providers = self.client.providers.list()
+        provider_id = providers["memory"][0].provider_id
+
+        if not self.is_memory_bank_present(self.memory_bank_id):
+            memory_bank = self.client.memory_banks.register(
+                memory_bank_id=self.memory_bank_id,
+                params={
+                    "embedding_model": "all-MiniLM-L6-v2",
+                    "chunk_size_in_tokens": 512,
+                    "overlap_size_in_tokens": 64,
+                },
+                provider_id=provider_id,
+            )
+            print(f"Memory bank registered: {memory_bank}")
+
+    async def load_documents(self):
+        """Load documents from the specified directory into memory bank."""
+        documents = []
+        for filename in os.listdir(self.docs_dir):
+            if filename.endswith(('.txt', '.md')):
+                file_path = os.path.join(self.docs_dir, filename)
+                with open(file_path, 'r', encoding='utf-8') as file:
+                    content = file.read()
+                    document = Document(
+                        document_id=filename,
+                        content=content,
+                        mime_type="text/plain",
+                        metadata={"filename": filename}
+                    )
+                    documents.append(document)
+
+        if documents:
+            self.client.memory.insert(
+                bank_id=self.memory_bank_id,
+                documents=documents,
+            )
+            print(f"Loaded {len(documents)} documents from {self.docs_dir}")
+
     async def initialize_agent(self):
         """Initialize the agent with model registration and configuration."""
         model_name = "Llama3.2-3B-Instruct"
@@ -61,58 +114,10 @@ class LlamaChatInterface:
         self.agent = Agent(self.client, agent_config)
         self.session_id = str(uuid.uuid4())
 
-    def is_memory_bank_present(self, target_identifier):
-        """Checks if a memory bank exists."""
-        return any(
-            bank.identifier == target_identifier for bank in self.client.memory_banks.list()
-        )
-
-    async def setup_memory_bank(self):
-        """Set up the memory bank if it doesn't exist."""
-        providers = self.client.providers.list()
-        provider_id = providers["memory"][0].provider_id
-
-        if not self.is_memory_bank_present(self.memory_bank_id):
-            memory_bank = self.client.memory_banks.register(
-                memory_bank_id=self.memory_bank_id,
-                params={
-                    "embedding_model": "all-MiniLM-L6-v2",
-                    "chunk_size_in_tokens": 512,
-                    "overlap_size_in_tokens": 64,
-                },
-                provider_id=provider_id,
-            )
-            print(f"Memory bank registered: {memory_bank}")
-
-    async def process_documents(self, files) -> str:
-        """Process and insert documents into the memory bank."""
-        await self.setup_memory_bank()
-        
-        documents = []
-        for file in files:
-            if file.name.endswith(('.txt', '.md')):
-                with open(file.name, 'r', encoding='utf-8') as f:
-                    content = f.read()
-                    document = Document(
-                        document_id=file.name,
-                        content=content,
-                        mime_type="text/plain",
-                        metadata={"filename": file.name}
-                    )
-                    documents.append(document)
-        
-        if documents:
-            self.client.memory.insert(
-                bank_id=self.memory_bank_id,
-                documents=documents,
-            )
-            return "Documents processed successfully!"
-        return "No valid documents found to process."
-
     async def chat(self, message: str, history: List[List[str]]) -> str:
         """Process a chat message and return the response."""
         if self.agent is None:
-            await self.initialize_agent()
+            await self.initialize_system()
         
         response = self.agent.create_turn(
             messages=[{"role": "user", "content": message}],
@@ -127,32 +132,22 @@ class LlamaChatInterface:
         
         return full_response
 
-def create_gradio_interface(host: str = "localhost", port: int = 8000):
+def create_gradio_interface(host: str = "localhost", port: int = 8000, docs_dir: str = "./docs"):
     # Initialize the chat interface
-    chat_interface = LlamaChatInterface(host, port)
+    chat_interface = LlamaChatInterface(host, port, docs_dir)
     
     with gr.Blocks(theme=gr.themes.Soft()) as interface:
         gr.Markdown("# LlamaStack Chat")
         
+        chatbot = gr.Chatbot()
+        msg = gr.Textbox(
+            label="Message",
+            placeholder="Type your message here...",
+            show_label=False
+        )
         with gr.Row():
-            with gr.Column(scale=3):
-                chatbot = gr.Chatbot()
-                msg = gr.Textbox(
-                    label="Message",
-                    placeholder="Type your message here...",
-                    show_label=False
-                )
-                with gr.Row():
-                    submit = gr.Button("Send")
-                    clear = gr.Button("Clear")
-            
-            with gr.Column(scale=1):
-                file_upload = gr.File(
-                    label="Upload Documents",
-                    file_types=[".txt", ".md"],
-                    file_count="multiple"
-                )
-                upload_button = gr.Button("Process Documents")
+            submit = gr.Button("Send")
+            clear = gr.Button("Clear")
                 
         gr.Examples(
             examples=[
@@ -168,9 +163,6 @@ def create_gradio_interface(host: str = "localhost", port: int = 8000):
             chat_history.append((message, bot_message))
             return "", chat_history
         
-        async def process_files(files):
-            return await chat_interface.process_documents(files)
-        
         def clear_chat():
             return None
         
@@ -178,11 +170,10 @@ def create_gradio_interface(host: str = "localhost", port: int = 8000):
         msg.submit(respond, [msg, chatbot], [msg, chatbot])
         submit.click(respond, [msg, chatbot], [msg, chatbot])
         clear.click(clear_chat, None, chatbot)
-        upload_button.click(process_files, [file_upload], None)
     
     return interface
 
 if __name__ == "__main__":
     # Create and launch the Gradio interface
-    interface = create_gradio_interface()
+    interface = create_gradio_interface(docs_dir="./your_docs_directory")  # Specify your docs directory here
     interface.launch(server_name="0.0.0.0", server_port=7860)
