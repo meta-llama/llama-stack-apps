@@ -80,8 +80,8 @@ async def run_main(host: str, port: int, docs_dir: str) -> None:
             {
                 "model_id": model_name,
                 "provider_model_id": None,
-                # "provider_id": "ollama",
-                "provider_id": "inline::meta-reference-0",
+                "provider_id": "ollama",
+                # "provider_id": "inline::meta-reference-0",
                 "metadata": None,
             }
         ),
@@ -108,22 +108,18 @@ async def run_main(host: str, port: int, docs_dir: str) -> None:
     )
     agent = Agent(client, agent_config)
 
-    user_prompts = [
-        "What is the policy regarding smoking in City offices?",
-        "How many days of paid sick leave do most full-time employees earn per year under Civil Service Rules?",
-        "What are the three categories of employees eligible for health coverage?",
-        "How long must an employee wait before using vacation time after starting employment?",
-        "What must an employee do if they're summoned for jury duty?",
-    ]
+    while True:
+        user_input = input("User> ")
+        if user_input.lower() in ["exit", "quit", "bye"]:
+            cprint("Ending conversation. Goodbye!", "yellow")
+            break
 
-    session_id = agent.create_session(f"session-{uuid.uuid4()}")
-    for prompt in tqdm(user_prompts, desc="Generating responses"):
-        cprint(f"Generating response for: {prompt}", "green")
+        message = {"role": "user", "content": user_input}
         response = agent.create_turn(
             messages=[
                 {
                     "role": "user",
-                    "content": prompt,
+                    "content": message,
                 }
             ],
             session_id=session_id,
@@ -131,6 +127,9 @@ async def run_main(host: str, port: int, docs_dir: str) -> None:
 
         async for log in EventLogger().log(response):
             log.print()
+
+
+# Run the chat loop in a Jupyter Notebook cell using await
 
 
 def main(host: str, port: int, docs_dir: str) -> None:
