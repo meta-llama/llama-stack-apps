@@ -14,7 +14,9 @@ AGENT_CONFIG = AgentConfig(
     sampling_params={
         "strategy": "greedy",
         "temperature": 1.0,
-        "top_p": 0.9,
+        "top_p": 0.95,
+        "max_tokens": 1024,
+        "repetition_penalty": 1.0,
     },
     tools=[
         {
