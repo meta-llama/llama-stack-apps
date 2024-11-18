@@ -64,28 +64,6 @@ async def insert_documents_to_memory_bank(client: LlamaStackClient, docs_dir: st
     )
 
 
-async def get_response_with_context(
-    agent: Agent, input_query: str, session_id: str
-) -> str:
-    """Fetches response from the agent with context from the memory bank."""
-    response = agent.create_turn(
-        messages=[
-            {
-                "role": "user",
-                "content": input_query,
-            }
-        ],
-        session_id=session_id,
-    )
-
-    async for chunk in response:
-        if chunk.event.payload.event_type == "turn_complete":
-            cprint(f"----input_query------- {input_query}", "magenta")
-            return chunk.event.payload.turn.output_message.content
-
-    return "No response generated."
-
-
 async def run_main(host: str, port: int, docs_dir: str) -> None:
     """Main async function to register model, insert documents, and generate responses."""
     client = LlamaStackClient(base_url=f"http://{host}:{port}")
