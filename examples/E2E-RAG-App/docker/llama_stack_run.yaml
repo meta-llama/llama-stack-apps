@@ -24,7 +24,7 @@ providers:
       kvstore:
         namespace: null
         type: sqlite
-        db_path: /home/kaiwu/.llama/runtime/faiss_store.db
+        db_path: ${HOME}/.llama/runtime/faiss_store.db
   safety:
   - provider_id: inline::llama-guard-0
     provider_type: inline::llama-guard
@@ -37,7 +37,7 @@ providers:
       persistence_store:
         namespace: null
         type: sqlite
-        db_path: /home/kaiwu/.llama/runtime/kvstore.db
+        db_path: ${HOME}/.llama/runtime/kvstore.db
   telemetry:
   - provider_id: inline::meta-reference-0
     provider_type: inline::meta-reference
