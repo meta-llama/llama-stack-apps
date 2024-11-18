@@ -58,7 +58,6 @@ async def agent_bulk_generate(agent: Agent, input_file_path: str) -> None:
     llamastack_generated_responses = []
 
     for prompt in tqdm(user_prompts):
-        prompt += " Please use search tool."
         try:
             generated_response = await get_response_row(agent, prompt)
             llamastack_generated_responses.append(generated_response)

@@ -15,7 +15,7 @@ from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.types.memory_insert_params import Document
 from tqdm import tqdm
 
-from ..util import data_url_from_file, get_response_row
+from ..util import agent_bulk_generate, data_url_from_file
 
 from .config import AGENT_CONFIG, MEMORY_BANK_ID, MEMORY_BANK_PARAMS
 
@@ -64,27 +64,7 @@ async def run_main(host: str, port: int, docs_dir: str, input_file_path: str):
 
     build_index(client, docs_dir, MEMORY_BANK_ID, MEMORY_BANK_PARAMS)
     agent = Agent(client, AGENT_CONFIG)
-
-    # load dataset and generate responses for the RAG agent
-    df = pd.read_csv(input_file_path)
-    user_prompts = df["input_query"].tolist()
-
-    llamastack_generated_responses = []
-
-    for prompt in tqdm(user_prompts):
-        print(f"Generating response for: {prompt}")
-        try:
-            generated_response = await get_response_row(agent, prompt)
-            llamastack_generated_responses.append(generated_response)
-        except Exception as e:
-            print(f"Error generating response for {prompt}: {e}")
-            llamastack_generated_responses.append(None)
-
-    df["generated_answer"] = llamastack_generated_responses
-
-    output_file_path = input_file_path.replace(".csv", "_llamastack_generated.csv")
-    df.to_csv(output_file_path, index=False)
-    print(f"Saved to {output_file_path}")
+    await agent_bulk_generate(agent, input_file_path)
 
 
 def main(host: str, port: int, docs_dir: str, input_file_path: str):
