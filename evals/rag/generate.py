@@ -22,7 +22,7 @@ from .util import data_url_from_file
 
 def build_index(
     client: LlamaStackClient, file_dir: str, bank_id: str, bank_params: dict
-) -> str:
+) -> None:
     """Build a memory bank from a directory of pdf files"""
     # 1. create memory bank
     providers = client.providers.list()
@@ -41,19 +41,16 @@ def build_index(
             file_path = os.path.join(file_dir, filename)
             paths.append(file_path)
 
-    documents = [
-        Document(
-            document_id=os.path.basename(path),
-            content=data_url_from_file(path),
-            mime_type="application/pdf",
-        )
-        for path in paths
-    ]
-
-    # insert some documents
-    client.memory.insert(bank_id=bank_id, documents=documents)
-
-    return bank_id
+    for p in paths:
+        documents = [
+            Document(
+                document_id=os.path.basename(p),
+                content=data_url_from_file(p),
+                mime_type="application/pdf",
+            )
+        ]
+        # insert some documents
+        client.memory.insert(bank_id=bank_id, documents=documents)
 
 
 async def get_response_row(agent: Agent, input_query: str) -> str:
