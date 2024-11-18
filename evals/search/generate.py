@@ -25,7 +25,6 @@ async def run_main(host: str, port: int, input_file_path: str):
         },
     )
     agent = Agent(client, AGENT_CONFIG)
-    # TODO: Add this to /eval pipeline
     await agent_bulk_generate(agent, input_file_path)
 
 

@@ -59,7 +59,6 @@ async def run_main(host: str, port: int, docs_dir: str, input_file_path: str):
             "together_api_key": os.environ.get("TOGETHER_API_KEY", ""),
         },
     )
-    # TODO: Add this to /eval pipeline
     build_index(client, docs_dir, MEMORY_BANK_ID, MEMORY_BANK_PARAMS)
     agent = Agent(client, AGENT_CONFIG)
     await agent_bulk_generate(agent, input_file_path)
