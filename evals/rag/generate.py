@@ -13,7 +13,7 @@ from llama_stack_client import LlamaStackClient
 from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.types.memory_insert_params import Document
 
-from ..util import agent_bulk_generate, data_url_from_file
+from ..util import agent_bulk_generate, data_url_from_file_adhoc
 
 from .config import AGENT_CONFIG, MEMORY_BANK_ID, MEMORY_BANK_PARAMS
 
@@ -43,7 +43,7 @@ def build_index(
         documents = [
             Document(
                 document_id=os.path.basename(p),
-                content=data_url_from_file(p),
+                content=data_url_from_file_adhoc(p),
                 mime_type="application/pdf",
             )
         ]

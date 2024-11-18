@@ -7,7 +7,6 @@
 import base64
 import mimetypes
 import os
-from typing import List
 
 import pandas as pd
 from llama_stack_client.lib.agents.agent import Agent
@@ -34,7 +33,7 @@ async def get_response_row(agent: Agent, input_query: str) -> str:
             return event.payload.turn.output_message.content
 
 
-def data_url_from_file(file_path: str) -> str:
+def data_url_from_file_adhoc(file_path: str) -> str:
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"File not found: {file_path}")
 
