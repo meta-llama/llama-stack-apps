@@ -1,12 +1,8 @@
 # RAG Evals
 
-## Setup
+## 1. Run LlamaStack RAG Generation
 
-```bash
-pip install -r requirements.txt
-```
-
-## Run LlamaStack RAG Agent Evals
+We will generate responses from the LlamaStack RAG agent and save them to a file for evaluation. 
 
 Edit the [.config.py](./config.py) file to set the retrieval and generation parameters.
 
@@ -52,3 +48,13 @@ python -m evals.rag.generate localhost 5000 --docs-dir <path-to-docs-dir> --inpu
 
 - `docs-dir`: Directory containing the pdfs to index
 - `input-file-path`: Path to the input file containing the prompts to generate answers for
+
+## 2. Run Scoring on LlamaStack Generated Responses
+
+After generating responses, we will score them using llama-stack-client. This will allow you to use any of the avaialble scoring functions for running evaluations on generated response. 
+
+```bash
+llama-stack-client eval run_scoring braintrust::answer-correctness \
+--dataset-path <path-to-local-dataset> \
+--output-dir ./
+```

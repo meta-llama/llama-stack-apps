@@ -15,9 +15,9 @@ from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.types.memory_insert_params import Document
 from tqdm import tqdm
 
-from .config import AGENT_CONFIG, MEMORY_BANK_ID, MEMORY_BANK_PARAMS
+from ..util import data_url_from_file, get_response_row
 
-from .util import data_url_from_file
+from .config import AGENT_CONFIG, MEMORY_BANK_ID, MEMORY_BANK_PARAMS
 
 
 def build_index(
@@ -51,26 +51,6 @@ def build_index(
         ]
         # insert some documents
         client.memory.insert(bank_id=bank_id, documents=documents)
-
-
-async def get_response_row(agent: Agent, input_query: str) -> str:
-    # single turn, each prompt is a new session
-    session_id = agent.create_session(f"session-{input_query}")
-    response = agent.create_turn(
-        messages=[
-            {
-                "role": "user",
-                "content": input_query,
-            }
-        ],
-        session_id=session_id,
-    )
-
-    async for chunk in response:
-        event = chunk.event
-        event_type = event.payload.event_type
-        if event_type == "turn_complete":
-            return event.payload.turn.output_message.content
 
 
 async def run_main(host: str, port: int, docs_dir: str, input_file_path: str):
