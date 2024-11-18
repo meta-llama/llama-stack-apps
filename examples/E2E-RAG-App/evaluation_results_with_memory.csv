@@ -1,0 +1,12 @@
+user_input,retrieved_contexts,response,reference,context_precision,context_recall,faithfulness,answer_relevancy,factual_correctness,semantic_similarity
+What is the policy regarding smoking in City offices?,[],No response generated.,"Smoking is not permitted in City offices, or within 20 feet of entrances, exits, or operable windows of public buildings. (Source: Page 46, 'Smoke-Free Workplace' section)",0.0,0.0,0.0,0.0,0.0,0.7311136274312703
+How many days of paid sick leave do most full-time employees earn per year under Civil Service Rules?,[],No response generated.,"Most full-time employees earn 13 8-hour working days per year of paid sick leave under the Civil Service Rules. (Source: Page 32, 'Accrual of Paid Sick Leave' section)",0.0,0.0,0.0,0.0,0.0,0.7087668374354706
+What are the three categories of employees eligible for health coverage?,[],No response generated.,"The following employees are eligible:
+
+All permanent employees working at least 20 hours per week
+
+All regularly scheduled provisional employees working at least 20 hours per week
+
+All other employees (including temporary exempt or 'as needed') who have worked more than 1040 hours in any consecutive 12-month period and work at least 20 hours per week (Source: Page 25, 'Eligibility' section)",0.0,0.0,0.0,0.0,0.0,0.6871347926183213
+How long must an employee wait before using vacation time after starting employment?,[],No response generated.,"Employees are not eligible to use vacation in the first year of continuous service. After one year of continuous service, they are awarded vacation allowance at the rate of .0385 of an hour for each hour of paid service in the preceding year. (Source: Page 30, 'Vacation' section)",0.0,0.0,0.0,0.0,0.0,0.7100602328142038
+What must an employee do if they're summoned for jury duty?,[],No response generated.,"An employee must notify their supervisor as soon as they receive a jury summons. If required to report during working hours, they will be excused from work on the day they perform jury service, provided they give prior notification. If not selected or dismissed early, they must return to work as soon as possible. (Source: Page 37, 'Jury Duty Leave' section)",0.0,0.0,0.0,0.0,0.0,0.7249350381113908
