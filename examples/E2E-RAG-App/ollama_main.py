@@ -6,7 +6,6 @@ from typing import List, Optional
 
 import fire
 import requests
-from dotenv import load_dotenv
 from llama_stack_client import LlamaStackClient
 from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.lib.agents.event_logger import EventLogger
@@ -16,52 +15,63 @@ from termcolor import cprint
 from tqdm import tqdm
 
 # Initialization
-load_dotenv()
+
+
+def is_memory_bank_present(client, target_identifier):
+    """Checks if a memory bank with the given identifier is present in the list."""
+    return any(
+        bank.identifier == target_identifier for bank in client.memory_banks.list()
+    )
 
 
 async def insert_documents_to_memory_bank(client: LlamaStackClient, docs_dir: str):
     """Inserts entire text documents from a directory into a memory bank."""
-    memory_bank_id = "test_bank_3"
+    memory_bank_id = "test_bank_6"
     providers = client.providers.list()
     provider_id = providers["memory"][0].provider_id
 
-    # Register a memory bank
-    memory_bank = client.memory_banks.register(
-        memory_bank_id=memory_bank_id,
-        params={
-            "embedding_model": "all-MiniLM-L6-v2",
-            "chunk_size_in_tokens": 512,
-            "overlap_size_in_tokens": 64,
-        },
-        provider_id=provider_id,
-    )
-    cprint(f"Memory bank registered: {memory_bank}", "green")
+    memorybank_boolean = is_memory_bank_present(client, memory_bank_id)
+    print(client.memory_banks.list())
+    print(memorybank_boolean)
 
-    # Prepare entire documents for insertion
-    documents = []
-    for filename in os.listdir(docs_dir):
-        if filename.endswith((".txt", ".md")):
-            file_path = os.path.join(docs_dir, filename)
-            with open(file_path, "r", encoding="utf-8") as file:
-                content = file.read()
+    if True:
+        # Register a memory bank
+        memory_bank = client.memory_banks.register(
+            memory_bank_id=memory_bank_id,
+            params={
+                "embedding_model": "all-MiniLM-L6-v2",
+                "chunk_size_in_tokens": 512,
+                "overlap_size_in_tokens": 64,
+            },
+            provider_id=provider_id,
+        )
+        cprint(f"Memory bank registered: {memory_bank}", "green")
 
-                document = Document(
-                    document_id=f"{filename}",
-                    content=content,
-                    mime_type="text/plain",
-                    metadata={"filename": filename},
-                )
-                documents.append(document)
+        # Prepare entire documents for insertion
+        documents = []
+        for filename in os.listdir(docs_dir):
+            if filename.endswith((".txt", ".md")):
+                file_path = os.path.join(docs_dir, filename)
+                with open(file_path, "r", encoding="utf-8") as file:
+                    content = file.read()
 
-    # Insert documents into the memory bank
-    client.memory.insert(
-        bank_id=memory_bank_id,
-        documents=documents,
-    )
-    cprint(
-        f"Inserted documents from {docs_dir} into memory bank '{memory_bank_id}'.",
-        "green",
-    )
+                    document = Document(
+                        document_id=f"{filename}",
+                        content=content,
+                        mime_type="text/plain",
+                        metadata={"filename": filename},
+                    )
+                    documents.append(document)
+
+        # Insert documents into the memory bank
+        client.memory.insert(
+            bank_id=memory_bank_id,
+            documents=documents,
+        )
+        cprint(
+            f"Inserted documents from {docs_dir} into memory bank '{memory_bank_id}'.",
+            "green",
+        )
 
 
 async def run_main(host: str, port: int, docs_dir: str) -> None:
@@ -80,8 +90,8 @@ async def run_main(host: str, port: int, docs_dir: str) -> None:
             {
                 "model_id": model_name,
                 "provider_model_id": None,
-                "provider_id": "ollama",
-                # "provider_id": "inline::meta-reference-0",
+                # "provider_id": "ollama",
+                "provider_id": "inline::meta-reference-0",
                 "metadata": None,
             }
         ),
@@ -96,7 +106,7 @@ async def run_main(host: str, port: int, docs_dir: str) -> None:
         tools=[
             {
                 "type": "memory",
-                "memory_bank_configs": [{"bank_id": "test_bank_3", "type": "vector"}],
+                "memory_bank_configs": [{"bank_id": "test_bank_6", "type": "vector"}],
                 "query_generator_config": {"type": "default", "sep": " "},
                 "max_tokens_in_context": 4096,
                 "max_chunks": 10,
@@ -108,28 +118,32 @@ async def run_main(host: str, port: int, docs_dir: str) -> None:
     )
     agent = Agent(client, agent_config)
 
+    user_prompts = [
+        "What is the policy regarding smoking in City offices?",
+        "How many days of paid sick leave do most full-time employees earn per year under Civil Service Rules?",
+        "What are the three categories of employees eligible for health coverage?",
+        "How long must an employee wait before using vacation time after starting employment?",
+        "What must an employee do if they're summoned for jury duty?",
+    ]
+
+    session_id = agent.create_session(f"session-{uuid.uuid4()}")
+
     while True:
         user_input = input("User> ")
         if user_input.lower() in ["exit", "quit", "bye"]:
             cprint("Ending conversation. Goodbye!", "yellow")
             break
 
-        message = {"role": "user", "content": user_input}
+        cprint(f"Generating response for: {user_input}", "green")
+
+        # Create a turn and generate the response asynchronously
         response = agent.create_turn(
-            messages=[
-                {
-                    "role": "user",
-                    "content": message,
-                }
-            ],
-            session_id=session_id,
+            messages=[{"role": "user", "content": user_input}], session_id=session_id
         )
 
+        # Log and display each response asynchronously
         async for log in EventLogger().log(response):
             log.print()
-
-
-# Run the chat loop in a Jupyter Notebook cell using await
 
 
 def main(host: str, port: int, docs_dir: str) -> None:
