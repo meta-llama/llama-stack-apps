@@ -8,11 +8,9 @@ import os
 
 from llama_stack_client.types.agent_create_params import AgentConfig
 
-# NOTE: We may need to modify the prompt to explicitly tell the agent to use the search tool.
-
 AGENT_CONFIG = AgentConfig(
     model="Llama3.1-405B-Instruct",
-    instructions="You are a helpful assistant",
+    instructions="You are a helpful assistant with access to a search tool. Please use the search tool to answer the user's question.",
     sampling_params={
         "strategy": "greedy",
         "temperature": 1.0,
