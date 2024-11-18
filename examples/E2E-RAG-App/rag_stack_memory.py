@@ -6,7 +6,6 @@ from typing import List, Optional
 
 import fire
 import requests
-from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
 from datasets import Dataset
 from dotenv import load_dotenv
 from llama_stack_client import LlamaStackClient
@@ -28,35 +27,11 @@ from tqdm import tqdm
 
 # Initialization
 load_dotenv()
-embedding_function = SentenceTransformerEmbeddingFunction(
-    model_name="all-mpnet-base-v2"
-)
-
-
-def chunk_text(content: str, chunk_size: int = 500) -> List[str]:
-    """Splits content into chunks with overlap."""
-    chunks = []
-    current_chunk = []
-    overlap = 100
-
-    for paragraph in content.split("\n\n"):
-        if sum(len(p) for p in current_chunk) + len(paragraph) <= chunk_size:
-            current_chunk.append(paragraph)
-        else:
-            chunks.append("\n\n".join(current_chunk).strip())
-            current_chunk = (
-                [current_chunk[-1], paragraph] if current_chunk else [paragraph]
-            )
-
-    if current_chunk:
-        chunks.append("\n\n".join(current_chunk).strip())
-
-    return chunks
 
 
 async def insert_documents_to_memory_bank(client: LlamaStackClient, docs_dir: str):
-    """Inserts text documents from a directory into a memory bank."""
-    memory_bank_id = "test_bank"
+    """Inserts entire text documents from a directory into a memory bank."""
+    memory_bank_id = "test_bank_2"
     providers = client.providers.list()
     provider_id = providers["memory"][0].provider_id
 
@@ -72,23 +47,21 @@ async def insert_documents_to_memory_bank(client: LlamaStackClient, docs_dir: st
     )
     cprint(f"Memory bank registered: {memory_bank}", "green")
 
-    # Prepare documents for insertion
+    # Prepare entire documents for insertion
     documents = []
     for filename in os.listdir(docs_dir):
         if filename.endswith((".txt", ".md")):
             file_path = os.path.join(docs_dir, filename)
             with open(file_path, "r", encoding="utf-8") as file:
                 content = file.read()
-                chunks = chunk_text(content, chunk_size=350)
 
-                for i, chunk in enumerate(chunks):
-                    document = Document(
-                        document_id=f"{filename}_chunk_{i}",
-                        content=chunk,
-                        mime_type="text/plain",
-                        metadata={"filename": filename, "chunk_index": i},
-                    )
-                    documents.append(document)
+                document = Document(
+                    document_id=f"{filename}",
+                    content=content,
+                    mime_type="text/plain",
+                    metadata={"filename": filename},
+                )
+                documents.append(document)
 
     # Insert documents into the memory bank
     client.memory.insert(
@@ -99,30 +72,6 @@ async def insert_documents_to_memory_bank(client: LlamaStackClient, docs_dir: st
         f"Inserted documents from {docs_dir} into memory bank '{memory_bank_id}'.",
         "green",
     )
-
-
-async def get_response_with_memory_bank(
-    agent: Agent, input_query: str, session_id: str
-) -> (str, List[str]):
-    """Fetches response from the agent with context from the memory bank."""
-    response = agent.create_turn(
-        messages=[{"role": "user", "content": input_query}],
-        session_id=session_id,
-    )
-
-    context_responses = []
-    async for log in EventLogger().log(response):
-        # Log the structure for debugging
-        print(f"Log structure: {vars(log)}")
-
-        # Ensure attribute existence before accessing
-        if hasattr(log, "event") and hasattr(log.event, "payload"):
-            if log.event.payload.event_type == "turn_complete":
-                return log.event.payload.turn.output_message.content, context_responses
-        else:
-            print("Warning: The 'event' attribute or 'payload' is not present.")
-
-    return "No response generated.", context_responses
 
 
 async def run_main(host: str, port: int, docs_dir: str) -> None:
@@ -204,44 +153,44 @@ async def run_main(host: str, port: int, docs_dir: str) -> None:
         ground_truth_answer = qa["Answer"]
 
         cprint(f"Generating response for: {question}", "green")
-        try:
-            generated_answer, contexts = await get_response_with_memory_bank(
-                agent, question, session_id
-            )
-            cprint(f"Response: {generated_answer}", "green")
+        response = agent.create_turn(
+            messages=[
+                {
+                    "role": "user",
+                    "content": question,
+                }
+            ],
+            session_id=session_id,
+        )
 
-            questions.append(question)
-            generated_answers.append(generated_answer)
-            retrieved_contexts.append(contexts)
-            ground_truths.append(ground_truth_answer)
-        except Exception as e:
-            cprint(f"Error generating response for {question}: {e}", "red")
+        async for log in EventLogger().log(response):
+            log.print()
 
     # Create a Dataset for RAGAS evaluation
-    eval_data = Dataset.from_dict(
-        {
-            "user_input": questions,
-            "response": generated_answers,
-            "retrieved_contexts": retrieved_contexts,
-            "reference": ground_truths,
-        }
-    )
+    # eval_data = Dataset.from_dict(
+    #     {
+    #         "user_input": questions,
+    #         "response": generated_answers,
+    #         "retrieved_contexts": retrieved_contexts,
+    #         "reference": ground_truths,
+    #     }
+    # )
 
-    result = evaluate(
-        eval_data,
-        metrics=[
-            ContextPrecision(),
-            ContextRecall(),
-            Faithfulness(),
-            AnswerRelevancy(),
-            FactualCorrectness(),
-            SemanticSimilarity(),
-        ],
-    )
+    # result = evaluate(
+    #     eval_data,
+    #     metrics=[
+    #         ContextPrecision(),
+    #         ContextRecall(),
+    #         Faithfulness(),
+    #         AnswerRelevancy(),
+    #         FactualCorrectness(),
+    #         SemanticSimilarity(),
+    #     ],
+    # )
 
-    df = result.to_pandas()
-    df.to_csv("evaluation_results_with_memory.csv", index=False)
-    print(df.head())
+    # df = result.to_pandas()
+    # df.to_csv("evaluation_results_with_memory.csv", index=False)
+    # print(df.head())
 
 
 def main(host: str, port: int, docs_dir: str) -> None:
