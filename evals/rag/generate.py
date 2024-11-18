@@ -8,12 +8,10 @@ import asyncio
 import os
 
 import fire
-import pandas as pd
 
 from llama_stack_client import LlamaStackClient
 from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.types.memory_insert_params import Document
-from tqdm import tqdm
 
 from ..util import agent_bulk_generate, data_url_from_file
 
@@ -61,7 +59,7 @@ async def run_main(host: str, port: int, docs_dir: str, input_file_path: str):
             "together_api_key": os.environ.get("TOGETHER_API_KEY", ""),
         },
     )
-
+    # TODO: Add this to /eval pipeline
     build_index(client, docs_dir, MEMORY_BANK_ID, MEMORY_BANK_PARAMS)
     agent = Agent(client, AGENT_CONFIG)
     await agent_bulk_generate(agent, input_file_path)

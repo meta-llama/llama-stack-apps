@@ -7,11 +7,9 @@ import asyncio
 import os
 
 import fire
-import pandas as pd
 
 from llama_stack_client import LlamaStackClient
 from llama_stack_client.lib.agents.agent import Agent
-from tqdm import tqdm
 
 from ..util import agent_bulk_generate
 
@@ -27,6 +25,7 @@ async def run_main(host: str, port: int, input_file_path: str):
         },
     )
     agent = Agent(client, AGENT_CONFIG)
+    # TODO: Add this to /eval pipeline
     await agent_bulk_generate(agent, input_file_path)
 
 
