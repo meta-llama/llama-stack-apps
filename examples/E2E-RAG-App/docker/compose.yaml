@@ -6,11 +6,11 @@ services:
       - MODEL_NAME=${MODEL_NAME}
     volumes:
       - ollama:/root/.ollama # this solution synchronizes with the docker volume and loads the model rocket fast
-      - ./ollama_start.sh:/root/ollama_start.sh  
-      - ./RAG_service.json:/root/RAG_service.json 
+      - ./ollama_start.sh:/root/ollama_start.sh
+      - ./RAG_service.json:/root/RAG_service.json
     ports:
       - "11434:11434"
-    entrypoint: bash /root/ollama_start.sh 
+    entrypoint: bash /root/ollama_start.sh
   llamastack:
     depends_on:
     - ollama
@@ -19,11 +19,10 @@ services:
     volumes:
       - ~/.llama:/root/.llama
       # Link to ollama run.yaml file
-      - ./run.yaml:/root/my-run.yaml
-      - ~/llama-stack-apps:/root/llama-stack-apps
+      - ./llama_stack_run.yaml:/root/my-run.yaml
+      - ../../E2E-RAG-App:/root/E2E-RAG-App
       - ./RAG_service.json:/root/RAG_service.json
       - ${DOC_PATH}:/root/rag_data/
-      - ~/local/llama-stack:/root/llama-stack
       - ./llama_stack_start.sh:/root/llama_stack_start.sh
     ports:
       - "5000:5000"
