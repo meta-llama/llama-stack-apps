@@ -5,36 +5,33 @@
 # the root directory of this source tree.
 
 import asyncio
-import json
 import os
-import uuid
 
 import fire
 import pandas as pd
 
 from llama_stack_client import LlamaStackClient
 from llama_stack_client.lib.agents.agent import Agent
-from llama_stack_client.lib.agents.event_logger import EventLogger
-from llama_stack_client.types.agent_create_params import AgentConfig
 from llama_stack_client.types.memory_insert_params import Document
-from termcolor import cprint
 from tqdm import tqdm
+
+from .config import AGENT_CONFIG, MEMORY_BANK_ID, MEMORY_BANK_PARAMS
 
 from .util import data_url_from_file
 
 
-def build_index(client: LlamaStackClient, file_dir: str, bank_id: str) -> str:
+def build_index(
+    client: LlamaStackClient, file_dir: str, bank_id: str, bank_params: dict
+) -> str:
     """Build a memory bank from a directory of pdf files"""
     # 1. create memory bank
     providers = client.providers.list()
     client.memory_banks.register(
-        memory_bank={
-            "identifier": bank_id,
-            "embedding_model": "all-MiniLM-L6-v2",
-            "chunk_size_in_tokens": 512,
-            "overlap_size_in_tokens": 64,
+        memory_bank_id=bank_id,
+        params={
+            **bank_params,
             "provider_id": providers["memory"][0].provider_id,
-        }
+        },
     )
 
     # 2. load pdfs from directory as raw text
@@ -80,37 +77,16 @@ async def get_response_row(agent: Agent, input_query: str) -> str:
 
 
 async def run_main(host: str, port: int, docs_dir: str, input_file_path: str):
-    client = LlamaStackClient(base_url=f"http://{host}:{port}")
-
-    bank_id = "rag_agent_docs"
-    build_index(client, docs_dir, bank_id)
-    print(f"Created bank: {bank_id}")
-
-    agent_config = AgentConfig(
-        model="Llama3.1-405B-Instruct",
-        instructions="You are a helpful assistant",
-        sampling_params={
-            "strategy": "greedy",
-            "temperature": 1.0,
-            "top_p": 0.9,
+    client = LlamaStackClient(
+        base_url=f"http://{host}:{port}",
+        provider_data={
+            "fireworks_api_key": os.environ.get("FIREWORKS_API_KEY", ""),
+            "together_api_key": os.environ.get("TOGETHER_API_KEY", ""),
         },
-        tools=[
-            {
-                "type": "memory",
-                "memory_bank_configs": [{"bank_id": bank_id, "type": "vector"}],
-                "query_generator_config": {"type": "default", "sep": " "},
-                "max_tokens_in_context": 4096,
-                "max_chunks": 10,
-            }
-        ],
-        tool_choice="auto",
-        tool_prompt_format="json",
-        input_shields=[],
-        output_shields=[],
-        enable_session_persistence=False,
     )
 
-    agent = Agent(client, agent_config)
+    build_index(client, docs_dir, MEMORY_BANK_ID, MEMORY_BANK_PARAMS)
+    agent = Agent(client, AGENT_CONFIG)
 
     # load dataset and generate responses for the RAG agent
     df = pd.read_csv(input_file_path)
