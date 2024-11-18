@@ -1,0 +1,69 @@
+version: '2'
+built_at: '2024-11-14T11:26:34.931183'
+image_name: meta-reference-gpu
+docker_image: null
+conda_env: meta-reference-gpu
+apis:
+- inference
+- memory
+- safety
+- agents
+- telemetry
+providers:
+  inference:
+  - provider_id: inline::meta-reference-0
+    provider_type: inline::meta-reference
+    config:
+      model: Llama3.2-3B-Instruct
+      torch_seed: null
+      max_seq_len: 16384
+      max_batch_size: 1
+      create_distributed_process_group: true
+      checkpoint_dir: null
+  - provider_id: inline::meta-reference-0
+    provider_type: inline::meta-reference
+    config:
+      model: Llama3.2-11B-Vision-Instruct
+      torch_seed: null
+      max_seq_len: 16384
+      max_batch_size: 1
+      create_distributed_process_group: true
+      checkpoint_dir: null
+  memory:
+  # - provider_id: inline::faiss-0
+  #   provider_type: inline::faiss
+  #   config:
+  #     kvstore:
+  #       namespace: null
+  #       type: sqlite
+  #       db_path: /home/justinai/.llama/runtime/faiss_store.db
+  - provider_id: remote::chromadb-1
+    provider_type: remote::chromadb
+    config:
+      host: localhost
+      port: 6000
+      protocol: http
+  safety:
+  - provider_id: inline::llama-guard-0
+    provider_type: inline::llama-guard
+    config:
+      excluded_categories: []
+  agents:
+  - provider_id: inline::meta-reference-0
+    provider_type: inline::meta-reference
+    config:
+      persistence_store:
+        namespace: null
+        type: sqlite
+        db_path: /home/justinai/.llama/runtime/kvstore.db
+  telemetry:
+  - provider_id: inline::meta-reference-0
+    provider_type: inline::meta-reference
+    config: {}
+metadata_store: null
+models: []
+shields: []
+memory_banks: []
+datasets: []
+scoring_fns: []
+eval_tasks: []
