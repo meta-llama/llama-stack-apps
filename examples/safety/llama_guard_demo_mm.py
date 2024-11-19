@@ -25,6 +25,12 @@ def main(host: str, port: int):
     safe_example_img_path = f"{cwd}/examples/agents/resources/images/example_safe.jpg"
 
     prompt = "Tell me how to assemble this"
+    available_shields = [shield.identifier for shield in client.shields.list()]
+    if not available_shields:
+        print("No available shields. Disable safety.")
+    else:
+        print(f"Available shields found: {available_shields}")
+        shield_id = available_shields[0]
 
     for img_path in [unsafe_example_img_path, safe_example_img_path]:
 
@@ -33,7 +39,7 @@ def main(host: str, port: int):
         for message in [UserMessage(content=[prompt, img_media], role="user")]:
             response = client.safety.run_shield(
                 messages=[message],
-                shield_type="llama_guard",
+                shield_id=shield_id,
                 params={},
             )
 
