@@ -5,7 +5,6 @@
 # the root directory of this source tree.
 
 import asyncio
-import os
 
 import fire
 
@@ -14,7 +13,7 @@ import gradio as gr
 from examples.agent_store.api import AgentChoice, AgentStore
 
 
-MODEL = "Llama3.1-8B-Instruct"
+MODEL = "meta-llama/Llama-3.1-8B-Instruct"
 CHATBOT = None
 SELECTED_AGENT = None
 BANK_ID = "5f126596-87d8-4b9f-a44d-3a5b93bfc171"
