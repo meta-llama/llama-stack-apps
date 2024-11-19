@@ -42,7 +42,7 @@ async def run_main(host: str, port: int, stream: bool = True):
     cprint(f"User>{message.content}", "green")
     response = client.inference.chat_completion(
         messages=[message],
-        model="Llama3.2-11B-Vision-Instruct",
+        model_id="meta-llama/Llama-3.2-11B-Vision-Instruct",
         stream=stream,
     )
 
