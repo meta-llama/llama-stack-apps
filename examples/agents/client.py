@@ -8,9 +8,10 @@
 
 import asyncio
 import os
-import fire
 from typing import Optional
 from urllib.parse import urlparse
+
+import fire
 from llama_stack_client import LlamaStackClient
 from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.lib.agents.event_logger import EventLogger
@@ -21,7 +22,6 @@ async def run_main(
     host: str,
     port: int,
     use_https: bool = False,
-    disable_safety: bool = False,
     cert_path: Optional[str] = None,
 ):
     # Construct the base URL with the appropriate protocol
@@ -34,6 +34,12 @@ async def run_main(
         client_kwargs["verify"] = cert_path
 
     client = LlamaStackClient(**client_kwargs)
+
+    available_shields = [shield.identifier for shield in client.shields.list()]
+    if not available_shields:
+        print(f"No available shields. Disable safety.")
+    else:
+        print(f"Available shields found: {available_shields}")
 
     agent_config = AgentConfig(
         model="Llama3.1-8B-Instruct",
@@ -52,8 +58,8 @@ async def run_main(
         ],
         tool_choice="auto",
         tool_prompt_format="function_tag",
-        input_shields=[],
-        output_shields=[],
+        input_shields=available_shields if available_shields else [],
+        output_shields=available_shields if available_shields else [],
         enable_session_persistence=False,
     )
 
@@ -86,10 +92,9 @@ def main(
     host: str,
     port: int,
     use_https: bool = False,
-    disable_safety: bool = False,
     cert_path: Optional[str] = None,
 ):
-    asyncio.run(run_main(host, port, use_https, disable_safety, cert_path))
+    asyncio.run(run_main(host, port, use_https, cert_path))
 
 
 if __name__ == "__main__":
