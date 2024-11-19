@@ -16,6 +16,7 @@ from llama_stack_client.types.memory_insert_params import Document
 # Load environment variables
 load_dotenv()
 
+
 class LlamaChatInterface:
     def __init__(self, host: str, port: int, docs_dir: str):
         self.host = host
@@ -25,7 +26,7 @@ class LlamaChatInterface:
         self.agent = None
         self.session_id = None
         self.memory_bank_id = "test_bank_6"
-        
+
     async def initialize_system(self):
         """Initialize the entire system including memory bank and agent."""
         await self.setup_memory_bank()
@@ -35,7 +36,8 @@ class LlamaChatInterface:
     def is_memory_bank_present(self, target_identifier):
         """Checks if a memory bank exists."""
         return any(
-            bank.identifier == target_identifier for bank in self.client.memory_banks.list()
+            bank.identifier == target_identifier
+            for bank in self.client.memory_banks.list()
         )
 
     async def setup_memory_bank(self):
@@ -59,15 +61,15 @@ class LlamaChatInterface:
         """Load documents from the specified directory into memory bank."""
         documents = []
         for filename in os.listdir(self.docs_dir):
-            if filename.endswith(('.txt', '.md')):
+            if filename.endswith((".txt", ".md")):
                 file_path = os.path.join(self.docs_dir, filename)
-                with open(file_path, 'r', encoding='utf-8') as file:
+                with open(file_path, "r", encoding="utf-8") as file:
                     content = file.read()
                     document = Document(
                         document_id=filename,
                         content=content,
                         mime_type="text/plain",
-                        metadata={"filename": filename}
+                        metadata={"filename": filename},
                     )
                     documents.append(document)
 
@@ -81,36 +83,43 @@ class LlamaChatInterface:
     async def initialize_agent(self):
         """Initialize the agent with model registration and configuration."""
         model_name = "Llama3.2-3B-Instruct"
-        
+
         # Register model
         response = requests.post(
             f"http://{self.host}:{self.port}/models/register",
             headers={"Content-Type": "application/json"},
-            data=json.dumps({
-                "model_id": model_name,
-                "provider_id": "inline::meta-reference-0",
-                "provider_model_id": None,
-                "metadata": None,
-            })
+            data=json.dumps(
+                {
+                    "model_id": model_name,
+                    "provider_id": "remote::ollama",
+                    # "provider_id": "inline::meta-reference-0",
+                    "provider_model_id": None,
+                    "metadata": None,
+                }
+            ),
         )
-        
+
         # Agent configuration
         agent_config = AgentConfig(
             model=model_name,
             instructions="You are a helpful assistant that can answer questions based on provided documents.",
             sampling_params={"strategy": "greedy", "temperature": 1.0, "top_p": 0.9},
-            tools=[{
-                "type": "memory",
-                "memory_bank_configs": [{"bank_id": self.memory_bank_id, "type": "vector"}],
-                "query_generator_config": {"type": "default", "sep": " "},
-                "max_tokens_in_context": 4096,
-                "max_chunks": 10,
-            }],
+            tools=[
+                {
+                    "type": "memory",
+                    "memory_bank_configs": [
+                        {"bank_id": self.memory_bank_id, "type": "vector"}
+                    ],
+                    "query_generator_config": {"type": "default", "sep": " "},
+                    "max_tokens_in_context": 4096,
+                    "max_chunks": 10,
+                }
+            ],
             tool_choice="auto",
             tool_prompt_format="json",
             enable_session_persistence=True,
         )
-        
+
         self.agent = Agent(self.client, agent_config)
         self.session_id = str(uuid.uuid4())
 
@@ -118,62 +127,65 @@ class LlamaChatInterface:
         """Process a chat message and return the response."""
         if self.agent is None:
             await self.initialize_system()
-        
+
         response = self.agent.create_turn(
-            messages=[{"role": "user", "content": message}],
-            session_id=self.session_id
+            messages=[{"role": "user", "content": message}], session_id=self.session_id
         )
-        
+
         # Collect the response using EventLogger
         full_response = ""
         async for log in EventLogger().log(response):
-            if hasattr(log, 'content'):
+            if hasattr(log, "content"):
                 full_response += log.content
-        
+
         return full_response
 
-def create_gradio_interface(host: str = "localhost", port: int = 8000, docs_dir: str = "./docs"):
+
+def create_gradio_interface(
+    host: str = "localhost", port: int = 5000, docs_dir: str = "./docs"
+):
     # Initialize the chat interface
     chat_interface = LlamaChatInterface(host, port, docs_dir)
-    
+
     with gr.Blocks(theme=gr.themes.Soft()) as interface:
         gr.Markdown("# LlamaStack Chat")
-        
+
         chatbot = gr.Chatbot()
         msg = gr.Textbox(
-            label="Message",
-            placeholder="Type your message here...",
-            show_label=False
+            label="Message", placeholder="Type your message here...", show_label=False
         )
         with gr.Row():
             submit = gr.Button("Send")
             clear = gr.Button("Clear")
-                
+
         gr.Examples(
             examples=[
                 "What topics are covered in the documents?",
                 "Can you summarize the main points?",
                 "Tell me more about specific details in the text.",
             ],
-            inputs=msg
+            inputs=msg,
         )
-        
+
         async def respond(message, chat_history):
             bot_message = await chat_interface.chat(message, chat_history)
             chat_history.append((message, bot_message))
             return "", chat_history
-        
+
         def clear_chat():
             return None
-        
+
         # Set up event handlers
         msg.submit(respond, [msg, chatbot], [msg, chatbot])
         submit.click(respond, [msg, chatbot], [msg, chatbot])
         clear.click(clear_chat, None, chatbot)
-    
+
     return interface
+
 
 if __name__ == "__main__":
     # Create and launch the Gradio interface
-    interface = create_gradio_interface(docs_dir="./your_docs_directory")  # Specify your docs directory here
-    interface.launch(server_name="0.0.0.0", server_port=7860)
+    interface = create_gradio_interface(
+        docs_dir="/root/rag_data"
+    )  # Specify your docs directory here
+    interface.launch(server_name="0.0.0.0", server_port=1234, share=True)

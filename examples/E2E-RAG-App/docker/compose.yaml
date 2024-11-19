@@ -1,4 +1,13 @@
 services:
+  chromadb:
+    image: chromadb/chroma:latest
+    network_mode: "host"
+    volumes:
+      - ${DOC_PATH}:/root/rag_data/
+      - ./chroma_start.sh:/root/chroma_start.sh
+    ports:
+      - "6000:6000"
+    entrypoint: bash /root/chroma_start.sh
   ollama:
     image: ollama/ollama:latest
     network_mode: "host"
@@ -25,8 +34,9 @@ services:
       - ${DOC_PATH}:/root/rag_data/
       - ./llama_stack_start.sh:/root/llama_stack_start.sh
     ports:
-      - "5000:5000"
-      - "1234:1234"
+      - "5000:5000" # for llama-stack
+      - "1234:1234" # for UI
+      - "6000:6000" # for DB
     # Hack: wait for ollama server to start before starting docker
     entrypoint: bash /root/llama_stack_start.sh
     #entrypoint: bash -c "sleep 60; python -m llama_stack.distribution.server.server --yaml_config /root/my-run.yaml"
