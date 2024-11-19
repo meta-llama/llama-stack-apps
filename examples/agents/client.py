@@ -9,7 +9,6 @@
 import asyncio
 import os
 from typing import Optional
-from urllib.parse import urlparse
 
 import fire
 from llama_stack_client import LlamaStackClient
@@ -37,12 +36,16 @@ async def run_main(
 
     available_shields = [shield.identifier for shield in client.shields.list()]
     if not available_shields:
-        print(f"No available shields. Disable safety.")
+        print("No available shields. Disable safety.")
     else:
         print(f"Available shields found: {available_shields}")
 
+    available_models = [model.identifier for model in client.models.list()]
+    selected_model = available_models[0]
+    print(f"Using model: {selected_model}")
+
     agent_config = AgentConfig(
-        model="Llama3.1-8B-Instruct",
+        model=selected_model,
         instructions="You are a helpful assistant",
         sampling_params={
             "strategy": "greedy",
