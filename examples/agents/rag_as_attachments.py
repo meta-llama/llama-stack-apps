@@ -39,12 +39,15 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
 
     available_shields = [shield.identifier for shield in client.shields.list()]
     if not available_shields:
-        print(f"No available shields. Disable safety.")
+        print("No available shields. Disable safety.")
     else:
         print(f"Available shields found: {available_shields}")
-        
+    available_models = [model.identifier for model in client.models.list()]
+    selected_model = available_models[0]
+    print(f"Using model: {selected_model}")
+
     agent_config = AgentConfig(
-        model="Llama3.2-3B-Instruct",
+        model=selected_model,
         instructions="You are a helpful assistant",
         sampling_params={
             "strategy": "greedy",
