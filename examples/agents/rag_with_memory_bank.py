@@ -39,19 +39,19 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
 
     available_shields = [shield.identifier for shield in client.shields.list()]
     if not available_shields:
-        print(f"No available shields. Disable safety.")
+        print("No available shields. Disable safety.")
     else:
         print(f"Available shields found: {available_shields}")
 
     # create a memory bank
     client.memory_banks.register(
-        memory_bank={
-            "identifier": "test_bank",
+        memory_bank_id="test_bank",
+        params={
             "embedding_model": "all-MiniLM-L6-v2",
             "chunk_size_in_tokens": 512,
             "overlap_size_in_tokens": 64,
-            "provider_id": providers["memory"][0].provider_id,
-        }
+        },
+        provider_id=providers["memory"][0].provider_id,
     )
 
     # insert some documents
@@ -59,9 +59,12 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
         bank_id="test_bank",
         documents=documents,
     )
+    available_models = [model.identifier for model in client.models.list()]
+    selected_model = available_models[0]
+    print(f"Using model: {selected_model}")
 
     agent_config = AgentConfig(
-        model="Llama3.2-3B-Instruct",
+        model=selected_model,
         instructions="You are a helpful assistant",
         sampling_params={
             "strategy": "greedy",
