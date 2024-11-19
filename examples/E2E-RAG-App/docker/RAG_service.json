@@ -1,4 +1,4 @@
 {
   "model_name": "llama3.2:3b",
-  "document_path": "${HOME}/llama-stack-apps/examples/E2E-RAG-App/example_data"
+  "document_path": "${HOME}/work/llama-stack-apps/examples/E2E-RAG-App/example_data"
 }
