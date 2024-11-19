@@ -23,12 +23,22 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
 
     available_shields = [shield.identifier for shield in client.shields.list()]
     if not available_shields:
-        print(f"No available shields. Disable safety.")
+        print("No available shields. Disable safety.")
     else:
         print(f"Available shields found: {available_shields}")
 
+    available_models = [model.identifier for model in client.models.list()]
+    supported_models = [x for x in available_models if "3.2" in x]
+    if not supported_models:
+        raise ValueError(
+            "No supported models found. Make sure to have a Llama 3.2 model."
+        )
+    else:
+        selected_model = supported_models[0]
+        print(f"Using model: {selected_model}")
+
     agent_config = AgentConfig(
-        model="Llama3.2-3B-Instruct",
+        model=selected_model,
         instructions="You are a helpful assistant",
         sampling_params={
             "strategy": "greedy",
