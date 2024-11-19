@@ -60,8 +60,11 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
         documents=documents,
     )
     available_models = [model.identifier for model in client.models.list()]
-    selected_model = available_models[0]
-    print(f"Using model: {selected_model}")
+    if not available_models:
+        raise ValueError("No available models")
+    else:
+        selected_model = available_models[0]
+        print(f"Using model: {selected_model}")
 
     agent_config = AgentConfig(
         model=selected_model,
