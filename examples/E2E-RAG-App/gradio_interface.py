@@ -25,7 +25,7 @@ class LlamaChatInterface:
         self.client = LlamaStackClient(base_url=f"http://{host}:{port}")
         self.agent = None
         self.session_id = None
-        self.memory_bank_id = "test_bank_6"
+        self.memory_bank_id = "test_bank_666"
 
     async def initialize_system(self):
         """Initialize the entire system including memory bank and agent."""
@@ -44,14 +44,16 @@ class LlamaChatInterface:
         """Set up the memory bank if it doesn't exist."""
         providers = self.client.providers.list()
         provider_id = providers["memory"][0].provider_id
-
+        memorybank_list = self.client.memory_banks.list()
+        # for bank in memorybank_list:
+        #     self.client.memory_banks.unregister(memory_bank_id=bank.identifier)
         if not self.is_memory_bank_present(self.memory_bank_id):
             memory_bank = self.client.memory_banks.register(
                 memory_bank_id=self.memory_bank_id,
                 params={
                     "embedding_model": "all-MiniLM-L6-v2",
-                    "chunk_size_in_tokens": 512,
-                    "overlap_size_in_tokens": 64,
+                    "chunk_size_in_tokens": 100,
+                    "overlap_size_in_tokens": 10,
                 },
                 provider_id=provider_id,
             )
@@ -84,21 +86,6 @@ class LlamaChatInterface:
         """Initialize the agent with model registration and configuration."""
         model_name = "Llama3.2-3B-Instruct"
 
-        # Register model
-        response = requests.post(
-            f"http://{self.host}:{self.port}/models/register",
-            headers={"Content-Type": "application/json"},
-            data=json.dumps(
-                {
-                    "model_id": model_name,
-                    "provider_id": "remote::ollama",
-                    # "provider_id": "inline::meta-reference-0",
-                    "provider_model_id": None,
-                    "metadata": None,
-                }
-            ),
-        )
-
         # Agent configuration
         agent_config = AgentConfig(
             model=model_name,
@@ -111,17 +98,16 @@ class LlamaChatInterface:
                         {"bank_id": self.memory_bank_id, "type": "vector"}
                     ],
                     "query_generator_config": {"type": "default", "sep": " "},
-                    "max_tokens_in_context": 4096,
-                    "max_chunks": 10,
+                    "max_tokens_in_context": 300,
+                    "max_chunks": 5,
                 }
             ],
             tool_choice="auto",
             tool_prompt_format="json",
             enable_session_persistence=True,
         )
-
         self.agent = Agent(self.client, agent_config)
-        self.session_id = str(uuid.uuid4())
+        self.session_id = self.agent.create_session(f"session-{uuid.uuid4()}")
 
     async def chat(self, message: str, history: List[List[str]]) -> str:
         """Process a chat message and return the response."""
@@ -188,4 +174,4 @@ if __name__ == "__main__":
     interface = create_gradio_interface(
         docs_dir="/root/rag_data"
     )  # Specify your docs directory here
-    interface.launch(server_name="0.0.0.0", server_port=1234, share=True)
+    interface.launch(server_name="0.0.0.0", server_port=7860, share=True)

@@ -26,22 +26,29 @@ def is_memory_bank_present(client, target_identifier):
 
 async def insert_documents_to_memory_bank(client: LlamaStackClient, docs_dir: str):
     """Inserts entire text documents from a directory into a memory bank."""
-    memory_bank_id = "test_bank_8"
+    memory_bank_id = "test_bank_0"
     providers = client.providers.list()
     provider_id = providers["memory"][0].provider_id
 
     memorybank_boolean = is_memory_bank_present(client, memory_bank_id)
-    print(client.memory_banks.list())
-    print(memorybank_boolean)
+    memorybank_list = client.memory_banks.list()
+    print(memorybank_list)
+    for bank in memorybank_list:
+        try:
+            client.memory_banks.unregister(memory_bank_id=bank.provider_resource_id)
+        except Exception as e:
+            print(e)
 
-    if True:
+    print("after unregistration: ", client.memory_banks.list())
+
+    if not memorybank_boolean:
         # Register a memory bank
         memory_bank = client.memory_banks.register(
             memory_bank_id=memory_bank_id,
             params={
                 "embedding_model": "all-MiniLM-L6-v2",
-                "chunk_size_in_tokens": 512,
-                "overlap_size_in_tokens": 64,
+                "chunk_size_in_tokens": 100,
+                "overlap_size_in_tokens": 10,
             },
             provider_id=provider_id,
         )
@@ -81,22 +88,22 @@ async def run_main(host: str, port: int, docs_dir: str) -> None:
     # Insert documents to the memory bank
     await insert_documents_to_memory_bank(client, docs_dir)
 
-    # Model registration
+    # # Model registration
     model_name = "Llama3.2-3B-Instruct"
-    response = requests.post(
-        f"http://{host}:{port}/models/register",
-        headers={"Content-Type": "application/json"},
-        data=json.dumps(
-            {
-                "model_id": model_name,
-                "provider_model_id": None,
-                "provider_id": "remote::ollama",
-                # "provider_id": "inline::meta-reference-0",
-                "metadata": None,
-            }
-        ),
-    )
-    cprint(f"Model registration status: {response.status_code}", "blue")
+    # response = requests.post(
+    #     f"http://{host}:{port}//alpha/models/register",
+    #     headers={"Content-Type": "application/json"},
+    #     data=json.dumps(
+    #         {
+    #             "model_id": model_name,
+    #             "provider_model_id": None,
+    #             "provider_id": "remote::ollama",
+    #             # "provider_id": "inline::meta-reference-0",
+    #             "metadata": None,
+    #         }
+    #     ),
+    # )
+    # cprint(f"Model registration status: {response.status_code}", "blue")
 
     # Agent configuration
     agent_config = AgentConfig(
@@ -106,10 +113,10 @@ async def run_main(host: str, port: int, docs_dir: str) -> None:
         tools=[
             {
                 "type": "memory",
-                "memory_bank_configs": [{"bank_id": "test_bank_8", "type": "vector"}],
+                "memory_bank_configs": [{"bank_id": "test_bank_0", "type": "vector"}],
                 "query_generator_config": {"type": "default", "sep": " "},
-                "max_tokens_in_context": 4096,
-                "max_chunks": 10,
+                "max_tokens_in_context": 512,
+                "max_chunks": 5,
             }
         ],
         tool_choice="auto",
@@ -118,13 +125,6 @@ async def run_main(host: str, port: int, docs_dir: str) -> None:
     )
     agent = Agent(client, agent_config)
 
-    user_prompts = [
-        "What is the policy regarding smoking in City offices?",
-        "How many days of paid sick leave do most full-time employees earn per year under Civil Service Rules?",
-        "What are the three categories of employees eligible for health coverage?",
-        "How long must an employee wait before using vacation time after starting employment?",
-        "What must an employee do if they're summoned for jury duty?",
-    ]
 
     session_id = agent.create_session(f"session-{uuid.uuid4()}")
 
