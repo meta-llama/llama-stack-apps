@@ -13,18 +13,17 @@ apis:
 - safety
 providers:
   inference:
-  - provider_id: ollama0
+  - provider_id: remote::ollama
     provider_type: remote::ollama
     config:
       url: http://127.0.0.1:14343
   memory:
-  - provider_id: inline::faiss-0
-    provider_type: inline::faiss
+  - provider_id: remote::chromadb
+    provider_type: remote::chromadb
     config:
-      kvstore:
-        namespace: null
-        type: sqlite
-        db_path: ${HOME}/.llama/runtime/faiss_store.db
+      host: localhost
+      port: 6000
+      protocol: http
   safety:
   - provider_id: inline::llama-guard-0
     provider_type: inline::llama-guard
@@ -49,4 +48,3 @@ memory_banks: []
 datasets: []
 scoring_fns: []
 eval_tasks: []
-

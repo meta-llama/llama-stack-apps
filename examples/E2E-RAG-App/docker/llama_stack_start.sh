@@ -1,18 +1,19 @@
 
-sleep 90
+sleep 60
 echo "starting to install llama-stack"
 apt-get update
 apt-get install -y git
 #pip install /root/llama-stack
 pip install git+https://github.com/meta-llama/llama-stack.git@2edfda97e9659155074269fc3b7e66d9bb2c57d4
-pip uninstall -y chromadb-client
-pip uninstall -y chromadb
-pip install -U chromadb
+#pip install tiktoken
+pip install gradio
 echo "Installing llama-stack-client"
-pip install llama-stack-client==0.0.50
+pip install --index-url https://test.pypi.org/simple/ llama_stack_client==0.0.53rc2
+#pip install git+https://github.com/meta-llama/llama-stack-client-python.git@f5a2391241eac03eea356b206469081688277d23
 echo "starting the llama-stack server"
 python -m llama_stack.distribution.server.server --yaml_config /root/my-run.yaml&
-sleep 30
+sleep 3600000000
 
 echo "running the RAG app"
-python /root/E2E-RAG-App/ollama_main.py localhost 5000 /root/RAG_service.json
+#python /root/E2E-RAG-App/gradio_interface.py
+#python /root/E2E-RAG-App/ollama_main.py localhost 5000

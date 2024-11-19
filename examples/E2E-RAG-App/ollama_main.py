@@ -90,8 +90,8 @@ async def run_main(host: str, port: int, docs_dir: str) -> None:
             {
                 "model_id": model_name,
                 "provider_model_id": None,
-                # "provider_id": "ollama",
-                "provider_id": "inline::meta-reference-0",
+                "provider_id": "remote::ollama",
+                # "provider_id": "inline::meta-reference-0",
                 "metadata": None,
             }
         ),
