@@ -4,13 +4,17 @@ This is an End to End RAG App leveraging llama-stack that handles the logic for 
 
 We share the details of how to run first and then an outline of how it works:
 
-## Prerequisite:
+### Prerequisite:
 
 Install docker: Check [this doc for Mac](https://docs.docker.com/desktop/setup/install/mac-install/), [this doc for Windows](https://docs.docker.com/desktop/setup/install/windows-install/) and this [instruction for Linux](https://docs.docker.com/engine/install/).
 
 For Mac and Windows users, you need to start the Docker app manually after installation.
 
-## How to run:
+### How to run the pipeline:
+
+![RAG_workflow](./RAG_workflow.jpg)
+
+The above is the workflow diagram for this RAG app. To run the app, please read the following instructions:
 
 1. We have main config `RAG_service.json` inside of the docker folder, please change `model_name` and `document_path` accordingly, for example:
 
@@ -41,21 +45,19 @@ docker exec -it docker-ollama-1 bash
 ollama ps
 ```
 
-> Check more about Ollama instruction [here](https://github.com/ollama/ollama)
+Check more about Ollama instruction [here](https://github.com/ollama/ollama)
 
 4. ChromaDB docker will also start. This docker will host the chroma database that can interact with llama-stack.
 
-5. Lastly, Llama-stack docker will start. The `llama_stack_start.sh` control the docker startup behavior, change it if needed. It should be able to run llama-stack server based on the  `llama_stack_run.yaml` config. Once the server is ready, then it will run the `gradio_interface.py`.
+5. Lastly, Llama-stack docker will start. The `llama_stack_start.sh` control the docker startup behavior, change it if needed. It will first run the ingestion pipeline to convert all the documents into MarkDown files. Then, it will run llama-stack server based on the  `llama_stack_run.yaml` config. Once the server is ready, then it will run the `gradio_interface.py` which will insert document chunks into memory_bank and start the UI for user interaction.
 
 6. `gradio_interface.py` will show a public link. You can access the gradio UI by putting this link to the browser. Then you can start your chat in the gradio web page.
 
 
-All of the steps are run using a single-step via docker script.
 
-Overview of how it works:
+### Overview of how the RAG app works:
+
 1. We use [docling](https://github.com/DS4SD/docling) framework for handling multiple file input formats (PDF, PPTX, DOCX)
 2. If you are using a GPU inference machine, we have an option to use `Llama-3.2-11B-Vision` to caption images in the documents, on CPU machine this step is skipped
 3. Once ingested, we use a llama-stack distribution running chroma-db and `Llama-3.2-3B-Instruct` to ingest chunks into a memory_bank
 4. Once the vectordb is created, we then use llama-stack with the `Llama-3.2-3B-Instruct` to chat with the model.
-
-![RAG_workflow](./RAG_workflow.jpg)
