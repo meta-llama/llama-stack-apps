@@ -2,7 +2,7 @@ import asyncio
 import json
 import os
 import uuid
-from typing import List, Optional
+from typing import List, Optional, Generator, AsyncGenerator
 
 import gradio as gr
 import requests
@@ -45,8 +45,6 @@ class LlamaChatInterface:
         providers = self.client.providers.list()
         provider_id = providers["memory"][0].provider_id
         memorybank_list = self.client.memory_banks.list()
-        # for bank in memorybank_list:
-        #     self.client.memory_banks.unregister(memory_bank_id=bank.identifier)
         if not self.is_memory_bank_present(self.memory_bank_id):
             memory_bank = self.client.memory_banks.register(
                 memory_bank_id=self.memory_bank_id,
@@ -86,7 +84,6 @@ class LlamaChatInterface:
         """Initialize the agent with model registration and configuration."""
         model_name = "Llama3.2-3B-Instruct"
 
-        # Agent configuration
         agent_config = AgentConfig(
             model=model_name,
             instructions="You are a helpful assistant that can answer questions based on provided documents.",
@@ -109,22 +106,31 @@ class LlamaChatInterface:
         self.agent = Agent(self.client, agent_config)
         self.session_id = self.agent.create_session(f"session-{uuid.uuid4()}")
 
-    async def chat(self, message: str, history: List[List[str]]) -> str:
-        """Process a chat message and return the response."""
+    async def chat_stream(
+        self, message: str, history: List[List[str]]
+    ) -> AsyncGenerator[List[List[str]], None]:
+        """Stream chat responses token by token with proper history handling."""
         if self.agent is None:
             await self.initialize_system()
 
+        # Initialize history if None
+        history = history or []
+        
+        # Add user message to history
+        history.append([message, ""])
+        
+        # Get streaming response from agent
         response = self.agent.create_turn(
             messages=[{"role": "user", "content": message}], session_id=self.session_id
         )
 
-        # Collect the response using EventLogger
-        full_response = ""
+        # Stream the response using EventLogger
+        current_response = ""
         async for log in EventLogger().log(response):
             if hasattr(log, "content"):
-                full_response += log.content
-
-        return full_response
+                current_response += log.content
+                history[-1][1] = current_response
+                yield history
 
 
 def create_gradio_interface(
@@ -136,12 +142,19 @@ def create_gradio_interface(
     with gr.Blocks(theme=gr.themes.Soft()) as interface:
         gr.Markdown("# LlamaStack Chat")
 
-        chatbot = gr.Chatbot()
+        chatbot = gr.Chatbot(
+            bubble_full_width=False,
+            show_label=False,
+            height=400
+        )
         msg = gr.Textbox(
-            label="Message", placeholder="Type your message here...", show_label=False
+            label="Message",
+            placeholder="Type your message here...",
+            show_label=False,
+            container=False,
         )
         with gr.Row():
-            submit = gr.Button("Send")
+            submit = gr.Button("Send", variant="primary")
             clear = gr.Button("Clear")
 
         gr.Examples(
@@ -153,25 +166,44 @@ def create_gradio_interface(
             inputs=msg,
         )
 
-        async def respond(message, chat_history):
-            bot_message = await chat_interface.chat(message, chat_history)
-            chat_history.append((message, bot_message))
-            return "", chat_history
-
         def clear_chat():
-            return None
+            return [], ""
 
-        # Set up event handlers
-        msg.submit(respond, [msg, chatbot], [msg, chatbot])
-        submit.click(respond, [msg, chatbot], [msg, chatbot])
-        clear.click(clear_chat, None, chatbot)
+        # Set up event handlers with streaming
+        submit_event = msg.submit(
+            fn=chat_interface.chat_stream,
+            inputs=[msg, chatbot],
+            outputs=chatbot,
+            queue=True,
+        ).then(
+            fn=lambda: "",  # Clear textbox after sending
+            outputs=msg,
+        )
+
+        submit_click = submit.click(
+            fn=chat_interface.chat_stream,
+            inputs=[msg, chatbot],
+            outputs=chatbot,
+            queue=True,
+        ).then(
+            fn=lambda: "",  # Clear textbox after sending
+            outputs=msg,
+        )
+
+        clear.click(clear_chat, outputs=[chatbot, msg], queue=False)
+
+        # Add keyboard shortcut for submit
+        msg.submit(lambda: None, None, None, api_name=False)
 
     return interface
 
 
 if __name__ == "__main__":
     # Create and launch the Gradio interface
-    interface = create_gradio_interface(
-        docs_dir="/root/rag_data"
-    )  # Specify your docs directory here
-    interface.launch(server_name="0.0.0.0", server_port=7860, share=True)
+    interface = create_gradio_interface(docs_dir="/root/rag_data")
+    interface.launch(
+        server_name="0.0.0.0",
+        server_port=7860,
+        share=True,
+        debug=True
+    )
