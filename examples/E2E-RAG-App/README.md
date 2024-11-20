@@ -2,7 +2,7 @@
 
 This is an End to End RAG App leveraging llama-stack that handles the logic for ingesting documents, storing them in a vector db and providing an inference interface.
 
-We share the details of how to run first and then an outline of how it works
+We share the details of how to run first and then an outline of how it works:
 
 ## Prerequisite:
 
