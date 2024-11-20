@@ -1,6 +1,7 @@
 import argparse
 import json
 import logging
+import shutil
 from pathlib import Path
 from typing import Tuple, List
 
@@ -23,19 +24,24 @@ def parse_args():
     parser.add_argument('--output_dir', type=str, help='Output directory for processed files (default: input_dir/output)')
     return parser.parse_args()
 
-def get_document_files(input_dir: Path) -> list[Path]:
+def get_document_files(input_dir: Path) -> Tuple[List[Path], List[Path]]:
     """
     Recursively scan directory for document files.
-    Returns a list of Path objects for supported document types.
+    Returns:
+        tuple: (documents_to_process, markdown_files)
     """
-    supported_extensions = {".pdf", ".docx", ".pptx"}
-    document_files = []
+    process_extensions = {".pdf", ".docx", ".pptx"}
+    documents_to_process = []
+    markdown_files = []
 
     for path in input_dir.rglob("*"):
-        if path.is_file() and path.suffix.lower() in supported_extensions:
-            document_files.append(path)
+        if path.is_file():
+            if path.suffix.lower() in process_extensions:
+                documents_to_process.append(path)
+            elif path.suffix.lower() == ".md":
+                markdown_files.append(path)
 
-    return document_files
+    return documents_to_process, markdown_files
 
 def save_images(res, output_subdir: Path, doc_filename: str) -> List[Tuple[str, Path]]:
     """
@@ -84,63 +90,64 @@ def main():
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Get all document files recursively
-    input_paths = get_document_files(input_dir)
+    documents_to_process, markdown_files = get_document_files(input_dir)
 
-    if not input_paths:
-        print(f"No documents found in {input_dir}!")
-        return
+    # Copy markdown files directly
+    for md_file in markdown_files:
+        relative_path = md_file.relative_to(input_dir)
+        output_path = output_dir / relative_path
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(md_file, output_path)
+        print(f"Copied: {md_file}")
 
-    print(f"Found {len(input_paths)} documents to process:")
-    for path in input_paths:
-        print(f"- {path}")
+    if documents_to_process:
+        # Configure pipeline options
+        pipeline_options = PdfPipelineOptions()
+        pipeline_options.do_ocr = False
+        pipeline_options.images_scale = 2.0
+        pipeline_options.generate_page_images = False
+        pipeline_options.generate_table_images = False
+        pipeline_options.generate_picture_images = True
 
-    # Configure pipeline options
-    pipeline_options = PdfPipelineOptions()
-    pipeline_options.do_ocr = False
-    pipeline_options.images_scale = 2.0
-    pipeline_options.generate_page_images = False
-    pipeline_options.generate_table_images = False
-    pipeline_options.generate_picture_images = True
+        # Configure document converter
+        doc_converter = DocumentConverter(
+            allowed_formats=[
+                InputFormat.PDF,
+                InputFormat.DOCX,
+                InputFormat.PPTX,
+            ],
+            format_options={
+                InputFormat.PDF: PdfFormatOption(
+                    pipeline_cls=StandardPdfPipeline,
+                    backend=PyPdfiumDocumentBackend,
+                    pipeline_options=pipeline_options
+                ),
+                InputFormat.DOCX: WordFormatOption(pipeline_cls=SimplePipeline),
+            },
+        )
 
-    # Configure document converter
-    doc_converter = DocumentConverter(
-        allowed_formats=[
-            InputFormat.PDF,
-            InputFormat.DOCX,
-            InputFormat.PPTX,
-        ],
-        format_options={
-            InputFormat.PDF: PdfFormatOption(
-                pipeline_cls=StandardPdfPipeline,
-                backend=PyPdfiumDocumentBackend,
-                pipeline_options=pipeline_options
-            ),
-            InputFormat.DOCX: WordFormatOption(pipeline_cls=SimplePipeline),
-        },
-    )
+        # Process all documents
+        conv_results = doc_converter.convert_all(documents_to_process)
+        all_extracted_images = []
 
-    # Process all documents
-    conv_results = doc_converter.convert_all(input_paths)
-    all_extracted_images = []
+        # Save results
+        for res in conv_results:
+            relative_path = res.input.file.relative_to(input_dir)
+            output_subdir = output_dir / relative_path.parent
+            output_subdir.mkdir(parents=True, exist_ok=True)
 
-    # Save results
-    for res in conv_results:
-        relative_path = res.input.file.relative_to(input_dir)
-        output_subdir = output_dir / relative_path.parent
-        output_subdir.mkdir(parents=True, exist_ok=True)
+            md_path = output_subdir / f"{res.input.file.stem}.md"
 
-        md_path = output_subdir / f"{res.input.file.stem}.md"
+            print(f"Converting: {res.input.file}" f"\nSaving to: {md_path}")
 
-        print(f"Converting: {res.input.file}" f"\nSaving to: {md_path}")
+            extracted_images = save_images(res, output_subdir, res.input.file.stem)
+            all_extracted_images.extend(extracted_images)
 
-        extracted_images = save_images(res, output_subdir, res.input.file.stem)
-        all_extracted_images.extend(extracted_images)
+            with md_path.open("w", encoding="utf-8") as fp:
+                fp.write(res.document.export_to_markdown())
 
-        with md_path.open("w", encoding="utf-8") as fp:
-            fp.write(res.document.export_to_markdown())
-
-    print(f"\nExtracted {len(all_extracted_images)} images in total")
-    print("Ready for image captioning processing")
+        print(f"\nExtracted {len(all_extracted_images)} images in total")
+        print("Ready for image captioning processing")
 
 if __name__ == "__main__":
     main()
