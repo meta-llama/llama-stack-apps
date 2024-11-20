@@ -24,6 +24,11 @@ from llama_stack_client.types.memory_insert_params import Document
 # Load environment variables
 load_dotenv()
 
+HOST = os.getenv("HOST", "localhost")
+PORT = int(os.getenv("PORT", 5000))
+CHROMA_PORT = int(os.getenv("CHROMA_PORT", 6000))
+DOCS_DIR = os.getenv("DOCS_DIR", "/root/E2E-RAG-App/example_data/")
+GRADIO_SERVER_PORT = int(os.getenv("GRADIO_SERVER_PORT", 7861))
 
 class LlamaChatInterface:
     def __init__(self, host: str, port: int, chroma_port: int, docs_dir: str):
@@ -159,10 +164,10 @@ class LlamaChatInterface:
 
 
 def create_gradio_interface(
-    host: str = "localhost",
-    port: int = 5555,
-    chroma_port: int = 6000,
-    docs_dir: str = "/root/E2E-RAG-App/example_data/",
+    host: str = HOST,
+    port: int = PORT,
+    chroma_port: int = CHROMA_PORT,
+    docs_dir: str = DOCS_DIR,
 ):
     chat_interface = LlamaChatInterface(host, port, chroma_port, docs_dir)
 
@@ -223,4 +228,4 @@ def create_gradio_interface(
 if __name__ == "__main__":
     # Create and launch the Gradio interface
     interface = create_gradio_interface()
-    interface.launch(server_name="0.0.0.0", server_port=7860, share=True, debug=True)
+    interface.launch(server_name=HOST, server_port=GRADIO_SERVER_PORT, share=True, debug=True)
