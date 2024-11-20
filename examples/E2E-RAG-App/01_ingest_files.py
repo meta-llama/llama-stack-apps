@@ -3,11 +3,13 @@ import json
 import logging
 import shutil
 from pathlib import Path
-from typing import Tuple, List
+from typing import List, Tuple
 
 import yaml
 from docling.backend.pypdfium2_backend import PyPdfiumDocumentBackend
 from docling.datamodel.base_models import InputFormat
+from docling.datamodel.document import PictureItem, TableItem
+from docling.datamodel.pipeline_options import PdfPipelineOptions
 from docling.document_converter import (
     DocumentConverter,
     PdfFormatOption,
@@ -15,14 +17,25 @@ from docling.document_converter import (
 )
 from docling.pipeline.simple_pipeline import SimplePipeline
 from docling.pipeline.standard_pdf_pipeline import StandardPdfPipeline
-from docling.datamodel.pipeline_options import PdfPipelineOptions
-from docling.datamodel.document import TableItem, PictureItem
+
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='Process documents from input directory')
-    parser.add_argument('--input_dir', type=str, required=True, help='Input directory containing documents')
-    parser.add_argument('--output_dir', type=str, help='Output directory for processed files (default: input_dir/output)')
+    parser = argparse.ArgumentParser(
+        description="Process documents from input directory"
+    )
+    parser.add_argument(
+        "--input_dir",
+        type=str,
+        required=True,
+        help="Input directory containing documents",
+    )
+    parser.add_argument(
+        "--output_dir",
+        type=str,
+        help="Output directory for processed files (default: input_dir/output)",
+    )
     return parser.parse_args()
+
 
 def get_document_files(input_dir: Path) -> Tuple[List[Path], List[Path]]:
     """
@@ -43,6 +56,7 @@ def get_document_files(input_dir: Path) -> Tuple[List[Path], List[Path]]:
 
     return documents_to_process, markdown_files
 
+
 def save_images(res, output_subdir: Path, doc_filename: str) -> List[Tuple[str, Path]]:
     """
     Extracts and saves images from the document.
@@ -54,40 +68,53 @@ def save_images(res, output_subdir: Path, doc_filename: str) -> List[Tuple[str, 
 
     # Save page images
     for page_no, page in res.document.pages.items():
-        if hasattr(page, 'image') and page.image:
+        if hasattr(page, "image") and page.image:
             image_path = images_dir / f"{doc_filename}-page-{page_no}.png"
             with image_path.open("wb") as fp:
                 page.image.pil_image.save(fp, format="PNG")
-            saved_images.append(('page', image_path))
+            saved_images.append(("page", image_path))
 
     # Save images of figures and tables
     table_counter = 0
     picture_counter = 0
-    
+
     for element, _level in res.document.iterate_items():
-        if isinstance(element, TableItem) and hasattr(element, 'image') and element.image:
+        if (
+            isinstance(element, TableItem)
+            and hasattr(element, "image")
+            and element.image
+        ):
             table_counter += 1
             image_path = images_dir / f"{doc_filename}-table-{table_counter}.png"
             with image_path.open("wb") as fp:
                 element.image.pil_image.save(fp, "PNG")
-            saved_images.append(('table', image_path))
+            saved_images.append(("table", image_path))
 
-        if isinstance(element, PictureItem) and hasattr(element, 'image') and element.image:
+        if (
+            isinstance(element, PictureItem)
+            and hasattr(element, "image")
+            and element.image
+        ):
             picture_counter += 1
             image_path = images_dir / f"{doc_filename}-figure-{picture_counter}.png"
             with image_path.open("wb") as fp:
                 element.image.pil_image.save(fp, "PNG")
-            saved_images.append(('figure', image_path))
+            saved_images.append(("figure", image_path))
 
     return saved_images
 
+
 def main():
     args = parse_args()
-    
+
     # Set up input and output directories
     input_dir = Path(args.input_dir)
     output_dir = Path(args.output_dir) if args.output_dir else input_dir / "output"
-    output_dir.mkdir(parents=True, exist_ok=True)
+    if os.path.exists(output_dir):
+        print(f"Output directory already exists: {output_dir}, will stop ingestion")
+        raise Exception(f"Output directory already exists: {output_dir}")
+    else:
+        output_dir.mkdir(parents=True, exist_ok=True)
 
     # Get all document files recursively
     documents_to_process, markdown_files = get_document_files(input_dir)
@@ -120,7 +147,7 @@ def main():
                 InputFormat.PDF: PdfFormatOption(
                     pipeline_cls=StandardPdfPipeline,
                     backend=PyPdfiumDocumentBackend,
-                    pipeline_options=pipeline_options
+                    pipeline_options=pipeline_options,
                 ),
                 InputFormat.DOCX: WordFormatOption(pipeline_cls=SimplePipeline),
             },
@@ -148,6 +175,7 @@ def main():
 
         print(f"\nExtracted {len(all_extracted_images)} images in total")
         print("Ready for image captioning processing")
+
 
 if __name__ == "__main__":
     main()
