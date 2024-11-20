@@ -2,10 +2,13 @@ import asyncio
 import json
 import os
 import uuid
-from typing import List, Optional, Generator, AsyncGenerator
+from typing import AsyncGenerator, Generator, List, Optional
+
+import chromadb
 
 import gradio as gr
 import requests
+from chromadb.utils import embedding_functions
 from dotenv import load_dotenv
 from llama_stack_client import LlamaStackClient
 from llama_stack_client.lib.agents.agent import Agent
@@ -18,11 +21,12 @@ load_dotenv()
 
 
 class LlamaChatInterface:
-    def __init__(self, host: str, port: int, docs_dir: str):
+    def __init__(self, host: str, port: int, chroma_port: int, docs_dir: str):
         self.host = host
         self.port = port
         self.docs_dir = docs_dir
         self.client = LlamaStackClient(base_url=f"http://{host}:{port}")
+        self.chroma_client = chromadb.HttpClient(host=host, port={chroma_port})
         self.agent = None
         self.session_id = None
         self.memory_bank_id = "test_bank_666"
@@ -33,19 +37,18 @@ class LlamaChatInterface:
         await self.load_documents()
         await self.initialize_agent()
 
-    def is_memory_bank_present(self, target_identifier):
-        """Checks if a memory bank exists."""
-        return any(
-            bank.identifier == target_identifier
-            for bank in self.client.memory_banks.list()
-        )
-
     async def setup_memory_bank(self):
         """Set up the memory bank if it doesn't exist."""
         providers = self.client.providers.list()
         provider_id = providers["memory"][0].provider_id
-        memorybank_list = self.client.memory_banks.list()
-        if not self.is_memory_bank_present(self.memory_bank_id):
+        collections = chroma_client.list_collections()
+
+        if any(col.name == memory_bank_id for col in collections):
+            print(f"The collection '{memory_bank_id}' exists.")
+        else:
+            print(
+                f"The collection '{memory_bank_id}' does not exist. Creating the collection..."
+            )
             memory_bank = self.client.memory_banks.register(
                 memory_bank_id=self.memory_bank_id,
                 params={
@@ -115,10 +118,10 @@ class LlamaChatInterface:
 
         # Initialize history if None
         history = history or []
-        
+
         # Add user message to history
         history.append([message, ""])
-        
+
         # Get streaming response from agent
         response = self.agent.create_turn(
             messages=[{"role": "user", "content": message}], session_id=self.session_id
@@ -134,19 +137,18 @@ class LlamaChatInterface:
 
 
 def create_gradio_interface(
-    host: str = "localhost", port: int = 5000, docs_dir: str = "./docs"
+    host: str = "localhost",
+    port: int = 5000,
+    chroma_port: int = 6000,
+    docs_dir: str = "./docs",
 ):
     # Initialize the chat interface
-    chat_interface = LlamaChatInterface(host, port, docs_dir)
+    chat_interface = LlamaChatInterface(host, port, docs_dir, chroma_port)
 
     with gr.Blocks(theme=gr.themes.Soft()) as interface:
         gr.Markdown("# LlamaStack Chat")
 
-        chatbot = gr.Chatbot(
-            bubble_full_width=False,
-            show_label=False,
-            height=400
-        )
+        chatbot = gr.Chatbot(bubble_full_width=False, show_label=False, height=400)
         msg = gr.Textbox(
             label="Message",
             placeholder="Type your message here...",
@@ -201,9 +203,4 @@ def create_gradio_interface(
 if __name__ == "__main__":
     # Create and launch the Gradio interface
     interface = create_gradio_interface(docs_dir="/root/rag_data")
-    interface.launch(
-        server_name="0.0.0.0",
-        server_port=7860,
-        share=True,
-        debug=True
-    )
+    interface.launch(server_name="0.0.0.0", server_port=7860, share=True, debug=True)
