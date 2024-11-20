@@ -26,10 +26,10 @@ class LlamaChatInterface:
         self.port = port
         self.docs_dir = docs_dir
         self.client = LlamaStackClient(base_url=f"http://{host}:{port}")
-        self.chroma_client = chromadb.HttpClient(host=host, port={chroma_port})
+        self.chroma_client = chromadb.HttpClient(host=host, port=chroma_port)
         self.agent = None
-        self.session_id = None
-        self.memory_bank_id = "test_bank_666"
+        self.memory_bank_id = "test_bank_999"
+        self.chat_history = []
 
     async def initialize_system(self):
         """Initialize the entire system including memory bank and agent."""
@@ -41,13 +41,13 @@ class LlamaChatInterface:
         """Set up the memory bank if it doesn't exist."""
         providers = self.client.providers.list()
         provider_id = providers["memory"][0].provider_id
-        collections = chroma_client.list_collections()
+        collections = self.chroma_client.list_collections()
 
-        if any(col.name == memory_bank_id for col in collections):
-            print(f"The collection '{memory_bank_id}' exists.")
+        if any(col.name == self.memory_bank_id for col in collections):
+            print(f"The collection '{self.memory_bank_id}' exists.")
         else:
             print(
-                f"The collection '{memory_bank_id}' does not exist. Creating the collection..."
+                f"The collection '{self.memory_bank_id}' does not exist. Creating the collection..."
             )
             memory_bank = self.client.memory_banks.register(
                 memory_bank_id=self.memory_bank_id,
@@ -104,10 +104,9 @@ class LlamaChatInterface:
             ],
             tool_choice="auto",
             tool_prompt_format="json",
-            enable_session_persistence=True,
+            enable_session_persistence=False,
         )
         self.agent = Agent(self.client, agent_config)
-        self.session_id = self.agent.create_session(f"session-{uuid.uuid4()}")
 
     async def chat_stream(
         self, message: str, history: List[List[str]]
@@ -117,16 +116,19 @@ class LlamaChatInterface:
             await self.initialize_system()
 
         # Initialize history if None
-        history = history or []
+        if history:
+            # Add assistant message to history
+            self.chat_history.append({"role": "assistant", "content": history[-1][1]})
+
 
         # Add user message to history
         history.append([message, ""])
-
+        self.chat_history.append({"role": "user", "content": message})
+        session_id = self.agent.create_session(f"session-{uuid.uuid4()}")
         # Get streaming response from agent
         response = self.agent.create_turn(
-            messages=[{"role": "user", "content": message}], session_id=self.session_id
-        )
-
+            messages=self.chat_history, session_id=session_id
+        )        
         # Stream the response using EventLogger
         current_response = ""
         async for log in EventLogger().log(response):
@@ -143,7 +145,7 @@ def create_gradio_interface(
     docs_dir: str = "./docs",
 ):
     # Initialize the chat interface
-    chat_interface = LlamaChatInterface(host, port, docs_dir, chroma_port)
+    chat_interface = LlamaChatInterface(host, port, chroma_port,docs_dir)
 
     with gr.Blocks(theme=gr.themes.Soft()) as interface:
         gr.Markdown("# LlamaStack Chat")
@@ -176,7 +178,7 @@ def create_gradio_interface(
             fn=chat_interface.chat_stream,
             inputs=[msg, chatbot],
             outputs=chatbot,
-            queue=True,
+            queue=False,
         ).then(
             fn=lambda: "",  # Clear textbox after sending
             outputs=msg,
@@ -203,4 +205,4 @@ def create_gradio_interface(
 if __name__ == "__main__":
     # Create and launch the Gradio interface
     interface = create_gradio_interface(docs_dir="/root/rag_data")
-    interface.launch(server_name="0.0.0.0", server_port=7860, share=True, debug=True)
+    interface.launch(server_name="0.0.0.0", server_port=7860, share=True, debug=True,inline=False)

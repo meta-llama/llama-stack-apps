@@ -25,7 +25,7 @@ services:
     restart: always
     entrypoint: ["bash", "/root/ollama_start.sh"]
   llamastack:
-    image: llamastack/distribution-ollama:test-0.0.53rc7
+    image: llamastack/distribution-ollama:test-0.0.53rc8
     network_mode: "host"
     tty: true
     volumes:
@@ -33,13 +33,11 @@ services:
       # Link to ollama run.yaml file
       - ./llama_stack_run.yaml:/root/my-run.yaml
       - ../../E2E-RAG-App:/root/E2E-RAG-App
-      - ./RAG_service.json:/root/RAG_service.json
       - ${DOC_PATH}:/root/rag_data/
       - ./llama_stack_start.sh:/root/llama_stack_start.sh
     ports:
       - "5000:5000" # for llama-stack
       - "7860:7860" # for UI
-      - "6000:6000" # for DB
     # Hack: wait for ollama server to start before starting docker
     entrypoint: ["bash", "/root/llama_stack_start.sh"]
     #entrypoint: bash -c "sleep 60; python -m llama_stack.distribution.server.server --yaml_config /root/my-run.yaml"
