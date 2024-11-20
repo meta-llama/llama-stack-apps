@@ -3,7 +3,6 @@ import json
 import os
 import uuid
 from typing import AsyncGenerator, Generator, List, Optional
-
 import chromadb
 
 import gradio as gr
@@ -28,7 +27,7 @@ class LlamaChatInterface:
         self.client = LlamaStackClient(base_url=f"http://{host}:{port}")
         self.chroma_client = chromadb.HttpClient(host=host, port=chroma_port)
         self.agent = None
-        self.memory_bank_id = "test_bank_999"
+        self.memory_bank_id = f"bank-{uuid.uuid4()}"
         self.chat_history = []
 
     async def initialize_system(self):
@@ -85,8 +84,22 @@ class LlamaChatInterface:
 
     async def initialize_agent(self):
         """Initialize the agent with model registration and configuration."""
-        model_name = "Llama3.2-3B-Instruct"
-
+        model_name = "Llama3.2-1B-Instruct"
+        # Model registration
+        response = requests.post(
+            f"http://{self.host}:{self.port}/alpha/models/register",
+            headers={"Content-Type": "application/json"},
+            data=json.dumps(
+                {
+                    "model_id": model_name,
+                    "provider_model_id": None,
+                    "provider_id": "remote::ollama",
+                    # "provider_id": "inline::meta-reference-0",
+                    "metadata": None,
+                }
+            ),
+        )
+        print(f"Model registration status: {response.status_code}")
         agent_config = AgentConfig(
             model=model_name,
             instructions="You are a helpful assistant that can answer questions based on provided documents.",

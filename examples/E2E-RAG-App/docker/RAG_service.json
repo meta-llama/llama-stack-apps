@@ -1,4 +1,4 @@
 {
-  "model_name": "llama3.2:3b",
+  "model_name": "llama3.2:1b-instruct-fp16",
   "document_path": "${HOME}/work/llama-stack-apps/examples/E2E-RAG-App/example_data"
 }
