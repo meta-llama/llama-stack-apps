@@ -90,20 +90,6 @@ async def run_main(host: str, port: int, docs_dir: str) -> None:
 
     # # Model registration
     model_name = "Llama3.2-3B-Instruct"
-    # response = requests.post(
-    #     f"http://{host}:{port}//alpha/models/register",
-    #     headers={"Content-Type": "application/json"},
-    #     data=json.dumps(
-    #         {
-    #             "model_id": model_name,
-    #             "provider_model_id": None,
-    #             "provider_id": "remote::ollama",
-    #             # "provider_id": "inline::meta-reference-0",
-    #             "metadata": None,
-    #         }
-    #     ),
-    # )
-    # cprint(f"Model registration status: {response.status_code}", "blue")
 
     # Agent configuration
     agent_config = AgentConfig(
@@ -124,7 +110,6 @@ async def run_main(host: str, port: int, docs_dir: str) -> None:
         enable_session_persistence=True,
     )
     agent = Agent(client, agent_config)
-
 
     session_id = agent.create_session(f"session-{uuid.uuid4()}")
 
