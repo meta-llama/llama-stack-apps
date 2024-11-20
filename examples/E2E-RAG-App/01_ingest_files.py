@@ -130,7 +130,6 @@ def main():
         output_subdir.mkdir(parents=True, exist_ok=True)
 
         md_path = output_subdir / f"{res.input.file.stem}.md"
-        json_path = output_subdir / f"{res.input.file.stem}.json"
 
         print(f"Converting: {res.input.file}" f"\nSaving to: {md_path}")
 
