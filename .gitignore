@@ -174,3 +174,4 @@ Package.resolved
 **/chroma
 /examples/E2E-RAG-App/data/input
 /examples/E2E-RAG-App/data/output
+**/.gradio
