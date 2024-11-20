@@ -2,19 +2,7 @@
 
 This is an End to End RAG App leveraging llama-stack that handles the logic for ingesting documents, storing them in a vector db and providing an inference interface.
 
-We share the details of how it works first and then detailed steps on how to run below:
-
-All of the steps are run using a single-step via docker script.
-
-Overview of how it works:
-1. We use [docling](https://github.com/DS4SD/docling) framework for handling multiple file input formats (PDF, PPTX, DOCX)
-2. If you are using a GPU inference machine, we have an option to use `Llama-3.2-11B-Vision` to caption images in the documents, on CPU machine this step is skipped
-3. Once ingested, we use a llama-stack distribution running chroma-db and `Llama-3.2-3B-Instruct` to ingest chunks into a memory_bank
-4. Once the vectordb is created, we then use llama-stack with the `Llama-3.2-3B-Instruct` to chat with the model.
-
-![RAG_workflow](./RAG_workflow.jpg)
-
-
+We share the details of how to run first
 
 ## Prerequisite:
 
@@ -60,3 +48,14 @@ ollama ps
 5. Lastly, Llama-stack docker will start. The `llama_stack_start.sh` control the docker startup behavior, change it if needed. It should be able to run llama-stack server based on the  `llama_stack_run.yaml` config. Once the server is ready, then it will run the `gradio_interface.py`.
 
 6. `gradio_interface.py` will show a public link. You can access the gradio UI by putting this link to the browser. Then you can start your chat in the gradio web page.
+
+
+All of the steps are run using a single-step via docker script.
+
+Overview of how it works:
+1. We use [docling](https://github.com/DS4SD/docling) framework for handling multiple file input formats (PDF, PPTX, DOCX)
+2. If you are using a GPU inference machine, we have an option to use `Llama-3.2-11B-Vision` to caption images in the documents, on CPU machine this step is skipped
+3. Once ingested, we use a llama-stack distribution running chroma-db and `Llama-3.2-3B-Instruct` to ingest chunks into a memory_bank
+4. Once the vectordb is created, we then use llama-stack with the `Llama-3.2-3B-Instruct` to chat with the model.
+
+![RAG_workflow](./RAG_workflow.jpg)
