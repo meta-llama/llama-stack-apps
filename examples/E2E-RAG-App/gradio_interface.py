@@ -2,13 +2,11 @@ import asyncio
 import json
 import os
 import uuid
-from typing import AsyncGenerator, Generator, List, Optional
-from threading import Thread
 from queue import Queue
-
+from threading import Thread
+from typing import AsyncGenerator, Generator, List, Optional
 
 import chromadb
-
 
 import gradio as gr
 import requests
@@ -27,8 +25,10 @@ load_dotenv()
 HOST = os.getenv("HOST", "localhost")
 PORT = int(os.getenv("PORT", 5000))
 CHROMA_PORT = int(os.getenv("CHROMA_PORT", 6000))
-DOCS_DIR = os.getenv("DOCS_DIR", "/root/E2E-RAG-App/example_data/")
+DOCS_DIR = "/root/rag_data/output"
 GRADIO_SERVER_PORT = int(os.getenv("GRADIO_SERVER_PORT", 7861))
+MODEL_NAME = os.getenv("MODEL_NAME", "Llama3.2-1B-Instruct")
+
 
 class LlamaChatInterface:
     def __init__(self, host: str, port: int, chroma_port: int, docs_dir: str):
@@ -39,7 +39,7 @@ class LlamaChatInterface:
         self.chroma_client = chromadb.HttpClient(host=host, port=chroma_port)
         self.agent = None
         self.session_id = None
-        self.memory_bank_id = "test_bank_122"
+        self.memory_bank_id = "test_bank_212"
 
     async def initialize_system(self):
         """Initialize the entire system including memory bank and agent."""
@@ -95,7 +95,15 @@ class LlamaChatInterface:
 
     async def initialize_agent(self):
         """Initialize the agent with model registration and configuration."""
-        model_name = "Llama3.2-1B-Instruct"
+
+        if "1b" in MODEL_NAME:
+            model_name = "Llama3.2-1B-Instruct"
+        elif "3b" in MODEL_NAME:
+            model_name = "Llama3.2-3B-Instruct"
+        elif "8b" in MODEL_NAME:
+            model_name = "Llama3.1-8B-Instruct"
+        else:
+            model_name = MODEL_NAME
 
         agent_config = AgentConfig(
             model=model_name,
@@ -135,7 +143,8 @@ class LlamaChatInterface:
                     await self.initialize_system()
 
                 response = self.agent.create_turn(
-                    messages=[{"role": "user", "content": message}], session_id=self.session_id
+                    messages=[{"role": "user", "content": message}],
+                    session_id=self.session_id,
                 )
 
                 current_response = ""
@@ -228,4 +237,6 @@ def create_gradio_interface(
 if __name__ == "__main__":
     # Create and launch the Gradio interface
     interface = create_gradio_interface()
-    interface.launch(server_name=HOST, server_port=GRADIO_SERVER_PORT, share=True, debug=True)
+    interface.launch(
+        server_name=HOST, server_port=GRADIO_SERVER_PORT, share=True, debug=True
+    )
