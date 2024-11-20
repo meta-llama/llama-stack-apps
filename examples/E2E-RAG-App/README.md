@@ -23,7 +23,7 @@ Install docker according to this [web page](https://docs.docker.com/engine/insta
 ```bash
 cd docker
 bash run_RAG.sh
-``1
+```
 
 3. Ollama docker will start and this docker will pull and run the llama model specified. The `ollama_start.sh` control the Ollama docker startup behavior, change it if needed. You can log into the docker by
 
