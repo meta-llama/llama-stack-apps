@@ -1,13 +1,18 @@
 import os
 import asyncio
+import argparse
 import base64
 import mimetypes
 from pathlib import Path
 from llama_stack_client import LlamaStackClient
 from llama_stack_client.lib.inference.event_logger import EventLogger
 
-HOST = "localhost"
-PORT = 5000
+def parse_args():
+    parser = argparse.ArgumentParser(description='Process document images with LlamaStack Vision API')
+    parser.add_argument('--host', type=str, default='localhost', help='LlamaStack server host (default: localhost)')
+    parser.add_argument('--port', type=int, default=5000, help='LlamaStack server port (default: 5000)')
+    parser.add_argument('--input_dir', type=str, required=True, help='Input directory containing markdown files and images')
+    return parser.parse_args()
 
 def encode_image_to_data_url(file_path: str) -> str:
     """Encode an image file to a data URL."""
@@ -21,8 +26,8 @@ def encode_image_to_data_url(file_path: str) -> str:
     return f"data:{mime_type};base64,{encoded_string}"
 
 class DocumentProcessor:
-    def __init__(self):
-        self.client = LlamaStackClient(base_url=f"http://{HOST}:{PORT}")
+    def __init__(self, host: str, port: int):
+        self.client = LlamaStackClient(base_url=f"http://{host}:{port}")
         self.processed_images = {}
 
     async def get_image_caption(self, image_path: str) -> str:
@@ -99,13 +104,14 @@ class DocumentProcessor:
                 print(f"Failed to write updated content to {md_filename}: {str(e)}")
 
 async def main():
-    output_dir = Path('DATA') / 'output'
+    args = parse_args()
+    output_dir = Path(args.input_dir)
     
     if not output_dir.exists():
-        print(f"Output directory not found: {output_dir}")
+        print(f"Input directory not found: {output_dir}")
         return
 
-    processor = DocumentProcessor()
+    processor = DocumentProcessor(host=args.host, port=args.port)
     md_files = list(output_dir.glob('*.md'))
     
     if not md_files:
