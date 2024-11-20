@@ -33,11 +33,11 @@ async def insert_documents_to_memory_bank(client: LlamaStackClient, docs_dir: st
     memorybank_boolean = is_memory_bank_present(client, memory_bank_id)
     memorybank_list = client.memory_banks.list()
     print(memorybank_list)
-    for bank in memorybank_list:
-        try:
-            client.memory_banks.unregister(memory_bank_id=bank.provider_resource_id)
-        except Exception as e:
-            print(e)
+    # for bank in memorybank_list:
+    #     try:
+    #         client.memory_banks.unregister(memory_bank_id=bank.provider_resource_id)
+    #     except Exception as e:
+    #         print(e)
 
     print("after unregistration: ", client.memory_banks.list())
 
@@ -89,7 +89,7 @@ async def run_main(host: str, port: int, docs_dir: str) -> None:
     await insert_documents_to_memory_bank(client, docs_dir)
 
     # # Model registration
-    model_name = "Llama3.2-3B-Instruct"
+    model_name = "llama3.2:1b-instruct-fp16"
 
     # Agent configuration
     agent_config = AgentConfig(
