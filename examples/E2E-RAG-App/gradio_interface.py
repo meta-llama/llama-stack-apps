@@ -39,7 +39,7 @@ class LlamaChatInterface:
         self.chroma_client = chromadb.HttpClient(host=host, port=chroma_port)
         self.agent = None
         self.session_id = None
-        self.memory_bank_id = "test_bank_691"
+        self.memory_bank_id = "test_bank_122"
 
     async def initialize_system(self):
         """Initialize the entire system including memory bank and agent."""
