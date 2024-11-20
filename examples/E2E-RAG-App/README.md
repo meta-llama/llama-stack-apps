@@ -20,7 +20,7 @@ Install docker according to this [web page](https://docs.docker.com/engine/insta
 1. We have main config `RAG_service.json` , please change `model_name` and `document_path` accordingly.
 2. `run_RAG.sh` is the main script that can create `.env` file for compose.yaml and then actually start the `docker compose`. `compose.yaml` is the main docker yaml that specifies all the mount option and docker configs, change the mounts if needed.
 
-```bash
+```bas
 cd docker
 bash run_RAG.sh
 ```
