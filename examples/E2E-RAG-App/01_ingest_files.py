@@ -1,3 +1,4 @@
+import argparse
 import json
 import logging
 from pathlib import Path
@@ -16,7 +17,11 @@ from docling.pipeline.standard_pdf_pipeline import StandardPdfPipeline
 from docling.datamodel.pipeline_options import PdfPipelineOptions
 from docling.datamodel.document import TableItem, PictureItem
 
-
+def parse_args():
+    parser = argparse.ArgumentParser(description='Process documents from input directory')
+    parser.add_argument('--input_dir', type=str, required=True, help='Input directory containing documents')
+    parser.add_argument('--output_dir', type=str, help='Output directory for processed files (default: input_dir/output)')
+    return parser.parse_args()
 
 def get_document_files(input_dir: Path) -> list[Path]:
     """
@@ -31,8 +36,6 @@ def get_document_files(input_dir: Path) -> list[Path]:
             document_files.append(path)
 
     return document_files
-
-
 
 def save_images(res, output_subdir: Path, doc_filename: str) -> List[Tuple[str, Path]]:
     """
@@ -73,16 +76,18 @@ def save_images(res, output_subdir: Path, doc_filename: str) -> List[Tuple[str, 
     return saved_images
 
 def main():
-    # Define input and output directories relative to current directory
-    input_dir = Path("data/input")
-    output_dir = Path("data/output")
+    args = parse_args()
+    
+    # Set up input and output directories
+    input_dir = Path(args.input_dir)
+    output_dir = Path(args.output_dir) if args.output_dir else input_dir / "output"
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Get all document files recursively
     input_paths = get_document_files(input_dir)
 
     if not input_paths:
-        print("No documents found in DATA directory!")
+        print(f"No documents found in {input_dir}!")
         return
 
     print(f"Found {len(input_paths)} documents to process:")
@@ -91,8 +96,8 @@ def main():
 
     # Configure pipeline options
     pipeline_options = PdfPipelineOptions()
-    pipeline_options.do_ocr = False  # Disable OCR
-    pipeline_options.images_scale = 2.0  # Set image resolution
+    pipeline_options.do_ocr = False
+    pipeline_options.images_scale = 2.0
     pipeline_options.generate_page_images = False
     pipeline_options.generate_table_images = False
     pipeline_options.generate_picture_images = True
@@ -116,36 +121,27 @@ def main():
 
     # Process all documents
     conv_results = doc_converter.convert_all(input_paths)
-
-    # Store all extracted images for later processing
     all_extracted_images = []
 
     # Save results
     for res in conv_results:
-        # Preserve directory structure in output
         relative_path = res.input.file.relative_to(input_dir)
         output_subdir = output_dir / relative_path.parent
         output_subdir.mkdir(parents=True, exist_ok=True)
 
-        # Create output filenames
         md_path = output_subdir / f"{res.input.file.stem}.md"
         json_path = output_subdir / f"{res.input.file.stem}.json"
 
         print(f"Converting: {res.input.file}" f"\nSaving to: {md_path}")
 
-        # Extract and save images
         extracted_images = save_images(res, output_subdir, res.input.file.stem)
         all_extracted_images.extend(extracted_images)
 
-        # Save markdown version with embedded images
         with md_path.open("w", encoding="utf-8") as fp:
             fp.write(res.document.export_to_markdown())
 
     print(f"\nExtracted {len(all_extracted_images)} images in total")
     print("Ready for image captioning processing")
 
-    # TODO: Add captioning logic here
-
 if __name__ == "__main__":
     main()
-
