@@ -1,13 +1,14 @@
 ## E2E-RAG-App
 
-This is an E2E RAG App that can be pointed to any folder to do RAG over a collection of mixed file formats and do retrieval using the `Llama-3.2-3B-Instruct` Model
+This is an End to End RAG App leveraging llama-stack that handles the logic for ingesting documents, storing them in a vector db and providing an inference interface.
+
+All of the steps are run using a single-step via docker script.
 
 Details:
-TODO:
-1. Save memory_bank to local, and load it to local
-2. Make the chat inference multi-turn
-3. Front-end + docker
-
+1. We use [docling](https://github.com/DS4SD/docling) framework for handling multiple file input formats (PDF, PPTX, DOCX)
+2. If you are using a GPU inference machine, we have an option to use `Llama-3.2-11B-Vision` to caption images in the documents, on CPU machine this step is skipped
+3. Once ingested, we use a llama-stack distribution running chroma-db and `Llama-3.2-3B-Instruct` to ingest chunks into a memory_bank
+4. Once the vectordb is created, we then use llama-stack with the `Llama-3.2-3B-Instruct` to chat with the model.
 To run the `ingestion_script.py` script, please make sure there is a /DATA and /OUTPUT folder at its relative root. It will ingest ALL documents in /DATA and output BOTH markdown and JSON dump in /OUTPUT folder
 
 
