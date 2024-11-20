@@ -3,7 +3,12 @@ import json
 import os
 import uuid
 from typing import AsyncGenerator, Generator, List, Optional
+from threading import Thread
+from queue import Queue
+
+
 import chromadb
+
 
 import gradio as gr
 import requests
@@ -14,6 +19,7 @@ from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.lib.agents.event_logger import EventLogger
 from llama_stack_client.types.agent_create_params import AgentConfig
 from llama_stack_client.types.memory_insert_params import Document
+
 
 # Load environment variables
 load_dotenv()
@@ -27,13 +33,12 @@ class LlamaChatInterface:
         self.client = LlamaStackClient(base_url=f"http://{host}:{port}")
         self.chroma_client = chromadb.HttpClient(host=host, port=chroma_port)
         self.agent = None
-        self.memory_bank_id = f"bank-{uuid.uuid4()}"
-        self.chat_history = []
+        self.session_id = None
+        self.memory_bank_id = "test_bank_691"
 
     async def initialize_system(self):
         """Initialize the entire system including memory bank and agent."""
         await self.setup_memory_bank()
-        await self.load_documents()
         await self.initialize_agent()
 
     async def setup_memory_bank(self):
@@ -48,7 +53,7 @@ class LlamaChatInterface:
             print(
                 f"The collection '{self.memory_bank_id}' does not exist. Creating the collection..."
             )
-            memory_bank = self.client.memory_banks.register(
+            self.client.memory_banks.register(
                 memory_bank_id=self.memory_bank_id,
                 params={
                     "embedding_model": "all-MiniLM-L6-v2",
@@ -57,7 +62,8 @@ class LlamaChatInterface:
                 },
                 provider_id=provider_id,
             )
-            print(f"Memory bank registered: {memory_bank}")
+            await self.load_documents()
+            print(f"Memory bank registered.")
 
     async def load_documents(self):
         """Load documents from the specified directory into memory bank."""
@@ -85,24 +91,10 @@ class LlamaChatInterface:
     async def initialize_agent(self):
         """Initialize the agent with model registration and configuration."""
         model_name = "Llama3.2-1B-Instruct"
-        # Model registration
-        response = requests.post(
-            f"http://{self.host}:{self.port}/alpha/models/register",
-            headers={"Content-Type": "application/json"},
-            data=json.dumps(
-                {
-                    "model_id": model_name,
-                    "provider_model_id": None,
-                    "provider_id": "remote::ollama",
-                    # "provider_id": "inline::meta-reference-0",
-                    "metadata": None,
-                }
-            ),
-        )
-        print(f"Model registration status: {response.status_code}")
+
         agent_config = AgentConfig(
             model=model_name,
-            instructions="You are a helpful assistant that can answer questions based on provided documents.",
+            instructions="You are a helpful assistant that can answer questions based on provided documents. Return your answer short and concise, less than 50 words.",
             sampling_params={"strategy": "greedy", "temperature": 1.0, "top_p": 0.9},
             tools=[
                 {
@@ -117,48 +109,62 @@ class LlamaChatInterface:
             ],
             tool_choice="auto",
             tool_prompt_format="json",
-            enable_session_persistence=False,
+            enable_session_persistence=True,
         )
         self.agent = Agent(self.client, agent_config)
+        self.session_id = self.agent.create_session(f"session-{uuid.uuid4()}")
 
-    async def chat_stream(
+    def chat_stream(
         self, message: str, history: List[List[str]]
-    ) -> AsyncGenerator[List[List[str]], None]:
+    ) -> Generator[List[List[str]], None, None]:
         """Stream chat responses token by token with proper history handling."""
-        if self.agent is None:
-            await self.initialize_system()
 
-        # Initialize history if None
-        if history:
-            # Add assistant message to history
-            self.chat_history.append({"role": "assistant", "content": history[-1][1]})
-
-
-        # Add user message to history
+        history = history or []
         history.append([message, ""])
-        self.chat_history.append({"role": "user", "content": message})
-        session_id = self.agent.create_session(f"session-{uuid.uuid4()}")
-        # Get streaming response from agent
-        response = self.agent.create_turn(
-            messages=self.chat_history, session_id=session_id
-        )        
-        # Stream the response using EventLogger
-        current_response = ""
-        async for log in EventLogger().log(response):
-            if hasattr(log, "content"):
-                current_response += log.content
-                history[-1][1] = current_response
-                yield history
+
+        output_queue = Queue()
+
+        def run_async():
+            async def async_process():
+                if self.agent is None:
+                    await self.initialize_system()
+
+                response = self.agent.create_turn(
+                    messages=[{"role": "user", "content": message}], session_id=self.session_id
+                )
+
+                current_response = ""
+                async for log in EventLogger().log(response):
+                    log.print()
+                    if hasattr(log, "content"):
+                        current_response += log.content
+                        history[-1][1] = current_response
+                        output_queue.put(history.copy())
+
+                output_queue.put(None)
+
+            asyncio.run(async_process())
+
+        thread = Thread(target=run_async)
+        thread.start()
+
+        while True:
+            item = output_queue.get()
+            if item is None:
+                break
+            else:
+                yield item
+
+        thread.join()
 
 
 def create_gradio_interface(
     host: str = "localhost",
-    port: int = 5000,
+    port: int = 5555,
     chroma_port: int = 6000,
-    docs_dir: str = "./docs",
+    docs_dir: str = "/root/E2E-RAG-App/example_data/",
 ):
-    # Initialize the chat interface
-    chat_interface = LlamaChatInterface(host, port, chroma_port,docs_dir)
+    chat_interface = LlamaChatInterface(host, port, chroma_port, docs_dir)
 
     with gr.Blocks(theme=gr.themes.Soft()) as interface:
         gr.Markdown("# LlamaStack Chat")
@@ -186,14 +192,13 @@ def create_gradio_interface(
         def clear_chat():
             return [], ""
 
-        # Set up event handlers with streaming
         submit_event = msg.submit(
             fn=chat_interface.chat_stream,
             inputs=[msg, chatbot],
             outputs=chatbot,
-            queue=False,
+            queue=True,
         ).then(
-            fn=lambda: "",  # Clear textbox after sending
+            fn=lambda: "",
             outputs=msg,
         )
 
@@ -203,19 +208,19 @@ def create_gradio_interface(
             outputs=chatbot,
             queue=True,
         ).then(
-            fn=lambda: "",  # Clear textbox after sending
+            fn=lambda: "",
             outputs=msg,
         )
 
         clear.click(clear_chat, outputs=[chatbot, msg], queue=False)
 
-        # Add keyboard shortcut for submit
         msg.submit(lambda: None, None, None, api_name=False)
+        interface.load(fn=chat_interface.initialize_system)
 
     return interface
 
 
 if __name__ == "__main__":
     # Create and launch the Gradio interface
-    interface = create_gradio_interface(docs_dir="/root/rag_data")
-    interface.launch(server_name="0.0.0.0", server_port=7860, share=True, debug=True,inline=False)
+    interface = create_gradio_interface()
+    interface.launch(server_name="0.0.0.0", server_port=7860, share=True, debug=True)
