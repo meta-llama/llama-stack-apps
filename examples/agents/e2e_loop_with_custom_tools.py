@@ -106,7 +106,7 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
         "Who was the 42nd president of the United States?",
     ]
     for prompt in user_prompts:
-        response = agent.async_create_turn(
+        response = agent.create_turn(
             messages=[
                 {
                     "role": "user",
@@ -116,7 +116,7 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
             session_id=session_id,
         )
 
-        async for log in EventLogger().async_log(response):
+        for log in EventLogger().log(response):
             log.print()
 
 

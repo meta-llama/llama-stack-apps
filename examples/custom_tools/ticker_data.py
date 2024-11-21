@@ -41,7 +41,7 @@ class TickerDataTool(SingleMessageCustomTool):
             ),
         }
 
-    async def run_impl(self, ticker_symbol: str, start: str, end: str):
+    def run_impl(self, ticker_symbol: str, start: str, end: str):
         data = yf.download(ticker_symbol, start=start, end=end)
 
         data["Year"] = data.index.year
