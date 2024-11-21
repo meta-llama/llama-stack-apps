@@ -7,13 +7,12 @@
 import os
 
 import pytest
-import pytest_asyncio
 
 from dotenv import load_dotenv
 
 from llama_stack_client import LlamaStackClient
 from llama_stack_client.lib.agents.agent import Agent
-from llama_stack_client.lib.agents.event_logger import EventLogger, LogEvent
+from llama_stack_client.lib.agents.event_logger import EventLogger
 from llama_stack_client.types.agent_create_params import AgentConfig
 
 from .example_custom_tool import GetBoilingPointTool
@@ -70,9 +69,7 @@ async def test_create_agent_turn():
         session_id=session_id,
     )
 
-    logs = [
-        str(log) async for log in EventLogger().log(simple_hello) if log is not None
-    ]
+    logs = [str(log) for log in EventLogger().log(simple_hello) if log is not None]
     logs_str = "".join(logs)
 
     assert "shield_call>" in logs_str
@@ -89,9 +86,7 @@ async def test_create_agent_turn():
         session_id=session_id,
     )
 
-    logs = [
-        str(log) async for log in EventLogger().log(bomb_response) if log is not None
-    ]
+    logs = [str(log) for log in EventLogger().log(bomb_response) if log is not None]
     logs_str = "".join(logs)
     assert "I can't answer that. Can I help with something else?" in logs_str
 
@@ -140,7 +135,7 @@ async def test_builtin_tool_brave_search():
         session_id=session_id,
     )
 
-    logs = [str(log) async for log in EventLogger().log(response) if log is not None]
+    logs = [str(log) for log in EventLogger().log(response) if log is not None]
     logs_str = "".join(logs)
 
     assert "tool_execution>" in logs_str
@@ -195,7 +190,7 @@ async def test_builtin_tool_code_execution():
         session_id=session_id,
     )
 
-    logs = [str(log) async for log in EventLogger().log(response) if log is not None]
+    logs = [str(log) for log in EventLogger().log(response) if log is not None]
     logs_str = "".join(logs)
 
     assert "541" in logs_str
@@ -203,7 +198,7 @@ async def test_builtin_tool_code_execution():
 
 
 @pytest.mark.asyncio
-async def test_builtin_tool_code_execution():
+async def test_custom_tool():
     host = os.environ.get("LOCALHOST")
     port = os.environ.get("PORT")
 
@@ -266,7 +261,7 @@ async def test_builtin_tool_code_execution():
         session_id=session_id,
     )
 
-    logs = [str(log) async for log in EventLogger().log(response) if log is not None]
+    logs = [str(log) for log in EventLogger().log(response) if log is not None]
     logs_str = "".join(logs)
     assert "-100" in logs_str
     assert "CustomTool" in logs_str
