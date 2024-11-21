@@ -1,6 +1,6 @@
 ## E2E-RAG-App
 
-This is an End to End RAG App leveraging llama-stack that handles the logic for ingesting documents, storing them in a vector db and providing an inference interface.
+This is an end-to-end Retrieval Augmented Geneartion (RAG) App leveraging llama-stack that handles the logic for ingesting documents, storing them in a vector database and providing an inference interface.
 
 We share the details of how to run first and then an outline of how it works:
 
@@ -49,7 +49,7 @@ Check more about Ollama instruction [here](https://github.com/ollama/ollama)
 
 4. ChromaDB docker will also start. This docker will host the chroma database that can interact with llama-stack.
 
-5. Lastly, Llama-stack docker will start. The `llama_stack_start.sh` control the docker startup behavior, change it if needed. It will first run the ingestion pipeline to convert all the documents into MarkDown files. Then, it will run llama-stack server based on the  `llama_stack_run.yaml` config. Once the server is ready, then it will run the `gradio_interface.py` which will insert document chunks into memory_bank and start the UI for user interaction.
+5. Lastly, Llama-stack docker will start. The `llama_stack_start.sh` controls the docker startup behavior. Change it if needed. It will first run the ingestion pipeline to convert all the documents into Markdown files. Then, it will run Llama Stack server based on the  `llama_stack_run.yaml` config. Once the server is ready, then it will run the `gradio_interface.py` which will insert document chunks into memory_bank and start the UI for user interaction.
 
 6. `gradio_interface.py` will show a public link. You can access the gradio UI by putting this link to the browser. Then you can start your chat in the gradio web page.
 
@@ -58,6 +58,6 @@ Check more about Ollama instruction [here](https://github.com/ollama/ollama)
 ### Overview of how the RAG app works:
 
 1. We use [docling](https://github.com/DS4SD/docling) framework for handling multiple file input formats (PDF, PPTX, DOCX)
-2. If you are using a GPU inference machine, we have an option to use `Llama-3.2-11B-Vision` to caption images in the documents, on CPU machine this step is skipped
+2. If you are using a GPU, we have an option to use `Llama-3.2-11B-Vision` to caption images in the documents. On a CPU-only machine this step is skipped.
 3. Once ingested, we use a llama-stack distribution running chroma-db and `Llama-3.2-3B-Instruct` to ingest chunks into a memory_bank
 4. Once the vectordb is created, we then use llama-stack with the `Llama-3.2-3B-Instruct` to chat with the model.
