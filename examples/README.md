@@ -25,7 +25,6 @@ python -m examples.agents.hello localhost 5000
 ```
 python -m examples.agents.hello localhost 5000
 python -m examples.agents.inflation localhost 5000
-python -m examples.agents.llama_guard_demo localhost 5000
 python -m examples.agents.podcast_transcript localhost 5000
 python -m examples.agents.rag_as_attachments localhost 5000
 python -m examples.agents.rag_with_memory_bank localhost 5000
@@ -34,16 +33,18 @@ python -m examples.agents.vacation localhost 5000
 
 ### Simple API Scripts
 ```
-python examples/inference/client.py localhost 5000
-python examples/memory/client.py localhost 5000
-python examples/safety/client.py localhost 5000
+python -m examples.inference.client localhost 5000
+python -m examples.memory.client localhost 5000
+python -m examples.safety.llama_guard_demo localhost 5000
 ```
 
 # Demo Apps
+### `agent_store`
 ```
-PYTHONPATH=. with-proxy mesop app/main.py
+python -m examples.agent_store.app localhost 5000
 ```
 
+### `interior_design_assistant`
 ```
-PYTHONPATH=. with-proxy gradio examples/agent_store/app.py
+python -m examples.interior_design_assistant.app
 ```
