@@ -5,7 +5,6 @@
 # the root directory of this source tree.
 import asyncio
 from datetime import datetime
-from pathlib import Path
 
 import fire
 
@@ -13,17 +12,15 @@ import pandas as pd
 from termcolor import cprint
 from tqdm import tqdm
 
-from ..api import AgentChoice, AgentStore
-
-MODEL = "meta-llama/Llama-3.1-8B-Instruct"
+from ..api import AgentChoice, AgentStore, MODEL
 
 
 async def app_bulk_generate(
-    host: str = "localhost",
-    port: int = 5000,
-    model: str = MODEL,
-    docs_dir: str = "",
-    dataset_path: str = "",
+    host: str,
+    port: int,
+    model: str,
+    docs_dir: str,
+    dataset_path: str,
 ):
     df = pd.read_csv(dataset_path)
     user_prompts = df["input_query"].tolist()
@@ -58,7 +55,7 @@ def main(
     host: str = "localhost",
     port: int = 5000,
     model: str = MODEL,
-    docs_dir: str = str(Path(__file__).parent.parent / "resources"),
+    docs_dir: str = "",
     dataset_path: str = "",
 ):
     asyncio.run(app_bulk_generate(host, port, model, docs_dir, dataset_path))
