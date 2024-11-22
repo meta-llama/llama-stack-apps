@@ -10,7 +10,7 @@ import textwrap
 import uuid
 from pathlib import Path
 from typing import List
-
+from examples.interior_design_assistant.utils import enforce_response_format
 import fire
 
 from examples.interior_design_assistant.utils import (
@@ -168,7 +168,7 @@ class InterioAgent:
 
         result = turn.output_message.content
         print(result)
-        return [r["description"].strip() for r in json.loads(result.strip())]
+        return enforce_response_format(result, n)
 
     async def retrieve_images(self, description: str) -> List[ImageMedia]:
         """
