@@ -9,10 +9,17 @@ from datetime import datetime
 import fire
 
 import pandas as pd
-from termcolor import cprint
 from tqdm import tqdm
 
-from ..api import AgentChoice, AgentStore, MODEL
+from ..api import AgentChoice, AgentStore
+from ..app import MODEL
+
+
+async def app_initialize(host: str, port: int, model: str, docs_dir: str):
+    agent_store_app = AgentStore(host, port, model)
+    bank_id = await agent_store_app.build_index(docs_dir)
+    await agent_store_app.initialize_agents([bank_id])
+    return agent_store_app
 
 
 async def app_bulk_generate(
@@ -22,16 +29,11 @@ async def app_bulk_generate(
     docs_dir: str,
     dataset_path: str,
 ):
+    agent_store_app = await app_initialize(host, port, model, docs_dir)
+
+    # read and loop over user prompts
     df = pd.read_csv(dataset_path)
     user_prompts = df["input_query"].tolist()
-
-    agent_store_app = AgentStore(host, port, model)
-    bank_id = await agent_store_app.build_index(docs_dir)
-    cprint(f"Successfully created bank: {bank_id}", color="green")
-
-    await agent_store_app.initialize_agents([bank_id])
-
-    # bulk_generate datasets
     generated_responses = []
     for user_prompt in tqdm(user_prompts):
         agent_store_app.create_session(AgentChoice.Memory)
@@ -40,12 +42,13 @@ async def app_bulk_generate(
         )
         generated_responses.append(output_msg)
 
+    # save to new csv
     new_dataset_path = dataset_path.replace(
         ".csv", f"_generated_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.csv"
     )
     df["generated_answer"] = generated_responses
     df.to_csv(new_dataset_path, index=False)
-    print(f"Bulk generated responses saved to {new_dataset_path}!")
+
     print(
         f"You may now run `llama-stack-client eval run_scoring <scoring_fn_ids> --dataset_path {new_dataset_path}` to score the generated responses."
     )
