@@ -55,7 +55,7 @@ This will install all dependencies required to (1) Build and start a Llama Stack
 
 
 ### 2. Starting a Llama Stack Server
-- Please see our [llama-stack](https://github.com/meta-llama/llama-stack) repo's [Developer Guide](https://github.com/meta-llama/llama-stack/blob/main/docs/developer_cookbook.md) for setting up a Llama Stack distribution and running server to serve API endpoints. You should have a server endpoint for building your client apps.
+- Please see our [llama-stack](https://github.com/meta-llama/llama-stack) repo's [Getting Started Guide](https://llama-stack.readthedocs.io/en/doc-simplify/getting_started/index.html) for setting up a Llama Stack distribution and running server to serve API endpoints. You should have a server endpoint for building your client apps.
 
 Once your your server started, you should have see outputs --
 ```
@@ -132,32 +132,38 @@ You may see other ways of interating in [Agent Store README.md](https://github.c
 NOTE: Ensure that Stack server is still running.
 
 ```bash
-cd <path-to-llama-agentic-system>
+cd <path-to-llama-stack-apps-repo>
 conda activate $ENV
 llama stack run <name> # If not already started
 
-PYTHONPATH=. python -m examples.agents.rag_with_memory_bank localhost 5000
+python -m examples.agents.rag_with_memory_bank localhost 5000
 ```
 
 You should see outputs to stdout of the form --
 ```bash
-Environment: ipython
-Tools: brave_search, wolfram_alpha, photogen
+Available shields found: ['meta-llama/Llama-Guard-3-8B']
+Using model: meta-llama/Llama-3.1-405B-Instruct
+Created session_id=cdb8a978-0085-4f3d-a976-939ba2b19de9 for Agent(0cfe05a8-cb97-430f-bec6-b1c7d42c712a)
+shield_call> No Violation
+memory_retrieval> Retrieved context from banks: ['test_bank'].
+====
+Here are the retrieved documents for relevant context:
+=== START-RETRIEVED-CONTEXT ===
+ id:num-1; content:_
+the template from Llama2 to better support multiturn conversations. The same text
+in the Lla...
+>
+inference> Based on the provided documentation, here are the top 5 topics explained:
 
-Cutting Knowledge Date: December 2023
-Today Date: 23 July 2024
+* Fine-tuning Llama3 with chat data
+* Template changes from Llama2 to Llama3
+* Tokenizing prompt templates and special tokens
+* Fine-tuning on a custom chat dataset
+* Using prompt templates for specific tasks
+shield_call> No Violation
 
-
-User> I am planning a trip to Switzerland, what are the top 3 places to visit?
-Final Llama Guard response shield_type=<BuiltinShield.llama_guard: 'llama_guard'> is_violation=False violation_type=None violation_return_message=None
-Ran PromptGuardShield and got Scores: Embedded: 0.9999765157699585, Malicious: 1.1110752893728204e-05
-StepType.shield_call> No Violation
-role='user' content='I am planning a trip to Switzerland, what are the top 3 places to visit?'
-StepType.inference> Switzerland is a beautiful country with a rich history, culture, and natural beauty. Here are three must-visit places to add to your itinerary: ....
-
+...
 ```
-
-> **Tip** You can optionally do `--disable-safety` in the scripts to avoid running safety shields all the time.
 
 
 Feel free to reach out if you have questions.
