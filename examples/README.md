@@ -3,7 +3,7 @@
 This folder contains some example client scripts using our Python SDK for client to connect with Llama Stack Distros. To run the example scripts:
 
 ## Step 0. Start Server
-- Follow steps in our [Getting Started](https://github.com/meta-llama/llama-stack/blob/main/docs/getting_started.md) guide to setup a Llama Stack server.
+- Follow steps in our [Getting Started](https://llama-stack.readthedocs.io/en/latest/) guide to setup a Llama Stack server.
 
 ## Step 1. Run Client
 First, setup depenencies via
