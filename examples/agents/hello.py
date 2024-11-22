@@ -3,8 +3,6 @@
 #
 # This source code is licensed under the terms described in the LICENSE file in
 # the root directory of this source tree.
-
-import asyncio
 import os
 
 import fire
@@ -15,7 +13,7 @@ from llama_stack_client.lib.agents.event_logger import EventLogger
 from llama_stack_client.types.agent_create_params import AgentConfig
 
 
-async def run_main(host: str, port: int, disable_safety: bool = False):
+def main(host: str, port: int):
     client = LlamaStackClient(
         base_url=f"http://{host}:{port}",
     )
@@ -72,12 +70,8 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
             session_id=session_id,
         )
 
-        async for log in EventLogger().log(response):
+        for log in EventLogger().log(response):
             log.print()
-
-
-def main(host: str, port: int):
-    asyncio.run(run_main(host, port))
 
 
 if __name__ == "__main__":

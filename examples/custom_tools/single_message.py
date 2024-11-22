@@ -18,7 +18,7 @@ class SingleMessageCustomTool(CustomTool):
     allow for the tool be called by the model and the necessary plumbing.
     """
 
-    async def run(self, messages: List[CompletionMessage]) -> List[ToolResponseMessage]:
+    def run(self, messages: List[CompletionMessage]) -> List[ToolResponseMessage]:
         assert len(messages) == 1, "Expected single message"
 
         message = messages[0]
@@ -26,7 +26,7 @@ class SingleMessageCustomTool(CustomTool):
         tool_call = message.tool_calls[0]
 
         try:
-            response = await self.run_impl(**tool_call.arguments)
+            response = self.run_impl(**tool_call.arguments)
             response_str = json.dumps(response, ensure_ascii=False)
         except Exception as e:
             response_str = f"Error when running tool: {e}"
@@ -40,5 +40,5 @@ class SingleMessageCustomTool(CustomTool):
         return [message]
 
     @abstractmethod
-    async def run_impl(self, *args, **kwargs):
+    def run_impl(self, *args, **kwargs):
         raise NotImplementedError()
