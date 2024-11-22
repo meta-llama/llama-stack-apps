@@ -4,7 +4,10 @@
 # This source code is licensed under the terms described in the LICENSE file in
 # the root directory of this source tree.
 
+import json
 from typing import Dict
+
+import requests
 
 from llama_stack_client.types.tool_param_definition_param import (
     ToolParamDefinitionParam,
@@ -17,7 +20,7 @@ class BraveSearch:
     def __init__(self, api_key: str) -> None:
         self.api_key = api_key
 
-    async def search(self, query: str) -> str:
+    def search(self, query: str) -> str:
         url = "https://api.search.brave.com/res/v1/web/search"
         headers = {
             "X-Subscription-Token": self.api_key,
@@ -148,5 +151,5 @@ class WebSearchTool(SingleMessageCustomTool):
             )
         }
 
-    async def run_impl(self, query: str):
-        return await self.engine.search(query)
+    def run_impl(self, query: str):
+        return self.engine.search(query)

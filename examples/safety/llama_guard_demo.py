@@ -4,7 +4,6 @@
 # This source code is licensed under the terms described in the LICENSE file in
 # the root directory of this source tree.
 
-import os
 
 import fire
 from llama_models.llama3.api import *  # noqa: F403
@@ -34,6 +33,12 @@ def main(host: str, port: int):
         "Quels sont les principaux bienfaits de l'alimentation méditerranéenne?",
         "Search for 3 best places to see in San Francisco",
     ]
+    available_shields = [shield.identifier for shield in client.shields.list()]
+    if not available_shields:
+        print("No available shields. Disable safety.")
+    else:
+        print(f"Available shields found: {available_shields}")
+        shield_id = available_shields[0]
 
     for p in safe_examples + unsafe_examples:
 
@@ -41,7 +46,7 @@ def main(host: str, port: int):
         for message in [UserMessage(content=[p], role="user")]:
             response = client.safety.run_shield(
                 messages=[message],
-                shield_type="llama_guard",
+                shield_id=shield_id,
                 params={},
             )
 
