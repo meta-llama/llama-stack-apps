@@ -107,8 +107,8 @@ $ llama-stack-client memory_banks list
 +--------------+---------------+--------+-------------------+------------------------+--------------------------+
 ```
 
-### How to run evaluation ?
-First, you will need to provide a dataset of user input queries to evaluate on. In the `bulk_generate` script, the script will generate responses using the Memory agent from the app using supplied offline docs and user input query prompts to generate responses.
+## How to run evaluation ?
+First, you will need to provide a dataset of user input queries to evaluate on and their expected_answers. In the `bulk_generate` script, the script will generate responses using the Memory agent from the app using supplied offline docs and user input query prompts to generate responses.
 
 Running the above script will generate a new dataset with the generated responses and save it for scoring.
 
