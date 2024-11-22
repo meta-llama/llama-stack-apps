@@ -57,12 +57,12 @@ $ python -m examples.agent_store.app localhost 5000
 * Running on local URL:  http://0.0.0.0:7860
 ```
 
-
 ## How to create a memory bank ?
 We provide a simple utility to create a bank.
 ```
 python -m examples.agent_store.build_index --help
 ```
+
 will show
 ```
 NAME
