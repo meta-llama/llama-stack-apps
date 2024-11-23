@@ -6,6 +6,8 @@ from pathlib import Path
 from typing import List, Tuple
 
 import yaml
+import os
+
 from docling.backend.pypdfium2_backend import PyPdfiumDocumentBackend
 from docling.datamodel.base_models import InputFormat
 from docling.datamodel.document import PictureItem, TableItem
@@ -17,7 +19,6 @@ from docling.document_converter import (
 )
 from docling.pipeline.simple_pipeline import SimplePipeline
 from docling.pipeline.standard_pdf_pipeline import StandardPdfPipeline
-
 
 def parse_args():
     parser = argparse.ArgumentParser(
