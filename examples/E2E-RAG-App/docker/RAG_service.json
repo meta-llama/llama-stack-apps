@@ -1,6 +1,7 @@
+
 {
-  "model_name": "llama3.2:3b",
-  "document_path": "/Users/kaiwu/work/llama-stack-apps/examples/E2E-RAG-App/example_data",
+  "model_name": "llama3.2:1b-instruct-fp16",
+  "document_path": "/Users/justinai/Documents/Code/llama-stack-apps/examples/E2E-RAG-App/example_data",
   "host": "localhost",
   "port": 5000,
   "chroma_port": 6000,

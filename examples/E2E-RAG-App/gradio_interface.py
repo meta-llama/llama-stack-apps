@@ -7,7 +7,6 @@ from threading import Thread
 from typing import AsyncGenerator, Generator, List, Optional
 
 import chromadb
-
 import gradio as gr
 import requests
 from chromadb.utils import embedding_functions
@@ -25,10 +24,9 @@ load_dotenv()
 HOST = os.getenv("HOST", "localhost")
 PORT = int(os.getenv("PORT", 5000))
 CHROMA_PORT = int(os.getenv("CHROMA_PORT", 6000))
-DOCS_DIR = "/root/rag_data/output"
+DOCS_DIR = "/root/rag_data"
 GRADIO_SERVER_PORT = int(os.getenv("GRADIO_SERVER_PORT", 7861))
 MODEL_NAME = os.getenv("MODEL_NAME", "Llama3.2-1B-Instruct")
-
 
 class LlamaChatInterface:
     def __init__(self, host: str, port: int, chroma_port: int, docs_dir: str):
