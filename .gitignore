@@ -175,3 +175,4 @@ Package.resolved
 /examples/E2E-RAG-App/data/input
 /examples/E2E-RAG-App/data/output
 **/.gradio
+**/RAG_service.json

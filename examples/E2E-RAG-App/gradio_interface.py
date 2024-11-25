@@ -113,7 +113,6 @@ class LlamaChatInterface:
                     "memory_bank_configs": [
                         {"bank_id": self.memory_bank_id, "type": "vector"}
                     ],
-                    "query_generator_config": {"type": "default", "sep": " "},
                     "max_tokens_in_context": 300,
                     "max_chunks": 5,
                 }
