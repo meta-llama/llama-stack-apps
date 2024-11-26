@@ -5,5 +5,6 @@
   "host": "localhost",
   "port": 5000,
   "chroma_port": 6000,
-  "gradio_server_port": 7860
+  "gradio_server_port": 7860,
+  "use_gpu": false
 }

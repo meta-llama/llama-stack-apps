@@ -24,9 +24,10 @@ load_dotenv()
 HOST = os.getenv("HOST", "localhost")
 PORT = int(os.getenv("PORT", "5000"))
 GRADIO_SERVER_PORT = int(os.getenv("GRADIO_SERVER_PORT", "7861"))
-
+USE_GPU = os.getenv("USE_GPU", False)
 MODEL_NAME = os.getenv("MODEL_NAME", "meta-llama/Llama-3.2-3B-Instruct")
-DOCS_DIR = os.getenv("DOCS_DIR", "./example_data")
+# if use_gpu, then the documents will be processed to output folder
+DOCS_DIR =  "/root/rag_data/output" if USE_GPU else "/root/rag_data/"
 
 
 class LlamaChatInterface:

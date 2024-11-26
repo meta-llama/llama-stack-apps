@@ -6,4 +6,5 @@ echo "HOST=$(jq -r '.host' ./RAG_service.json)" >> .env
 echo "PORT=$(jq -r '.port' ./RAG_service.json)" >> .env
 echo "CHROMA_PORT=$(jq -r '.chroma_port' ./RAG_service.json)" >> .env
 echo "GRADIO_SERVER_PORT=$(jq -r '.gradio_server_port' ./RAG_service.json)" >> .env
+echo "USE_GPU=$(jq -r '.use_gpu' ./RAG_service.json)" >> .env
 docker compose up
