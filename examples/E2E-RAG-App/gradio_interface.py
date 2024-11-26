@@ -37,7 +37,7 @@ class LlamaChatInterface:
         self.chroma_client = chromadb.HttpClient(host=host, port=chroma_port)
         self.agent = None
         self.session_id = None
-        self.memory_bank_id = "test_bank_232"
+        self.memory_bank_id = "test_bank_235"
 
     async def initialize_system(self):
         """Initialize the entire system including memory bank and agent."""
@@ -132,41 +132,21 @@ class LlamaChatInterface:
         history = history or []
         history.append([message, ""])
 
-        output_queue = Queue()
+        if self.agent is None:
+            asyncio.run(self.initialize_system())
 
-        def run_async():
-            async def async_process():
-                if self.agent is None:
-                    await self.initialize_system()
+        response = self.agent.create_turn(
+            messages=[{"role": "user", "content": message}],
+            session_id=self.session_id,
+        )
 
-                response = self.agent.create_turn(
-                    messages=[{"role": "user", "content": message}],
-                    session_id=self.session_id,
-                )
-
-                current_response = ""
-                async for log in EventLogger().log(response):
-                    log.print()
-                    if hasattr(log, "content"):
-                        current_response += log.content
-                        history[-1][1] = current_response
-                        output_queue.put(history.copy())
-
-                output_queue.put(None)
-
-            asyncio.run(async_process())
-
-        thread = Thread(target=run_async)
-        thread.start()
-
-        while True:
-            item = output_queue.get()
-            if item is None:
-                break
-            else:
-                yield item
-
-        thread.join()
+        current_response = ""
+        for log in EventLogger().log(response):
+            log.print()
+            if hasattr(log, "content"):
+                current_response += log.content
+                history[-1][1] = current_response
+                yield history.copy()
 
 
 def create_gradio_interface(
@@ -235,5 +215,5 @@ if __name__ == "__main__":
     # Create and launch the Gradio interface
     interface = create_gradio_interface()
     interface.launch(
-        server_name=HOST, server_port=GRADIO_SERVER_PORT, share=True, debug=True
+        server_name=HOST, server_port=8888, share=True, debug=True
     )
