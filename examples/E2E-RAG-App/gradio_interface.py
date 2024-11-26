@@ -23,10 +23,10 @@ load_dotenv()
 
 HOST = os.getenv("HOST", "localhost")
 PORT = int(os.getenv("PORT", 5000))
-CHROMA_PORT = int(os.getenv("CHROMA_PORT", 6000))
-DOCS_DIR = "/root/rag_data"
+CHROMA_PORT = 8000
+DOCS_DIR = "./example_data"
 GRADIO_SERVER_PORT = int(os.getenv("GRADIO_SERVER_PORT", 7861))
-MODEL_NAME = os.getenv("MODEL_NAME", "Llama3.2-1B-Instruct")
+MODEL_NAME = "meta-llama/Llama-3.2-3B-Instruct"
 
 class LlamaChatInterface:
     def __init__(self, host: str, port: int, chroma_port: int, docs_dir: str):
