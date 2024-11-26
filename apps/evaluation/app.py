@@ -97,7 +97,8 @@ def application_evaluation_page():
             output_res = {}
             for i, r in enumerate(rows):
                 # Update progress
-                progress_bar.progress(i, text=progress_text)
+                progress = i / len(rows)
+                progress_bar.progress(progress, text=progress_text)
 
                 # Run evaluation for current row
                 print(selected_scoring_functions)
