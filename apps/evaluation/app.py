@@ -101,7 +101,6 @@ def application_evaluation_page():
                 progress_bar.progress(progress, text=progress_text)
 
                 # Run evaluation for current row
-                print(selected_scoring_functions)
                 score_res = EVALUATION_API.run_scoring(
                     r, scoring_function_ids=selected_scoring_functions
                 )

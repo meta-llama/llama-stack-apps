@@ -16,6 +16,7 @@ class LlamaStackEvaluation:
             provider_data={
                 "fireworks_api_key": os.environ.get("FIREWORKS_API_KEY", ""),
                 "together_api_key": os.environ.get("TOGETHER_API_KEY", ""),
+                "openai_api_key": os.environ.get("OPENAI_API_KEY", ""),
             },
         )
 
