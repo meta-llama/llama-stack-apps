@@ -15,7 +15,7 @@ git clone https://github.com/meta-llama/llama-stack-apps.git
 conda create -n agentstore python=3.10
 conda activate agentstore
 cd <path/to/llama-stack-apps>
-pip install -r requirements_agent_store.txt
+pip install -r requirements.txt
 ```
 
 ## How to start app
