@@ -22,3 +22,10 @@ class LlamaStackEvaluation:
     def list_scoring_functions(self):
         """List all available scoring functions"""
         return self.client.scoring_functions.list()
+
+    def run_scoring(self, row, scoring_function_ids: list[str]):
+        """Run scoring on a single row"""
+        scoring_params = {fn_id: None for fn_id in scoring_function_ids}
+        return self.client.scoring.score(
+            input_rows=[row], scoring_functions=scoring_params
+        )

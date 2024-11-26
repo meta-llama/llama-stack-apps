@@ -4,6 +4,8 @@
 # This source code is licensed under the terms described in the LICENSE file in
 # the root directory of this source tree.
 
+import pandas as pd
+
 import streamlit as st
 
 from modules.api import LlamaStackEvaluation
@@ -24,24 +26,20 @@ def main():
             st.title("Navigation")
             page = st.radio(
                 "Select a Page",
-                ["Dataset Upload", "Analysis", "Settings"],
+                ["Application Evaluation"],
                 index=0,
             )
         else:
-            page = "Dataset Upload"  # Default page when sidebar is collapsed
+            page = "Application Evaluation"  # Default page when sidebar is collapsed
 
     # Main content area
     st.title("🦙 Llama Stack Evaluations")
 
-    if page == "Dataset Upload":
-        dataset_upload_page()
-    elif page == "Analysis":
-        analysis_page()
-    elif page == "Settings":
-        settings_page()
+    if page == "Application Evaluation":
+        application_evaluation_page()
 
 
-def dataset_upload_page():
+def application_evaluation_page():
     # File uploader
     uploaded_file = st.file_uploader("Upload Dataset", type=["csv", "xlsx", "xls"])
 
@@ -70,7 +68,7 @@ def dataset_upload_page():
     }
     scoring_functions_names = list(scoring_functions_descriptions.keys())
     selected_scoring_functions = st.multiselect(
-        "Select 1 or more scoring functions to run evaluation",
+        "Choose one or more scoring functions",
         options=scoring_functions_names,
         help="Choose one or more scoring functions.",
     )
@@ -82,19 +80,57 @@ def dataset_upload_page():
                 f"- **{scoring_function}**: {scoring_functions_descriptions[scoring_function]}"
             )
 
-        # Add run evaluation button
+        # Add run evaluation button & slider
+        total_rows = len(df)
+        num_rows = st.slider("Number of rows to evaluate", 1, total_rows, total_rows)
+
         if st.button("Run Evaluation"):
-            st.write("Running evaluation...")
+            progress_text = "Running evaluation..."
+            progress_bar = st.progress(0, text=progress_text)
+            rows = df.to_dict(orient="records")
+            if num_rows < total_rows:
+                rows = rows[:num_rows]
 
+            # Create separate containers for progress text and results
+            progress_text_container = st.empty()
+            results_container = st.empty()
+            output_res = {}
+            for i, r in enumerate(rows):
+                # Update progress
+                progress_bar.progress(i, text=progress_text)
 
-def analysis_page():
-    st.header("Analysis")
-    st.write("Analysis page content goes here")
+                # Run evaluation for current row
+                print(selected_scoring_functions)
+                score_res = EVALUATION_API.run_scoring(
+                    r, scoring_function_ids=selected_scoring_functions
+                )
 
+                for k in r.keys():
+                    if k not in output_res:
+                        output_res[k] = []
+                    output_res[k].append(r[k])
 
-def settings_page():
-    st.header("Settings")
-    st.write("Settings page content goes here")
+                for fn_id in selected_scoring_functions:
+                    if fn_id not in output_res:
+                        output_res[fn_id] = []
+                    output_res[fn_id].append(score_res.results[fn_id].score_rows[0])
+
+                # Display current row results using separate containers
+                progress_text_container.write(
+                    f"Expand to see current processed result ({i+1}/{len(rows)})"
+                )
+                results_container.json(
+                    score_res.to_json(),
+                    expanded=2,
+                )
+
+            progress_bar.progress(1.0, text="Evaluation complete!")
+
+            # Display results in dataframe
+            if output_res:
+                output_df = pd.DataFrame(output_res)
+                st.subheader("Evaluation Results")
+                st.dataframe(output_df)
 
 
 if __name__ == "__main__":
