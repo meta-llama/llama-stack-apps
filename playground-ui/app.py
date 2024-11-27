@@ -4,6 +4,8 @@
 # This source code is licensed under the terms described in the LICENSE file in
 # the root directory of this source tree.
 
+import json
+
 import pandas as pd
 
 import streamlit as st
@@ -63,22 +65,54 @@ def application_evaluation_page():
     # Select Scoring Functions to Run Evaluation On
     st.subheader("Select Scoring Functions")
     scoring_functions = EVALUATION_API.list_scoring_functions()
-    scoring_functions_descriptions = {
-        sf.identifier: sf.description for sf in scoring_functions
-    }
-    scoring_functions_names = list(scoring_functions_descriptions.keys())
+    scoring_functions = {sf.identifier: sf for sf in scoring_functions}
+    scoring_functions_names = list(scoring_functions.keys())
     selected_scoring_functions = st.multiselect(
         "Choose one or more scoring functions",
         options=scoring_functions_names,
         help="Choose one or more scoring functions.",
     )
 
+    available_models = EVALUATION_API.list_models()
+    available_models = [m.identifier for m in available_models]
+
+    scoring_params = {}
     if selected_scoring_functions:
         st.write("Selected:")
-        for scoring_function in selected_scoring_functions:
-            st.write(
-                f"- **{scoring_function}**: {scoring_functions_descriptions[scoring_function]}"
-            )
+        for scoring_fn_id in selected_scoring_functions:
+            scoring_fn = scoring_functions[scoring_fn_id]
+            st.write(f"- **{scoring_fn_id}**: {scoring_fn.description}")
+            new_params = None
+            if scoring_fn.params:
+                new_params = {}
+                for param_name, param_value in scoring_fn.params.to_dict().items():
+                    if param_name == "type":
+                        new_params[param_name] = param_value
+                        continue
+
+                    if param_name == "judge_model":
+                        value = st.selectbox(
+                            f"Select **{param_name}** for {scoring_fn_id}",
+                            options=available_models,
+                            index=0,
+                            key=f"{scoring_fn_id}_{param_name}",
+                        )
+                        new_params[param_name] = value
+                    else:
+                        value = st.text_area(
+                            f"Enter value for **{param_name}** in {scoring_fn_id} in valid JSON format",
+                            value=json.dumps(param_value, indent=2),
+                            height=80,
+                        )
+                        try:
+                            new_params[param_name] = json.loads(value)
+                        except json.JSONDecodeError:
+                            st.error(
+                                f"Invalid JSON for **{param_name}** in {scoring_fn_id}"
+                            )
+
+                st.json(new_params)
+            scoring_params[scoring_fn_id] = new_params
 
         # Add run evaluation button & slider
         total_rows = len(df)
@@ -102,7 +136,9 @@ def application_evaluation_page():
 
                 # Run evaluation for current row
                 score_res = EVALUATION_API.run_scoring(
-                    r, scoring_function_ids=selected_scoring_functions
+                    r,
+                    scoring_function_ids=selected_scoring_functions,
+                    scoring_params=scoring_params,
                 )
 
                 for k in r.keys():
