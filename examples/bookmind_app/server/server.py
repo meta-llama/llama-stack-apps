@@ -9,6 +9,11 @@ from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.lib.agents.event_logger import EventLogger
 from llama_stack_client.types.agent_create_params import AgentConfig
 
+# Get env variables
+INFERENCE_MODEL = os.environ["INFERENCE_MODEL"]
+LLAMA_STACK_PORT = os.environ["LLAMA_STACK_PORT"]
+SERVER_PORT = os.environ["SERVER_PORT"]
+
 # Flask setup
 app = Flask(__name__)
 CORS(app)
@@ -67,7 +72,7 @@ async def get_graph_response(text_response, client):
 
     # Get graph structure from LlamaStack
     graph_response = client.inference.chat_completion(
-        model_id=os.environ["INFERENCE_MODEL"],
+        model_id=INFERENCE_MODEL,
         messages=[
             {"role": "system", "content": "You are a data structure expert. Convert text descriptions into graph JSON format."},
             {"role": "user", "content": graph_prompt}
@@ -104,9 +109,9 @@ async def process_book(book_title):
     Process the book title, query LlamaStack for characters and relationships,
     and initialize memory.
     """
-    client = LlamaStackClient(base_url=f"http://localhost:{os.environ['LLAMA_STACK_PORT']}")
+    client = LlamaStackClient(base_url=f"http://localhost:{LLAMA_STACK_PORT}")
     agent_config = AgentConfig(
-        model=os.environ["INFERENCE_MODEL"],
+        model=INFERENCE_MODEL,
         instructions="You are a helpful assistant",
         tools=[{"type": "memory"}],  # Enable memory
         enable_session_persistence=True,
@@ -273,4 +278,4 @@ async def query_llama_stack(prompt):
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5001)
+    app.run(debug=True, port=SERVER_PORT)
