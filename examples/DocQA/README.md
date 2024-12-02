@@ -12,7 +12,7 @@ For Mac and Windows users, you need to start the Docker app manually after insta
 
 ### How to run the pipeline:
 
-![RAG_workflow](./data/assets/RAG_workflow.jpg)
+![RAG_workflow](./data/assets/DocQA.png)
 
 The above is the workflow diagram for this RAG app. To run the app, please read the following instructions:
 
@@ -25,33 +25,14 @@ The above is the workflow diagram for this RAG app. To run the app, please read 
 }
 ```
 
-2. Inside of docker folder, `run_RAG.sh` is the main script that can create `.env` file for compose.yaml and then actually start the `docker compose` process to launch all the pipelines in our dockers. `compose.yaml` is the main docker yaml that specifies all the mount option and docker configs, change the mounts if needed.
+2. Run following code:
 
 ```bash
 cd docker
 bash run_RAG.sh
 ```
 
-> [!TIP]
-> You can check the status of dockers by typing `docker ps` on another terminal.
-
-3. Ollama docker will start and this docker will pull and run the llama model specified. The `ollama_start.sh` control the Ollama docker startup behavior, change it if needed.
-
-> [!TIP]
-> On anther terminal, you can log into the docker and check which model has been hosted, by following code:
-
-```bash
-docker exec -it docker-ollama-1 bash
-ollama ps
-```
-
-Check more about Ollama instruction [here](https://github.com/ollama/ollama)
-
-4. ChromaDB docker will also start. This docker will host the chroma database that can interact with llama-stack.
-
-5. Lastly, Llama-stack docker will start. The `llama_stack_start.sh` controls the docker startup behavior. Change it if needed. It will first run the ingestion pipeline to convert all the documents into Markdown files. Then, it will run Llama Stack server based on the  `llama_stack_run.yaml` config. Once the server is ready, then it will run the `gradio_interface.py` which will insert document chunks into memory_bank and start the UI for user interaction.
-
-6. `gradio_interface.py` will show a public link. You can access the gradio UI by putting this link to the browser. Then you can start your chat in the gradio web page.
+3.  Once the service is ready, open the link http://localhost:7861/ in your browser to chat with your documents.
 
 
 
