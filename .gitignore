@@ -172,7 +172,12 @@ Package.resolved
 **/faiss_index.index
 **/faiss_index.index.json
 **/chroma
+
+
+# DocQA
 /examples/DocQA/data/input
 /examples/DocQA/data/output
 **/.gradio
 **/RAG_service.json
+examples/DocQA/example_data/chroma.sqlite3
+examples/DocQA/example_data/**/*.bin

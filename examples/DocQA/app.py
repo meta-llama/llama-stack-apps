@@ -26,9 +26,9 @@ HOST = os.getenv("HOST", "localhost")
 PORT = int(os.getenv("PORT", "5000"))
 GRADIO_SERVER_PORT = int(os.getenv("GRADIO_SERVER_PORT", "7861"))
 USE_GPU = os.getenv("USE_GPU", False)
-MODEL_NAME = os.getenv("MODEL_NAME", "meta-llama/Llama-3.2-3B-Instruct")
+MODEL_NAME = os.getenv("MODEL_NAME", "meta-llama/Llama-3.2-1B-Instruct")
 # if use_gpu, then the documents will be processed to output folder
-DOCS_DIR =  "/root/rag_data/output" if USE_GPU else "/root/rag_data/"
+DOCS_DIR = "/root/rag_data/output" if USE_GPU else "/root/rag_data/"
 
 CUSTOM_CSS = """
 .context-block {
@@ -80,7 +80,7 @@ class LlamaChatInterface:
         self.client = LlamaStackClient(base_url=f"http://{host}:{port}")
         self.agent = None
         self.session_id = None
-        self.memory_bank_id = "test_bank_235"
+        self.memory_bank_id = "docqa_bank"
 
     async def initialize_system(self):
         """Initialize the entire system including memory bank and agent."""
@@ -173,7 +173,7 @@ class LlamaChatInterface:
         self, message: str, history: List[List[str]]
     ) -> Generator[List[List[str]], None, None]:
         """Stream chat responses token by token with proper history handling."""
-        
+
         history = history or []
         history.append([message, ""])
 
@@ -187,7 +187,7 @@ class LlamaChatInterface:
 
         current_response = ""
         context_shown = False
-        
+
         for log in EventLogger().log(response):
             log.print()
             if hasattr(log, "content"):
@@ -198,14 +198,15 @@ class LlamaChatInterface:
                     context_shown = True
                 else:
                     current_response += log.content
-                
+
                 history[-1][1] = current_response
                 yield history.copy()
 
     def format_context(self, log_str: str) -> str:
         """Format the context block with custom styling."""
         # Extract context and clean up the markers
-        context_match = re.search(r"Retrieved context from banks:.*?\n(.*?===.*?===.*?)(?=\n>|$)", log_str, re.DOTALL)
+        context_match = re.search(
+            r"Retrieved context from banks:.*?\n(.*?===.*?===.*?)(?=\n>|$)", log_str, re.DOTALL)
         if context_match:
             context = context_match.group(1).strip()
             # Remove the marker lines

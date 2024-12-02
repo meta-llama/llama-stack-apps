@@ -25,7 +25,7 @@ services:
     restart: always
     entrypoint: ["bash", "/root/ollama_start.sh"]
   llamastack:
-    image: llamastack/distribution-ollama:0.0.54
+    image: llamastack/distribution-ollama:0.0.56
     network_mode: "host"
     tty: true
     volumes:
