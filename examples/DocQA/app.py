@@ -216,11 +216,11 @@ class LlamaChatInterface:
                 flags=re.IGNORECASE
             )
             return f"""
-                    <div class="context-block">
-                        <div class="context-title">Retrieved Context</div>
-                        <div class="context-content">{context}</div>
-                    </div>
-                    """
+<div class="context-block">
+    <div class="context-title">Retrieved Context</div>
+    <div class="context-content">{context}</div>
+</div>
+"""
         return ""
 
 
@@ -295,5 +295,5 @@ if __name__ == "__main__":
     # Create and launch the Gradio interface
     interface = create_gradio_interface()
     interface.launch(
-        server_name=HOST, server_port=8888, share=True, debug=True
+        server_name=HOST, server_port=GRADIO_SERVER_PORT, share=True, debug=True
     )
