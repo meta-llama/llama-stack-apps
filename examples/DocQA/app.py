@@ -16,6 +16,7 @@ from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.lib.agents.event_logger import EventLogger
 from llama_stack_client.types.agent_create_params import AgentConfig
 from llama_stack_client.types.memory_insert_params import Document
+import re
 
 
 # Load environment variables
@@ -28,6 +29,47 @@ USE_GPU = os.getenv("USE_GPU", False)
 MODEL_NAME = os.getenv("MODEL_NAME", "meta-llama/Llama-3.2-3B-Instruct")
 # if use_gpu, then the documents will be processed to output folder
 DOCS_DIR =  "/root/rag_data/output" if USE_GPU else "/root/rag_data/"
+
+CUSTOM_CSS = """
+.context-block {
+    font-size: 0.8em;
+    border-left: 3px solid #e9ecef;
+    margin: 0.5em 0;
+    padding: 0.5em 1em;
+    opacity: 0.85;
+}
+
+.context-title {
+    font-size: 0.8em;
+    color: #9ca3af;
+    font-weight: 400;
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    margin-bottom: 0.3em;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.context-title::before {
+    content: "📄";
+    font-size: 1em;
+    opacity: 0.7;
+}
+
+.context-content {
+    color: #6b7280;
+    line-height: 1.4;
+    font-weight: 400;
+}
+
+.inference-response {
+    font-size: 1em;
+    color: #111827;
+    line-height: 1.5;
+    margin-top: 1em;
+}
+"""
 
 
 class LlamaChatInterface:
@@ -131,7 +173,7 @@ class LlamaChatInterface:
         self, message: str, history: List[List[str]]
     ) -> Generator[List[List[str]], None, None]:
         """Stream chat responses token by token with proper history handling."""
-
+        
         history = history or []
         history.append([message, ""])
 
@@ -144,12 +186,42 @@ class LlamaChatInterface:
         )
 
         current_response = ""
+        context_shown = False
+        
         for log in EventLogger().log(response):
             log.print()
             if hasattr(log, "content"):
-                current_response += log.content
+                # Format context blocks if present
+                if not context_shown and "Retrieved context from banks" in str(log):
+                    context = self.format_context(str(log))
+                    current_response = context + current_response
+                    context_shown = True
+                else:
+                    current_response += log.content
+                
                 history[-1][1] = current_response
                 yield history.copy()
+
+    def format_context(self, log_str: str) -> str:
+        """Format the context block with custom styling."""
+        # Extract context and clean up the markers
+        context_match = re.search(r"Retrieved context from banks:.*?\n(.*?===.*?===.*?)(?=\n>|$)", log_str, re.DOTALL)
+        if context_match:
+            context = context_match.group(1).strip()
+            # Remove the marker lines
+            context = re.sub(
+                r"====\s*Here are the retrieved documents for relevant context:\s*===\s*START-RETRIEVED-CONTEXT\s*===\s*",
+                "",
+                context,
+                flags=re.IGNORECASE
+            )
+            return f"""
+                    <div class="context-block">
+                        <div class="context-title">Retrieved Context</div>
+                        <div class="context-content">{context}</div>
+                    </div>
+                    """
+        return ""
 
 
 def create_gradio_interface(
@@ -159,11 +231,16 @@ def create_gradio_interface(
 ):
     chat_interface = LlamaChatInterface(host, port, docs_dir)
 
-    with gr.Blocks(theme=gr.themes.Soft()) as interface:
+    with gr.Blocks(theme=gr.themes.Soft(), css=CUSTOM_CSS) as interface:
         gr.Markdown("# LlamaStack Chat")
 
-        chatbot = gr.Chatbot(bubble_full_width=False,
-                             show_label=False, height=400)
+        chatbot = gr.Chatbot(
+            bubble_full_width=False,
+            show_label=False,
+            height=400,
+            container=True,
+            render_markdown=True
+        )
         msg = gr.Textbox(
             label="Message",
             placeholder="Type your message here...",
@@ -218,5 +295,5 @@ if __name__ == "__main__":
     # Create and launch the Gradio interface
     interface = create_gradio_interface()
     interface.launch(
-        server_name=HOST, server_port=GRADIO_SERVER_PORT, share=True, debug=True
+        server_name=HOST, server_port=8888, share=True, debug=True
     )
