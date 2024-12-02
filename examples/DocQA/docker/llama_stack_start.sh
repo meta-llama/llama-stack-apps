@@ -10,7 +10,7 @@ pip install -U llama-stack
 # Check if GPU is enabled and run ingest files script accordingly
 if [ "$USE_GPU" = true ]; then
   pip install docling
-  python /root/E2E-RAG-App/01_ingest_files.py --input_dir /root/rag_data/
+  python /root/DocQA/scripts/ingest_files.py --input_dir /root/rag_data/
 fi
 # Print a message indicating the start of llama-stack server
 echo "starting the llama-stack server"
@@ -21,4 +21,4 @@ sleep 30
 # Print a message indicating the start of RAG app
 echo "---------running the RAG app--------------"
 # Run RAG app
-python /root/E2E-RAG-App/app.py
+python /root/DocQA/app.py

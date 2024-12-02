@@ -32,7 +32,8 @@ services:
       - ~/.llama:/root/.llama
       # Link to ollama run.yaml file
       - ./llama_stack_run.yaml:/root/my-run.yaml
-      - ../../E2E-RAG-App:/root/E2E-RAG-App
+      - ../../DocQA:/root/DocQA
+      - ../../DocQA/scripts:/root/DocQA/scripts
       - ${DOC_PATH}:/root/rag_data/
       - ./llama_stack_start.sh:/root/llama_stack_start.sh
     ports:

@@ -172,7 +172,7 @@ Package.resolved
 **/faiss_index.index
 **/faiss_index.index.json
 **/chroma
-/examples/E2E-RAG-App/data/input
-/examples/E2E-RAG-App/data/output
+/examples/DocQA/data/input
+/examples/DocQA/data/output
 **/.gradio
 **/RAG_service.json

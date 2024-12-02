@@ -1,6 +1,6 @@
-## E2E-RAG-App
+## DocQA
 
-This is an end-to-end Retrieval Augmented Geneartion (RAG) App leveraging llama-stack that handles the logic for ingesting documents, storing them in a vector database and providing an inference interface.
+This is an end-to-end Retrieval Augmented Generation (RAG) App leveraging llama-stack that handles the logic for ingesting documents, storing them in a vector database and providing an inference interface.
 
 We share the details of how to run first and then an outline of how it works:
 
@@ -12,7 +12,7 @@ For Mac and Windows users, you need to start the Docker app manually after insta
 
 ### How to run the pipeline:
 
-![RAG_workflow](./RAG_workflow.jpg)
+![RAG_workflow](./data/assets/RAG_workflow.jpg)
 
 The above is the workflow diagram for this RAG app. To run the app, please read the following instructions:
 
@@ -21,7 +21,7 @@ The above is the workflow diagram for this RAG app. To run the app, please read 
 ```yaml
 {
   "model_name": "llama3.2:1b-instruct-fp16",
-  "document_path": "${HOME}/work/llama-stack-apps/examples/E2E-RAG-App/example_data"
+  "document_path": "${HOME}/work/llama-stack-apps/examples/DocQA/example_data"
 }
 ```
 
