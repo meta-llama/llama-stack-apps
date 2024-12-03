@@ -1,24 +1,27 @@
 services:
   chromadb:
-    image: chromadb/chroma:latest
+    image: ghcr.io/chroma-core/chroma:latest
+    env_file: "docqa_env"
+    environment:
+      - IS_PERSISTENT=TRUE
+      - CHROMA_HOST_PORT=${CHROMA_PORT}
     network_mode: "host"
     volumes:
-      - ${DOC_PATH}:/root/rag_data/
-      - ./chroma_start.sh:/root/chroma_start.sh
+      - ${DOC_PATH}:/chroma/chroma
+    tty: true
     ports:
       - "6000:6000"
-    entrypoint: bash /root/chroma_start.sh
   ollama:
     image: ollama/ollama:latest
+    env_file: "docqa_env"
     network_mode: "host"
     environment:
       - MODEL_NAME=${MODEL_NAME}
-      - OLLAMA_KEEP_ALIVE=24h
+      - OLLAMA_KEEP_ALIVE=99h
       - OLLAMA_HOST=127.0.0.1:14343
     volumes:
       - ollama:/root/.ollama # this solution synchronizes with the docker volume and loads the model rocket fast
       - ./ollama_start.sh:/root/ollama_start.sh
-      - ./RAG_service.json:/root/RAG_service.json
     ports:
       - "14343:14343"
     tty: true
@@ -32,6 +35,7 @@ services:
     entrypoint: ["bash", "/root/ollama_start.sh"]
   llamastack:
     image: llamastack/distribution-ollama:0.0.56
+    env_file: "docqa_env"
     network_mode: "host"
     tty: true
     volumes:
@@ -39,7 +43,6 @@ services:
       # Link to ollama run.yaml file
       - ./llama_stack_run.yaml:/root/my-run.yaml
       - ../../DocQA:/root/DocQA
-      - ../../DocQA/scripts:/root/DocQA/scripts
       - ${DOC_PATH}:/root/rag_data/
       - ./llama_stack_start.sh:/root/llama_stack_start.sh
     ports:

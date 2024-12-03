@@ -16,26 +16,28 @@ For Mac and Windows users, you need to start the Docker app manually after insta
 
 The above is the workflow diagram for this RAG app. To run the app, please read the following instructions:
 
-1. Copy the template configuration file `RAG_service-template.json` to create your own `RAG_service.json` inside the docker folder:
+1. Copy the template configuration file `docqa_env_template` to create your own `docqv_env` inside the docker folder:
 
 ```bash
 cd docker
-cp RAG_service-template.json RAG_service.json
+cp docqa_env_template docqv_env
 ```
 
-2. Then update `model_name` and `document_path` accordingly in your `RAG_service.json`, for example:
+2. Then update `model_name` and `document_path` accordingly in your `docqv_env`, for example:
 
-```yaml
-{
-  "model_name": "llama3.2:1b-instruct-fp16",
-  "document_path": "${HOME}/work/llama-stack-apps/examples/DocQA/example_data",
-}
+```
+DOC_PATH=/path/to/your/llama-stack-apps/examples/DocQA/example_data
+MODEL_NAME=llama3.2:1b-instruct-fp16
+HOST=localhost
+LLAMA_STACK_PORT=5000
+CHROMA_PORT=6000
+GRADIO_SERVER_PORT=7860
+USE_GPU_FOR_DOC_INGESTION=false
 ```
 
-3. Run following code:
+3. In the `docker` folder, run following code:
 
 ```bash
-cd docker
 bash run_RAG.sh
 ```
 

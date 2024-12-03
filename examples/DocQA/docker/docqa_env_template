@@ -1,6 +1,7 @@
 DOC_PATH=/path/to/your/llama-stack-apps/examples/DocQA/example_data
 MODEL_NAME=llama3.2:1b-instruct-fp16
 HOST=localhost
-PORT=5000
+LLAMA_STACK_PORT=5000
 CHROMA_PORT=6000
 GRADIO_SERVER_PORT=7860
+USE_GPU_FOR_DOC_INGESTION=false

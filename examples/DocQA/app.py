@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+import re
 import uuid
 from queue import Queue
 from threading import Thread
@@ -16,19 +17,18 @@ from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.lib.agents.event_logger import EventLogger
 from llama_stack_client.types.agent_create_params import AgentConfig
 from llama_stack_client.types.memory_insert_params import Document
-import re
 
 
 # Load environment variables
 load_dotenv()
 
 HOST = os.getenv("HOST", "localhost")
-PORT = int(os.getenv("PORT", "5000"))
+LLAMA_STACK_PORT = int(os.getenv("LLAMA_STACK_PORT", "5000"))
 GRADIO_SERVER_PORT = int(os.getenv("GRADIO_SERVER_PORT", "7861"))
-USE_GPU = os.getenv("USE_GPU", False)
+USE_GPU_FOR_DOC_INGESTION = os.getenv("USE_GPU_FOR_DOC_INGESTION", False)
 MODEL_NAME = os.getenv("MODEL_NAME", "meta-llama/Llama-3.2-1B-Instruct")
-# if use_gpu, then the documents will be processed to output folder
-DOCS_DIR = "/root/rag_data/output" if USE_GPU else "/root/rag_data/"
+# if USE_GPU_FOR_DOC_INGESTION, then the documents will be processed to output folder
+DOCS_DIR = "/root/rag_data/output" if USE_GPU_FOR_DOC_INGESTION else "/root/rag_data/"
 
 CUSTOM_CSS = """
 .context-block {
@@ -98,8 +98,7 @@ class LlamaChatInterface:
         if any(bank.identifier == self.memory_bank_id for bank in memory_banks):
             print(f"Memory bank '{self.memory_bank_id}' exists.")
         else:
-            print(
-                f"Memory bank '{self.memory_bank_id}' does not exist. Creating...")
+            print(f"Memory bank '{self.memory_bank_id}' does not exist. Creating...")
             self.client.memory_banks.register(
                 memory_bank_id=self.memory_bank_id,
                 params={
@@ -150,8 +149,7 @@ class LlamaChatInterface:
         agent_config = AgentConfig(
             model=model_name,
             instructions="You are a helpful assistant that can answer questions based on provided documents. Return your answer short and concise, less than 50 words.",
-            sampling_params={"strategy": "greedy",
-                             "temperature": 1.0, "top_p": 0.9},
+            sampling_params={"strategy": "greedy", "temperature": 1.0, "top_p": 0.9},
             tools=[
                 {
                     "type": "memory",
@@ -206,7 +204,10 @@ class LlamaChatInterface:
         """Format the context block with custom styling."""
         # Extract context and clean up the markers
         context_match = re.search(
-            r"Retrieved context from banks:.*?\n(.*?===.*?===.*?)(?=\n>|$)", log_str, re.DOTALL)
+            r"Retrieved context from banks:.*?\n(.*?===.*?===.*?)(?=\n>|$)",
+            log_str,
+            re.DOTALL,
+        )
         if context_match:
             context = context_match.group(1).strip()
             # Remove the marker lines
@@ -214,7 +215,7 @@ class LlamaChatInterface:
                 r"====\s*Here are the retrieved documents for relevant context:\s*===\s*START-RETRIEVED-CONTEXT\s*===\s*",
                 "",
                 context,
-                flags=re.IGNORECASE
+                flags=re.IGNORECASE,
             )
             return f"""
 <div class="context-block">
@@ -227,7 +228,7 @@ class LlamaChatInterface:
 
 def create_gradio_interface(
     host: str = HOST,
-    port: int = PORT,
+    port: int = LLAMA_STACK_PORT,
     docs_dir: str = DOCS_DIR,
 ):
     chat_interface = LlamaChatInterface(host, port, docs_dir)
@@ -240,7 +241,7 @@ def create_gradio_interface(
             show_label=False,
             height=400,
             container=True,
-            render_markdown=True
+            render_markdown=True,
         )
         msg = gr.Textbox(
             label="Message",

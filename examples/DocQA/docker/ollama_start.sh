@@ -4,4 +4,3 @@ OLLAMA_HOST=127.0.0.1:14343 /usr/bin/ollama  serve &
 echo "Running ollama model: $MODEL_NAME"
 sleep 5
 OLLAMA_HOST=127.0.0.1:14343 /usr/bin/ollama run $MODEL_NAME
-while :; do sleep 2073600; done
