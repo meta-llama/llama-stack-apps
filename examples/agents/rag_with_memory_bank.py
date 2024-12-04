@@ -37,22 +37,29 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
     client = LlamaStackClient(base_url=f"http://{host}:{port}")
     providers = client.providers.list()
 
-    available_shields = [shield.identifier for shield in client.shields.list()]
-    if not available_shields:
-        print("No available shields. Disable safety.")
-    else:
-        print(f"Available shields found: {available_shields}")
-
+    model_name = "Llama3.2-3B-Instruct"
+    url = f"http://{host}:{port}/models/register"
+    headers = {"Content-Type": "application/json"}
+    data = {
+        "model_id": model_name,
+        "provider_model_id": None,
+        "provider_id": "inline::meta-reference-0",
+        "metadata": None,
+    }
+    provider_id = providers["memory"][0].provider_id
+    print(provider_id)
     # create a memory bank
-    client.memory_banks.register(
+    test = client.memory_banks.register(
         memory_bank_id="test_bank",
         params={
             "embedding_model": "all-MiniLM-L6-v2",
             "chunk_size_in_tokens": 512,
             "overlap_size_in_tokens": 64,
         },
-        provider_id=providers["memory"][0].provider_id,
+        provider_id=provider_id,
     )
+
+    print(f"Is memory bank registered? {test}")
 
     # insert some documents
     client.memory.insert(
@@ -67,7 +74,7 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
         print(f"Using model: {selected_model}")
 
     agent_config = AgentConfig(
-        model=selected_model,
+        model=model_name,
         instructions="You are a helpful assistant",
         sampling_params={
             "strategy": "greedy",
