@@ -36,22 +36,15 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
 
     client = LlamaStackClient(base_url=f"http://{host}:{port}")
     providers = client.providers.list()
-
-    available_shields = [shield.identifier for shield in client.shields.list()]
-    if not available_shields:
-        print("No available shields. Disable safety.")
-    else:
-        print(f"Available shields found: {available_shields}")
-
     # create a memory bank
     client.memory_banks.register(
-        memory_bank_id="test_bank",
-        params={
+        memory_bank={
+            "identifier": "test_bank",
             "embedding_model": "all-MiniLM-L6-v2",
             "chunk_size_in_tokens": 512,
             "overlap_size_in_tokens": 64,
-        },
-        provider_id=providers["memory"][0].provider_id,
+            "provider_id": providers["memory"][0].provider_id,
+        }
     )
 
     # insert some documents
@@ -67,7 +60,7 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
         print(f"Using model: {selected_model}")
 
     agent_config = AgentConfig(
-        model=selected_model,
+        model="Llama3.1-8B-Instruct",
         instructions="You are a helpful assistant",
         sampling_params={
             "strategy": "greedy",

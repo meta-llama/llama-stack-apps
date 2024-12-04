@@ -1,0 +1,54 @@
+version: '2'
+built_at: '2024-10-08T17:40:45.325529'
+image_name: local
+docker_image: null
+conda_env: local
+apis:
+- shields
+- agents
+- models
+- memory
+- memory_banks
+- inference
+- safety
+providers:
+  inference:
+  - provider_id: remote::ollama
+    provider_type: remote::ollama
+    config:
+      url: http://127.0.0.1:14343
+  memory:
+  - provider_id: remote::chromadb
+    provider_type: remote::chromadb
+    config:
+      host: localhost
+      port: 6000
+      protocol: http
+  safety:
+  - provider_id: inline::llama-guard-0
+    provider_type: inline::llama-guard
+    config:
+      excluded_categories: []
+  agents:
+  - provider_id: inline::meta-reference-0
+    provider_type: inline::meta-reference
+    config:
+      persistence_store:
+        namespace: null
+        type: sqlite
+        db_path: ${HOME}/.llama/runtime/kvstore.db
+  telemetry:
+  - provider_id: inline::meta-reference-0
+    provider_type: inline::meta-reference
+    config: {}
+metadata_store: null
+models:
+- metadata: {}
+  model_id: meta-llama/Llama-3.2-1B-Instruct
+  provider_id: null
+  provider_model_id: llama3.2:1b-instruct-fp16
+shields: []
+memory_banks: []
+datasets: []
+scoring_fns: []
+eval_tasks: []
