@@ -69,15 +69,12 @@ dependencies {
   androidTestImplementation("androidx.compose.ui:ui-test-junit4")
   debugImplementation("androidx.compose.ui:ui-tooling")
   debugImplementation("androidx.compose.ui:ui-test-manifest")
-  implementation(fileTree(mapOf(
-    "dir" to "libs",
-    "include" to listOf("*.aar", "*.jar"),
-  )))
+  implementation(files("libs/executorch.aar"))
   implementation("com.squareup.okhttp3:okhttp:4.10.0")
   implementation("com.google.guava:guava:31.0-jre")
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.18.1")
   implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.18.1")
   implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.1")
-  implementation("com.llama.llamastack:llama-stack-client-kotlin:0.0.1-alpha.2")
+  implementation("com.llama.llamastack:llama-stack-client-kotlin:0.0.54.1")
   implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.2.1")
 }

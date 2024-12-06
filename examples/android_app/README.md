@@ -6,7 +6,7 @@ This app serves as a valuable resource to inspire your creativity and provide fo
 
 Please dive in and start exploring our demo app today! We look forward to any feedback and are excited to see your innovative ideas to build agentic apps with Llama models. The current demo app is built using both Java and Kotlin. The majority of the activities are built with Java but the interfacing with Llama Stack APIs are in Kotlin. 
 
-NOTE: The current app release is intended to work with Llama Stack Kotlin SDK v0.0.54 and Llama Stack v0.0.54. We haven’t tested other versions or combinations. 
+NOTE: The current app release is intended to work with Llama Stack Kotlin SDK v0.0.54.1 and Llama Stack v0.0.54. We haven’t tested other versions or combinations. 
 
 
 ## Key Concepts
@@ -46,7 +46,7 @@ sh download-prebuilt-et-lib.sh
 The demo app automatically downloads Llama Stack Kotlin SDK from Maven based on this configuration in `build.gradle.kts`: 
 
 ```
-implementation("com.llama.llamastack:llama-stack-client-kotlin:0.0.54")
+implementation("com.llama.llamastack:llama-stack-client-kotlin:0.0.54.1")
 ```
 
 
