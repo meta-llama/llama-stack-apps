@@ -36,7 +36,7 @@ For on-device, here is the list of models we support currently and growing:
 3. Add .aar file for local inference: Use and download the `download-prebuilt-et-lib.sh` script file from the [llama-stack-client-kotlin-client-local](https://github.com/meta-llama/llama-stack-client-kotlin/blob/release/0.0.54/llama-stack-client-kotlin-client-local/download-prebuilt-et-lib.sh) directory to your local machine. Place the script in the top level of your Android app where the `app/` directory resides.
 
 ```
-cd llama-stack-client-kotlin-client-local 
+# downloads the executorch.aar and places it in the newly created directory app/libs
 sh download-prebuilt-et-lib.sh
 ```
 4. Wait until the gradle sync finished or in File -> `Sync Project with Gradle Files`
