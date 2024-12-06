@@ -2,11 +2,15 @@ import asyncio
 import json
 import os
 import re
+import socket
+import subprocess
+import time
 import uuid
+from contextlib import closing
 from queue import Queue
 from threading import Thread
 from typing import AsyncGenerator, Generator, List, Optional
-import subprocess
+
 import gradio as gr
 import requests
 from dotenv import load_dotenv
@@ -15,18 +19,16 @@ from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.lib.agents.event_logger import EventLogger
 from llama_stack_client.types.agent_create_params import AgentConfig
 from llama_stack_client.types.memory_insert_params import Document
-import socket
-from contextlib import closing
-import time
+
 # Load environment variables
 load_dotenv()
 
 HOST = os.getenv("HOST", "localhost")
 PORT = int(os.getenv("PORT", "5000"))
 GRADIO_SERVER_PORT = int(os.getenv("GRADIO_SERVER_PORT", "7861"))
-#MODEL_NAME = os.getenv("MODEL_NAME", "meta-llama/Llama-3.2-1B-Instruct")
+# MODEL_NAME = os.getenv("MODEL_NAME", "meta-llama/Llama-3.2-1B-Instruct")
 # if use_gpu, then the documents will be processed to output folder
-DOCS_DIR = os.getenv("DOCS_DIR", "./example_data")
+DOCS_DIR = None
 CHROMA_PORT = int(os.getenv("CHROMA_PORT", "6000"))
 YAML_PATH = os.getenv("YAML_PATH", "./llama_stack_run.yaml")
 YAML = """
@@ -129,18 +131,19 @@ CUSTOM_CSS = """
 
 
 class LlamaChatInterface:
-    def __init__(self, host: str, port: int, docs_dir: str):
+    def __init__(self, host: str, port: int):
         self.host = host
         self.port = port
-        self.docs_dir = docs_dir
+        self.docs_dir = None
         self.client = None
         self.agent = None
         self.session_id = None
-        self.memory_bank_id = "macqa_bank"
+        self.memory_bank_id = "chroma_bank"
 
     async def initialize_system(self):
         """Initialize the entire system including memory bank and agent."""
         self.client = LlamaStackClient(base_url=f"http://{self.host}:{self.port}")
+        self.docs_dir = DOCS_DIR
         await self.setup_memory_bank()
         await self.initialize_agent()
 
@@ -194,7 +197,6 @@ class LlamaChatInterface:
     async def initialize_agent(self):
         """Initialize the agent with model registration and configuration."""
 
-
         agent_config = AgentConfig(
             model=MODEL_NAME,
             instructions="You are a helpful assistant that can answer questions based on provided documents. Return your answer short and concise, less than 50 words.",
@@ -223,9 +225,8 @@ class LlamaChatInterface:
         history = history or []
         history.append([message, ""])
 
-        if self.agent is None and APP_READY:
+        if self.agent is None:
             asyncio.run(self.initialize_system())
-
 
         response = self.agent.create_turn(
             messages=[{"role": "user", "content": message}],
@@ -274,55 +275,14 @@ class LlamaChatInterface:
 """
         return ""
 
-# Function to handle the initial input and transition to the chat interface
-def setup_chat_interface(folder_path, model_name):
-    global MODEL_NAME
-    print("Starting Chroma server...")
-    subprocess.Popen(f"chroma run --host localhost --port {CHROMA_PORT} --path {folder_path}".split())
-    subprocess.run(["sleep", "10"], capture_output=True)
-    MODEL_NAME = model_name
-    ollama_name_dict = {
-        "meta-llama/Llama-3.2-1B-Instruct": "llama3.2:1b-instruct-fp16",
-        "meta-llama/Llama-3.2-3B-Instruct": "llama3.2:3b-instruct-fp16",
-        "meta-llama/Llama-3.1-8B-Instruct": "llama3.1:8b-instruct-fp16"
-    }
-    ollama_name = ollama_name_dict[model_name]
-    subprocess.Popen(f"ollama run {ollama_name} --keepalive=99h".split(),stdout=subprocess.DEVNULL)
-    subprocess.run(["sleep", "10"], capture_output=True)
-    print("Starting LlamaStack server...")
-    save_yaml()
-    subprocess.Popen(f"python -m llama_stack.distribution.server.server --yaml-config {YAML_PATH} --disable-ipv6".split())
-    print(f"Model '{model_name}' started, and  DB loaded '{folder_path}'. You can now start chatting!")
-    global APP_READY
-    APP_READY = True
 
-    return  f"Model '{model_name}' started, and  DB loaded '{folder_path}'. You can now start chatting!"
 def create_gradio_interface(
     host: str = HOST,
     port: int = PORT,
     docs_dir: str = DOCS_DIR,
 ):
-    chat_interface = LlamaChatInterface(host, port, docs_dir)
-    with gr.Blocks(theme=gr.themes.Soft(), css=CUSTOM_CSS) as initial_interface:
-        gr.Markdown("## Enter Data Folder Path and Select a Llama Model Name to run")
-        folder_path_input = gr.Textbox(label="Data Folder Path")
-        #folder_path_input = gr.File(label="Select Data Directory for RAG", file_count="directory")
-        model_name_input =  gr.Dropdown(
-        choices=[
-            "meta-llama/Llama-3.2-1B-Instruct","meta-llama/Llama-3.2-3B-Instruct","meta-llama/Llama-3.1-8B-Instruct"
-            ], 
-        value="meta-llama/Llama-3.2-1B-Instruct", 
-        label="Llama Model Name"
-        )
-        setup_button = gr.Button("Setup Chat Interface")
-        setup_output = gr.Textbox(label="Setup", interactive=False)
-        setup_button.click(
-            setup_chat_interface,
-            inputs=[folder_path_input, model_name_input],
-            outputs=setup_output
-        )
-
-    with gr.Blocks(theme=gr.themes.Soft(), css=CUSTOM_CSS) as interface:
+    chat_interface = LlamaChatInterface(host, port)
+    with gr.Blocks(theme=gr.themes.Soft(), css=CUSTOM_CSS) as main_interface:
         gr.Markdown("# LlamaStack Chat")
 
         chatbot = gr.Chatbot(
@@ -377,14 +337,68 @@ def create_gradio_interface(
         clear.click(clear_chat, outputs=[chatbot, msg], queue=False)
 
         msg.submit(lambda: None, None, None, api_name=False)
-        #interface.load(fn=chat_interface.initialize_system)
+        # interface.load(fn=chat_interface.initialize_system)
+
     # Combine both interfaces
-    with gr.Blocks() as demo:
-        with gr.Tab("Setup"):
-            initial_interface.render()
-        with gr.Tab("Chat"):
-            interface.render()
+    with gr.Blocks(theme=gr.themes.Soft(), css=CUSTOM_CSS) as demo:
+        with gr.Tab("Setup", visible=True) as setup_tab:
+            with gr.Blocks(theme=gr.themes.Soft(), css=CUSTOM_CSS) as initial_interface:
+                gr.Markdown("## Enter Data Folder Path and Select a Llama Model Name")
+                folder_path_input = gr.Textbox(label="Data Folder Path")
+                # folder_path_input = gr.File(label="Select Data Directory for RAG", file_count="directory")
+                model_name_input = gr.Dropdown(
+                    choices=[
+                        "meta-llama/Llama-3.2-1B-Instruct",
+                        "meta-llama/Llama-3.2-3B-Instruct",
+                        "meta-llama/Llama-3.1-8B-Instruct",
+                    ],
+                    value="meta-llama/Llama-3.2-1B-Instruct",
+                    label="Llama Model Name",
+                )
+                setup_button = gr.Button("Setup Chat Interface")
+                setup_output = gr.Textbox(label="Setup", interactive=False)
+
+                # Function to handle the initial input and transition to the chat interface
+                def setup_chat_interface(folder_path, model_name):
+                    global MODEL_NAME
+                    global DOCS_DIR
+                    print("Starting Chroma server...")
+                    subprocess.Popen(
+                        f"chroma run --host localhost --port {CHROMA_PORT} --path {folder_path}".split()
+                    )
+                    DOCS_DIR = folder_path
+                    subprocess.run(["sleep", "10"], capture_output=True)
+                    MODEL_NAME = model_name
+                    ollama_name_dict = {
+                        "meta-llama/Llama-3.2-1B-Instruct": "llama3.2:1b-instruct-fp16",
+                        "meta-llama/Llama-3.2-3B-Instruct": "llama3.2:3b-instruct-fp16",
+                        "meta-llama/Llama-3.1-8B-Instruct": "llama3.1:8b-instruct-fp16",
+                    }
+                    ollama_name = ollama_name_dict[model_name]
+                    subprocess.Popen(
+                        f"ollama run {ollama_name} --keepalive=99h".split(),
+                        stdout=subprocess.DEVNULL,
+                    )
+                    subprocess.run(["sleep", "10"], capture_output=True)
+                    print("Starting LlamaStack server...")
+                    save_yaml()
+                    subprocess.Popen(
+                        f"python -m llama_stack.distribution.server.server --yaml-config {YAML_PATH} --disable-ipv6".split()
+                    )
+                    return (
+                        f"Model {model_name} inference started, and  {folder_path} loaded to DB. You can now go to Chat tab and start chatting!",
+                    )
+
+                setup_button.click(
+                    setup_chat_interface,
+                    inputs=[folder_path_input, model_name_input],
+                    outputs=setup_output,
+                )
+        with gr.Tab("Chat", visible=True) as chat_tab:
+            main_interface.render()
     return demo
+
+
 def checkports():
     # Check if the ports are available
     for port in [CHROMA_PORT, GRADIO_SERVER_PORT, PORT]:
@@ -393,7 +407,7 @@ def checkports():
             return False
     return True
 
-  
+
 def is_port_available(port):
     with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
         try:
@@ -403,10 +417,13 @@ def is_port_available(port):
             return False
     return True
 
+
 def save_yaml():
     with open(YAML_PATH, "w") as f:
         f.write(YAML)
     print("YAML file saved.")
+
+
 # def start_servers():
 #     if not checkports():
 #         print("Ports are not available. Please check and try again.")
@@ -421,8 +438,5 @@ def save_yaml():
 if __name__ == "__main__":
     # Create and launch the Gradio interface
 
-    #start_servers()
     interface = create_gradio_interface()
-    interface.launch(
-        server_name=HOST, server_port=GRADIO_SERVER_PORT, debug=True
-    )
+    interface.launch(server_name=HOST, server_port=GRADIO_SERVER_PORT, debug=True)

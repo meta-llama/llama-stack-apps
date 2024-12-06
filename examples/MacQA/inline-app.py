@@ -35,6 +35,7 @@ from typing import AsyncGenerator, Generator, List, Optional
 import gradio as gr
 import requests
 from dotenv import load_dotenv
+from llama_stack.apis.memory_banks.memory_banks import VectorMemoryBankParams
 from llama_stack_client import LlamaStackClient
 from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.lib.agents.event_logger import EventLogger
@@ -98,6 +99,63 @@ CUSTOM_CSS = """
     margin-top: 1em;
 }
 """
+YAML = """
+version: '2'
+built_at: '2024-10-08T17:40:45.325529'
+image_name: local
+docker_image: null
+conda_env: local
+apis:
+- shields
+- agents
+- models
+- memory
+- memory_banks
+- inference
+- safety
+providers:
+  inference:
+  - provider_id: remote::ollama
+    provider_type: remote::ollama
+    config:
+      url: http://127.0.0.1:11434
+  memory:
+  - provider_id: remote::chromadb
+    provider_type: remote::chromadb
+    config:
+      host: localhost
+      port: 6000
+      protocol: http
+  safety:
+  - provider_id: inline::llama-guard-0
+    provider_type: inline::llama-guard
+    config:
+      excluded_categories: []
+  agents:
+  - provider_id: inline::meta-reference-0
+    provider_type: inline::meta-reference
+    config:
+      persistence_store:
+        namespace: null
+        type: sqlite
+        db_path: ./runtime/kvstore.db
+  telemetry:
+  - provider_id: inline::meta-reference-0
+    provider_type: inline::meta-reference
+    config: {}
+metadata_store: null
+models:
+- metadata: {}
+  model_id: meta-llama/Llama-3.2-1B-Instruct
+  provider_id: null
+  provider_model_id: llama3.2:1b-instruct-fp16
+shields: []
+memory_banks: []
+datasets: []
+scoring_fns: []
+eval_tasks: []
+"""
+YAML_PATH = os.getenv("YAML_PATH", "./llama_stack_run.yaml")
 
 
 class LlamaChatInterface:
@@ -110,9 +168,15 @@ class LlamaChatInterface:
         self.session_id = None
         self.memory_bank_id = "docqa_bank"
 
+    def save_yaml(self):
+        with open(YAML_PATH, "w") as f:
+            f.write(YAML)
+        print("YAML file saved.")
+
     async def initialize_system(self):
         """Initialize the entire system including memory bank and agent."""
-        self.client = await LlamaStackDirectClient.from_config("./llama_stack_run.yaml")
+        self.save_yaml()
+        self.client = await LlamaStackDirectClient.from_config(YAML_PATH)
         await self.client.initialize()
         await self.setup_memory_bank()
         await self.initialize_agent()
@@ -131,11 +195,11 @@ class LlamaChatInterface:
             print(f"Memory bank '{self.memory_bank_id}' does not exist. Creating...")
             await self.client.memory_banks.register(
                 memory_bank_id=self.memory_bank_id,
-                params={
-                    "embedding_model": "all-MiniLM-L6-v2",
-                    "chunk_size_in_tokens": 100,
-                    "overlap_size_in_tokens": 10,
-                },
+                params=VectorMemoryBankParams(
+                    embedding_model="all-MiniLM-L6-v2",
+                    chunk_size_in_tokens=100,
+                    overlap_size_in_tokens=10,
+                ),
                 provider_id=provider_id,
             )
             await self.load_documents()

@@ -6,7 +6,8 @@ Usage:
 """
 
 from setuptools import setup
-
+import sys
+sys.setrecursionlimit(5000)
 APP = ['MacQA.py']
 DATA_FILES = []
 OPTIONS = {}
