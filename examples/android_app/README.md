@@ -110,7 +110,7 @@ Once the model is successfully loaded then enter any prompt and click the send (
 
 You can provide more follow-up questions as well. The current application stores 2 rounds of previous conversations as memory. This can be adjusted with the constant `CONVERSATION_HISTORY_MESSAGE_LOOKBACK`. Since it will append message history as part of the new prompt, this will affect your time-to-first-token. For local inference, the prefill rate is usually smaller than remote inference, which means the model takes longer to process the input prompt. We recommend 2 rounds of conversation history for local inference as a moving window approach.
 
-To understand more about how we are running the inference, check the sample code in `LlamaStackLocalInference.kt` or `LlamaStackRemoteInference.kt`
+To understand more about how we are running the inference, check the sample code in `ExampleLlamaStackLocalInference.kt` or `ExampleLlamaStackRemoteInference.kt`
 
 
 
@@ -129,7 +129,7 @@ However, when you have intention to create a meeting or events, the model helps 
 <img src="./docs/gif/toolcalling.gif" style="width:300px">
 </p>
 
-Whenever the model is going to make a tool-calling, the Llama Stack Kotlin API will return details in
+Whenever the model is going to make a tool call, the Llama Stack Kotlin API will return details in
 ```
 val toolCalls = result.asChatCompletionResponse().completionMessage().toolCalls()
 ```

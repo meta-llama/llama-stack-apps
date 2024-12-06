@@ -16,7 +16,7 @@ import java.util.concurrent.CompletableFuture
 import kotlinx.datetime.Clock
 
 
-class LlamaStackRemoteInference(remoteURL: String) {
+class ExampleLlamaStackRemoteInference(remoteURL: String) {
 
     private var client: LlamaStackClientClient? = null
 

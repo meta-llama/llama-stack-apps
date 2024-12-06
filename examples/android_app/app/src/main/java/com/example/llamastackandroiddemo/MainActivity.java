@@ -75,8 +75,8 @@ public class MainActivity extends AppCompatActivity implements Runnable {
   private Runnable memoryUpdater;
   private int promptID = 0;
   private Executor executor;
-  private LlamaStackRemoteInference llamaStackRemoteInference;
-  private LlamaStackLocalInference llamaStackLocalInference;
+  private ExampleLlamaStackRemoteInference exampleLlamaStackRemoteInference;
+  private ExampleLlamaStackLocalInference exampleLlamaStackLocalInference;
 
 
   private void populateExistingMessages(String existingMsgJSON) {
@@ -171,21 +171,21 @@ public class MainActivity extends AppCompatActivity implements Runnable {
         if (!mCurrentSettingsFields.getRemoteURL().equals(updatedSettingsFields.getRemoteURL())) {
           // Remote URL changes
           AppLogging.getInstance().log(mCurrentSettingsFields.getRemoteURL() + "remote URL is changing to " + updatedSettingsFields.getRemoteURL());
-          llamaStackRemoteInference = new LlamaStackRemoteInference(updatedSettingsFields.getRemoteURL());
+          exampleLlamaStackRemoteInference = new ExampleLlamaStackRemoteInference(updatedSettingsFields.getRemoteURL());
         }
 
-        AppLogging.getInstance().log("llamaStackCloudInference " + (llamaStackRemoteInference == null) + " llamaStackLocalInference" + (llamaStackLocalInference == null));
+        AppLogging.getInstance().log("llamaStackCloudInference " + (exampleLlamaStackRemoteInference == null) + " exampleLlamaStackLocalInference" + (exampleLlamaStackLocalInference == null));
 
-        if (llamaStackRemoteInference == null && llamaStackLocalInference == null) {
+        if (exampleLlamaStackRemoteInference == null && exampleLlamaStackLocalInference == null) {
           askUserToSelectModel();
         } else {
           String message = "Models configured. You can now do ";
-          if (llamaStackLocalInference != null) {
+          if (exampleLlamaStackLocalInference != null) {
             String[] segments = updatedSettingsFields.getModelFilePath().split("/");
             String pteName = segments[segments.length - 1];
             message += "local (" + pteName + ") ";
           }
-          if (llamaStackRemoteInference != null) {
+          if (exampleLlamaStackRemoteInference != null) {
             message += "and remote (" + updatedSettingsFields.getRemoteURL() +") ";
           }
           message += " inference.";
@@ -240,11 +240,11 @@ public class MainActivity extends AppCompatActivity implements Runnable {
                   || !tokenizerPath.equals(mCurrentSettingsFields.getTokenizerFilePath())
                   || temperature != mCurrentSettingsFields.getTemperature()) {
         AppLogging.getInstance().log("UPDATING local client with new data");
-        if (llamaStackLocalInference == null) {
-          llamaStackLocalInference = new LlamaStackLocalInference(updatedSettingsFields.getModelFilePath(), updatedSettingsFields.getTokenizerFilePath(), (float) updatedSettingsFields.getTemperature());
+        if (exampleLlamaStackLocalInference == null) {
+          exampleLlamaStackLocalInference = new ExampleLlamaStackLocalInference(updatedSettingsFields.getModelFilePath(), updatedSettingsFields.getTokenizerFilePath(), (float) updatedSettingsFields.getTemperature());
         } else {
           // We already have a client, just pass in the updated model
-          llamaStackLocalInference.updateModel(updatedSettingsFields.getModelFilePath(),updatedSettingsFields.getTokenizerFilePath(), (float) updatedSettingsFields.getTemperature());
+          exampleLlamaStackLocalInference.updateModel(updatedSettingsFields.getModelFilePath(),updatedSettingsFields.getTokenizerFilePath(), (float) updatedSettingsFields.getTemperature());
         }
         updatedSettingsFields.saveLoadModelAction(false);
         AppLogging.getInstance().log(updatedSettingsFields.toString());
@@ -461,17 +461,6 @@ public class MainActivity extends AppCompatActivity implements Runnable {
             });
   }
 
-  private List<ETImage> getProcessedImagesForModel(List<Uri> uris) {
-    List<ETImage> imageList = new ArrayList<>();
-    if (uris != null) {
-      uris.forEach(
-              (uri) -> {
-                imageList.add(new ETImage(this.getContentResolver(), uri));
-              });
-    }
-    return imageList;
-  }
-
   private void showMediaPreview(List<Uri> uris) {
     if (mSelectedImageUri == null) {
       mSelectedImageUri = uris;
@@ -586,7 +575,7 @@ public class MainActivity extends AppCompatActivity implements Runnable {
     String systemPrompt = mCurrentSettingsFields.getSystemPrompt();
     String modelName = mCurrentSettingsFields.getRemoteModel();
     double temperature = mCurrentSettingsFields.getTemperature();
-    String result = llamaStackRemoteInference.inferenceStart(modelName, temperature, mMessageAdapter.getRecentSavedTextMessages(AppUtils.CONVERSATION_HISTORY_MESSAGE_LOOKBACK), systemPrompt, this);
+    String result = exampleLlamaStackRemoteInference.inferenceStart(modelName, temperature, mMessageAdapter.getRecentSavedTextMessages(AppUtils.CONVERSATION_HISTORY_MESSAGE_LOOKBACK), systemPrompt, this);
     mResultMessage.appendText(result);
   }
 
@@ -595,12 +584,12 @@ public class MainActivity extends AppCompatActivity implements Runnable {
     String modelType = mCurrentSettingsFields.getModelType().toString();
     String systemPrompt = mCurrentSettingsFields.getSystemPrompt();
     // If you want with conversation history
-     String result = llamaStackLocalInference.inferenceStart(
+     String result = exampleLlamaStackLocalInference.inferenceStart(
              modelType,
              mMessageAdapter.getRecentSavedTextMessages(AppUtils.CONVERSATION_HISTORY_MESSAGE_LOOKBACK),
              systemPrompt
      );
-    float tps = llamaStackLocalInference.getTps();
+    float tps = exampleLlamaStackLocalInference.getTps();
     mResultMessage.appendText(result);
     mResultMessage.setTokensPerSecond(tps);
   }

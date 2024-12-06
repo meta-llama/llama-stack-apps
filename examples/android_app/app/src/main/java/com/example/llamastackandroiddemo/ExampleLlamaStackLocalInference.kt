@@ -10,7 +10,7 @@ import com.llama.llamastack.models.SystemMessage
 import com.llama.llamastack.models.UserMessage
 import java.util.concurrent.CompletableFuture
 
-class LlamaStackLocalInference(
+class ExampleLlamaStackLocalInference(
     val modelPath: String,
     val tokenizerPath: String,
     val temperature: Float
@@ -31,7 +31,7 @@ class LlamaStackLocalInference(
     init {
         val thread = Thread {
             try {
-                Log.d("llama_stack","LlamaStackLocalInference init is called")
+                Log.d("llama_stack","ExampleLlamaStackLocalInference init is called")
                 client = LlamaStackClientLocalClient
                     .builder()
                     .modelPath(modelPath)
@@ -69,7 +69,6 @@ class LlamaStackLocalInference(
         val future = CompletableFuture<String>()
         val thread = Thread {
             try {
-                // Your code goes here
                 val response = inferenceCall(modelName, conversationHistory, systemPrompt).toString();
                 future.complete(response)
             } catch (e: Exception) {
