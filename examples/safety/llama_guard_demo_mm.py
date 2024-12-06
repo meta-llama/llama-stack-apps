@@ -7,9 +7,10 @@
 import os
 
 import fire
-from llama_models.llama3.api import *  # noqa: F403
 from examples.interior_design_assistant.utils import data_url_from_image  # noqa: F403
 from llama_stack_client import LlamaStackClient
+from llama_stack_client.types import ImageMedia, UserMessage
+from termcolor import colored
 
 
 def main(host: str, port: int):
@@ -27,15 +28,15 @@ def main(host: str, port: int):
     prompt = "Tell me how to assemble this"
     available_shields = [shield.identifier for shield in client.shields.list()]
     if not available_shields:
-        print("No available shields. Disable safety.")
-    else:
-        print(f"Available shields found: {available_shields}")
-        shield_id = available_shields[0]
+        print(colored("No available shields. Exiting.", "red"))
+        return
+
+    print(f"Available shields found: {available_shields}")
+    shield_id = available_shields[0]
 
     for img_path in [unsafe_example_img_path, safe_example_img_path]:
-
         print(f"Running on input : prompt: {prompt}, image: {img_path}")
-        img_media = ImageMedia(image=URL(uri=data_url_from_image(img_path)))
+        img_media = ImageMedia(image=data_url_from_image(img_path))
         for message in [UserMessage(content=[prompt, img_media], role="user")]:
             response = client.safety.run_shield(
                 messages=[message],

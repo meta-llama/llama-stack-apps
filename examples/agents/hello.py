@@ -11,21 +11,31 @@ from llama_stack_client import LlamaStackClient
 from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.lib.agents.event_logger import EventLogger
 from llama_stack_client.types.agent_create_params import AgentConfig
+from termcolor import colored
 
 
 def main(host: str, port: int):
+    if "BRAVE_SEARCH_API_KEY" not in os.environ:
+        print(
+            colored(
+                "Warning: BRAVE_SEARCH_API_KEY is not set; will not use Search tool.",
+                "yellow",
+            )
+        )
+
     client = LlamaStackClient(
         base_url=f"http://{host}:{port}",
     )
 
     available_shields = [shield.identifier for shield in client.shields.list()]
     if not available_shields:
-        print("No available shields. Disable safety.")
+        print(colored("No available shields. Disabling safety.", "yellow"))
     else:
         print(f"Available shields found: {available_shields}")
     available_models = [model.identifier for model in client.models.list()]
     if not available_models:
-        raise ValueError("No available models")
+        print(colored("No available models. Exiting.", "red"))
+        return
     else:
         selected_model = available_models[0]
         print(f"Using model: {selected_model}")
@@ -38,13 +48,17 @@ def main(host: str, port: int):
             "temperature": 1.0,
             "top_p": 0.9,
         },
-        tools=[
-            {
-                "type": "brave_search",
-                "engine": "brave",
-                "api_key": os.getenv("BRAVE_SEARCH_API_KEY"),
-            }
-        ],
+        tools=(
+            [
+                {
+                    "type": "brave_search",
+                    "engine": "brave",
+                    "api_key": os.getenv("BRAVE_SEARCH_API_KEY"),
+                }
+            ]
+            if os.getenv("BRAVE_SEARCH_API_KEY")
+            else []
+        ),
         tool_choice="auto",
         tool_prompt_format="json",
         input_shields=available_shields if available_shields else [],
