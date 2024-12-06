@@ -115,7 +115,7 @@ To understand more about how we are running the inference, check the sample code
 
 
 ### Tool Calling
-In this demo app, we also showcase a tool calling example to ask the model to help schedule calendar events with the default Android Calendar app. This is done by supplying a “special” system prompt to have the model detect the user's intention and match it to customized tools or functions provided. In our example, we defined a function called `createCalendarEvent` and the criteria to invoke it. You can learn more and define your own function in `AvailableFunction.kt`.
+In this demo app, we also showcase a tool calling example to ask the model to help schedule calendar events with the default Android Calendar app. This is done by supplying a “special” system prompt to have the model detect the user's intention and match it to customized tools or functions provided. In our example, we defined a function called `createCalendarEvent` and the criteria to invoke it. You can learn more and define your own function in `AvailableFunction.kt`. Tool calling currently works with remote inference only. We are adding the capability to local inference.
 
 When using the demo app, you can chat with the model like normal. 
 
