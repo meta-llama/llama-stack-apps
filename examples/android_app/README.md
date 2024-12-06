@@ -33,7 +33,8 @@ For on-device, here is the list of models we support currently and growing:
 ## Building and Run the Demo App
 1. Clone the repo
 2. Open the project in Android Studio
-3. Download .aar file for local inference. From [llama-stack-client-kotlin](https://github.com/meta-llama/llama-stack-client-kotlin/tree/release/0.0.54) release/0.0.54, run the following and copy the downloaded AAR file to the `example/android_app/app/libs` directory for the Android demo app.
+3. Add .aar file for local inference: Use and download the `download-prebuilt-et-lib.sh` script file from the [llama-stack-client-kotlin-client-local](https://github.com/meta-llama/llama-stack-client-kotlin/blob/release/0.0.54/llama-stack-client-kotlin-client-local/download-prebuilt-et-lib.sh) directory to your local machine. Place the script in the top level of your Android app where the `app/` directory resides.
+
 ```
 cd llama-stack-client-kotlin-client-local 
 sh download-prebuilt-et-lib.sh
