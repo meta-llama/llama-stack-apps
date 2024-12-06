@@ -3,3 +3,6 @@ mesop
 python-dotenv
 setuptools
 yfinance
+gradio
+llama-stack>=0.0.57
+llama-stack-client>=0.0.57
