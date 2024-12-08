@@ -61,6 +61,16 @@ class InterioAgent:
         assert (
             self.agent_id is not None
         ), "Agent not initialized, call initialize() first"
+
+        response_format = {
+            "type": "object",
+            "properties": {
+                "description": {"type": "string"},
+                "items": {"type": "array", "items": {"type": "string"}},
+            },
+            "required": ["description", "items"]
+        }
+
         text = textwrap.dedent(
             """
             Analyze the image to provide a 4 sentence description of the architecture and furniture items present in it.
@@ -95,6 +105,7 @@ class InterioAgent:
             session_id=resposne.session_id,
             messages=[message],
             stream=True,
+            response_format=response_format,
         )
 
         result = ""
@@ -106,8 +117,8 @@ class InterioAgent:
 
         # print(turn.output_message.content)
         result = turn.output_message.content
-        d = json.loads(result.strip())
-        return d
+        return json.loads(result)
+        
 
     async def suggest_alternatives(
         self, file_path: str, item: str, n: int = 3
@@ -116,6 +127,16 @@ class InterioAgent:
         Analyze the image using multimodal llm
         and return possible alternative descriptions for the provided item.
         """
+        response_format = {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "description": {"type": "string"}
+                },
+                "required": ["description"]
+            }
+        }
         prompt = textwrap.dedent(
             """
             For the given image, your task is to carefully examine the image to provide alternative suggestions for {item}.
@@ -154,11 +175,13 @@ class InterioAgent:
             agent_id=self.agent_id,
             session_name=uuid.uuid4().hex,
         )
+
         generator = self.client.agents.turn.create(
             agent_id=self.agent_id,
             session_id=resposne.session_id,
             messages=[message],
             stream=True,
+            response_format=response_format,
         )
         result = ""
         for chunk in generator:
@@ -167,8 +190,8 @@ class InterioAgent:
                 turn = payload.turn
 
         result = turn.output_message.content
-        print(result)
-        return [r["description"].strip() for r in json.loads(result.strip())]
+        print(result)  
+        return [r["description"] for r in json.loads(result)]
 
     async def retrieve_images(self, description: str) -> List[ImageMedia]:
         """
