@@ -111,7 +111,7 @@ public class MessageAdapter extends ArrayAdapter<Message> {
             numOfLatestPromptMessages--;
             oldPromptID = messageToAdd.getPromptID();
           }
-          if (numOfLatestPromptMessages > 0) {
+          if (numOfLatestPromptMessages >= 0) {
             if (messageToAdd.getMessageType() == MessageType.TEXT && !messageToAdd.getText().isEmpty()) {
               recentMessages.add(messageToAdd);
             }
