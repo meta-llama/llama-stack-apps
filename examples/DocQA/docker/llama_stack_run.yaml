@@ -13,7 +13,7 @@ apis:
 - safety
 providers:
   inference:
-  - provider_id: remote::ollama
+  - provider_id: ollama
     provider_type: remote::ollama
     config:
       url: http://127.0.0.1:14343
@@ -45,7 +45,7 @@ metadata_store: null
 models:
 - metadata: {}
   model_id: meta-llama/Llama-3.2-1B-Instruct
-  provider_id: null
+  provider_id: ollama
   provider_model_id: llama3.2:1b-instruct-fp16
 shields: []
 memory_banks: []

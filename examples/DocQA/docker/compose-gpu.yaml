@@ -34,9 +34,11 @@ services:
     restart: always
     entrypoint: ["bash", "/root/ollama_start.sh"]
   llamastack:
-    image: llamastack/distribution-ollama:0.0.56
+    image: llamastack/distribution-ollama:0.0.57
     env_file: "docqa_env"
     network_mode: "host"
+    environment:
+      - LLAMA_STACK_PORT=${LLAMA_STACK_PORT}
     tty: true
     volumes:
       - ~/.llama:/root/.llama
@@ -46,11 +48,10 @@ services:
       - ${DOC_PATH}:/root/rag_data/
       - ./llama_stack_start.sh:/root/llama_stack_start.sh
     ports:
-      - "5000:5000" # for llama-stack
+      - "${LLAMA_STACK_PORT}:${LLAMA_STACK_PORT}" # for llama-stack
       - "7860:7860" # for UI
     # Hack: wait for ollama server to start before starting docker
     entrypoint: ["bash", "/root/llama_stack_start.sh"]
-    #entrypoint: bash -c "sleep 60; python -m llama_stack.distribution.server.server --yaml_config /root/my-run.yaml"
     deploy:
       restart_policy:
         condition: "no"

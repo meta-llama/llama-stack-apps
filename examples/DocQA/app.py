@@ -138,11 +138,11 @@ class LlamaChatInterface:
         """Initialize the agent with model registration and configuration."""
 
         if "1b" in MODEL_NAME:
-            model_name = "Llama3.2-1B-Instruct"
+            model_name = "meta-llama/Llama-3.2-1B-Instruct"
         elif "3b" in MODEL_NAME:
-            model_name = "Llama3.2-3B-Instruct"
+            model_name = "meta-llama/Llama-3.2-3B-Instruct"
         elif "8b" in MODEL_NAME:
-            model_name = "Llama3.1-8B-Instruct"
+            model_name = "meta-llama/Llama-3.1-8B-Instruct"
         else:
             model_name = MODEL_NAME
 
