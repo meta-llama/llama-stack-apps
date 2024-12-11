@@ -19,33 +19,37 @@ import java.util.TimeZone
 //Tool calling helper functions
 
 fun functionDispatch(toolCalls:List<ToolCall>, ctx: Context): String {
+    var response = ""
     // Dispatch the function call based on model responses
     val availableFunctions = AvailableFunctions.getInstance()
     val functionNames = availableFunctions.keys()
 
-    // Unwrap only the first tool call. This example only support one tool call at a time
-    val toolCall = toolCalls[0]
-    val toolName = toolCall.toolName().toString()
-    val properties = toolCall.arguments()._additionalProperties()
-
-    for (name in functionNames) {
-        if (toolName == name) {
-            return when(name) {
-                "createCalendarEvent" -> createCalendarEvent(
-                    properties["title"].toString(),
-                    properties["description"].toString(),
-                    properties["startDate"].toString(),
-                    properties["endDate"].toString(),
-                    properties["startTime"].toString(),
-                    properties["endTime"].toString(),
-                    ctx
-                )
-                else -> "Function in registry but execution is not implemented. Add your function in the AvailableFunctions.kt"
+    for (toolCall in toolCalls) {
+        val toolName = toolCall.toolName().toString()
+        val properties = toolCall.arguments()._additionalProperties()
+        for (name in functionNames) {
+            if (toolName == name) {
+                response += when (name) {
+                    "createCalendarEvent" -> createCalendarEvent(
+                        properties["title"].toString(),
+                        properties["description"].toString(),
+                        properties["startDate"].toString(),
+                        properties["endDate"].toString(),
+                        properties["startTime"].toString(),
+                        properties["endTime"].toString(),
+                        ctx
+                    )
+                    else -> "Function in registry but execution is not implemented. Add your function in the AvailableFunctions.kt"
+                } + "\n"
             }
-
         }
     }
-    return "Function is not registered and cannot be recognized. Please Add your function in the AvailableFunctions.kt and provide implementation"
+    return if(response.isEmpty()){
+        "Function is not registered and cannot be recognized. Please Add your function in the AvailableFunctions.kt and provide implementation"
+    } else{
+        // remove hanging "\n"
+        response.dropLast(1)
+    }
 }
 
 private fun createCalendarEvent(title:String, description: String, startDate:String, endDate:String, startTime:String, endTime:String, ctx: Context): String {
