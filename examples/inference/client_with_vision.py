@@ -40,7 +40,7 @@ async def run_main(host: str, port: int, stream: bool = True):
     if not stream:
         cprint(f"> Response: {response}", "cyan")
     else:
-        async for log in EventLogger().log(response):
+        for log in EventLogger().log(response):
             log.print()
 
     # query models endpoint
