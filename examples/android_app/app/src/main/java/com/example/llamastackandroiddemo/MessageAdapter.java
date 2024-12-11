@@ -95,8 +95,9 @@ public class MessageAdapter extends ArrayAdapter<Message> {
   public ArrayList<Message> getRecentSavedTextMessages(int numOfLatestPromptMessages) {
     ArrayList<Message> recentMessages = new ArrayList<Message>();
 
-    // We don't want the "last" empty prompt response message that is yet to generate
-    int lastIndex = savedMessages.size() - 1;
+    // We don't want the "last" empty prompt response message that is yet to generate.
+    // -1 to get last index and another -1 to exclude the above. Therefore -2.
+    int lastIndex = savedMessages.size() - 2;
 
     // In most cases lastIndex >=0 .
     // A situation where the user clears chat history and enters prompt. Causes lastIndex=-1 .
@@ -104,7 +105,7 @@ public class MessageAdapter extends ArrayAdapter<Message> {
       Message messageToAdd = savedMessages.get(lastIndex);
       int oldPromptID = messageToAdd.getPromptID();
 
-      for (int i = 0; i < savedMessages.size(); i++) {
+      for (int i = 0; i < savedMessages.size() - 1; i++) {
         messageToAdd = savedMessages.get(lastIndex - i);
         if (messageToAdd.getMessageType() != MessageType.SYSTEM) {
           if (messageToAdd.getPromptID() != oldPromptID) {

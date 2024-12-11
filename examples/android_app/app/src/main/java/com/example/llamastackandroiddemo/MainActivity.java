@@ -77,6 +77,7 @@ public class MainActivity extends AppCompatActivity implements Runnable {
   private Executor executor;
   private ExampleLlamaStackRemoteInference exampleLlamaStackRemoteInference;
   private ExampleLlamaStackLocalInference exampleLlamaStackLocalInference;
+  private String RESULT_MSG_WHILE_BUSY = "...";
 
 
   private void populateExistingMessages(String existingMsgJSON) {
@@ -528,7 +529,7 @@ public class MainActivity extends AppCompatActivity implements Runnable {
               mMessageAdapter.add(new Message(rawPrompt, true, MessageType.TEXT, promptID));
               mMessageAdapter.notifyDataSetChanged();
               mEditTextMessage.setText("");
-              mResultMessage = new Message("", false, MessageType.TEXT, promptID);
+              mResultMessage = new Message(RESULT_MSG_WHILE_BUSY, false, MessageType.TEXT, promptID);
               mMessageAdapter.add(mResultMessage);
               // Scroll to bottom of the list
               mMessagesView.smoothScrollToPosition(mMessageAdapter.getCount() - 1);
@@ -576,7 +577,7 @@ public class MainActivity extends AppCompatActivity implements Runnable {
     String modelName = mCurrentSettingsFields.getRemoteModel();
     double temperature = mCurrentSettingsFields.getTemperature();
     String result = exampleLlamaStackRemoteInference.inferenceStart(modelName, temperature, mMessageAdapter.getRecentSavedTextMessages(AppUtils.CONVERSATION_HISTORY_MESSAGE_LOOKBACK), systemPrompt, this);
-    mResultMessage.appendText(result);
+    mResultMessage.setText(result);
   }
 
   public void localLlamaStackModeGeneration(String rawPrompt) {
@@ -591,7 +592,7 @@ public class MainActivity extends AppCompatActivity implements Runnable {
              this
      );
     float tps = exampleLlamaStackLocalInference.getTps();
-    mResultMessage.appendText(result);
+    mResultMessage.setText(result);
     mResultMessage.setTokensPerSecond(tps);
   }
 
