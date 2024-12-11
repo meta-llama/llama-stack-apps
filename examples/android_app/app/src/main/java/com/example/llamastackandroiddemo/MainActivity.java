@@ -50,7 +50,7 @@ import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-public class MainActivity extends AppCompatActivity implements Runnable {
+public class MainActivity extends AppCompatActivity implements Runnable, InferenceStreamingCallback {
   private EditText mEditTextMessage;
   private ImageButton mSendButton;
   private ImageButton mGalleryButton;
@@ -575,7 +575,13 @@ public class MainActivity extends AppCompatActivity implements Runnable {
     String systemPrompt = mCurrentSettingsFields.getSystemPrompt();
     String modelName = mCurrentSettingsFields.getRemoteModel();
     double temperature = mCurrentSettingsFields.getTemperature();
-    String result = exampleLlamaStackRemoteInference.inferenceStart(modelName, temperature, mMessageAdapter.getRecentSavedTextMessages(AppUtils.CONVERSATION_HISTORY_MESSAGE_LOOKBACK), systemPrompt, this);
+    String result = exampleLlamaStackRemoteInference.inferenceStart(
+            modelName,
+            temperature,
+            mMessageAdapter.getRecentSavedTextMessages(AppUtils.CONVERSATION_HISTORY_MESSAGE_LOOKBACK),
+            systemPrompt,
+            this
+    );
     mResultMessage.appendText(result);
   }
 
@@ -624,4 +630,15 @@ public class MainActivity extends AppCompatActivity implements Runnable {
     // never clicked on the logsActivity
     AppLogging.getInstance().saveLogs();
   }
+
+  @Override
+  public void onStreamReceived(@NonNull String message) {
+    AppLogging.getInstance().log("this is stream received: " + message);
+    runOnUiThread(
+            () -> {
+              mResultMessage.appendText(message);
+              mMessageAdapter.notifyDataSetChanged();
+            });
+  }
+
 }
