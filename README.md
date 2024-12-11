@@ -55,7 +55,7 @@ This will install all dependencies required to (1) Build and start a Llama Stack
 
 
 ### 2. Starting a Llama Stack Server
-- Please see our [llama-stack](https://github.com/meta-llama/llama-stack) repo's [Getting Started Guide](https://llama-stack.readthedocs.io/en/doc-simplify/getting_started/index.html) for setting up a Llama Stack distribution and running server to serve API endpoints. You should have a server endpoint for building your client apps.
+- Please see our [llama-stack](https://github.com/meta-llama/llama-stack) repo's [Getting Started Guide](https://llama-stack.readthedocs.io/en/latest/getting_started/index.html) for setting up a Llama Stack distribution and running server to serve API endpoints. You should have a server endpoint for building your client apps.
 
 Once your your server started, you should have see outputs --
 ```

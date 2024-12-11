@@ -6,8 +6,9 @@
 
 
 import fire
-from llama_models.llama3.api import *  # noqa: F403
 from llama_stack_client import LlamaStackClient
+from llama_stack_client.types import UserMessage
+from termcolor import colored
 
 
 def main(host: str, port: int):
@@ -35,13 +36,13 @@ def main(host: str, port: int):
     ]
     available_shields = [shield.identifier for shield in client.shields.list()]
     if not available_shields:
-        print("No available shields. Disable safety.")
-    else:
-        print(f"Available shields found: {available_shields}")
-        shield_id = available_shields[0]
+        print(colored("No available shields. Exiting.", "red"))
+        return
+
+    print(f"Available shields found: {available_shields}")
+    shield_id = available_shields[0]
 
     for p in safe_examples + unsafe_examples:
-
         print(f"Running on input : {p}")
         for message in [UserMessage(content=[p], role="user")]:
             response = client.safety.run_shield(

@@ -14,24 +14,36 @@ from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.lib.agents.event_logger import EventLogger
 from llama_stack_client.types import Attachment
 from llama_stack_client.types.agent_create_params import AgentConfig
+from termcolor import colored
 
 
 async def run_main(host: str, port: int, disable_safety: bool = False):
+    if "BRAVE_SEARCH_API_KEY" not in os.environ:
+        print(
+            colored(
+                "You must set the BRAVE_SEARCH_API_KEY environment variable to use the Search tool which is required for this example.",
+                "red",
+            )
+        )
+        return
+
     client = LlamaStackClient(
         base_url=f"http://{host}:{port}",
     )
 
     available_shields = [shield.identifier for shield in client.shields.list()]
     if not available_shields:
-        print("No available shields. Disable safety.")
+        print(colored("No available shields. Disabling safety.", "yellow"))
     else:
         print(f"Available shields found: {available_shields}")
     available_models = [model.identifier for model in client.models.list()]
     if not available_models:
-        raise ValueError("No available models")
-    else:
-        selected_model = available_models[0]
-        print(f"Using model: {selected_model}")
+        print(colored("No available models. Exiting.", "red"))
+        return
+
+    selected_model = available_models[0]
+    print(f"Using model: {selected_model}")
+
     agent_config = AgentConfig(
         model=selected_model,
         instructions="You are a helpful assistant",
