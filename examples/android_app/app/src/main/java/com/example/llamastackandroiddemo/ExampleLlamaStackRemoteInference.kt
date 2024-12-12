@@ -108,8 +108,19 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
                 val callback = ctx as InferenceStreamingCallback
                 result.use {
                     result.asSequence().forEach {
-                        println(it)
-                        callback.onStreamReceived(it.asChatCompletionResponseStreamChunk().event().delta().string().toString())
+                        val delta = it.asChatCompletionResponseStreamChunk().event().delta()
+                        if (delta.isToolCallDelta()) {
+                            val toolCall = delta.toolCallDelta()?.content()?.toolCall()
+                            if (toolCall != null) {
+                                callback.onStreamReceived("\n" + functionDispatch(listOf(toolCall), ctx))
+                            } else {
+                                callback.onStreamReceived("\n" + "Empty tool call. File a bug")
+                            }
+
+                        }
+                        if (it.asChatCompletionResponseStreamChunk().event().stopReason().toString() != "end_of_turn") {
+                            callback.onStreamReceived(it.asChatCompletionResponseStreamChunk().event().delta().string().toString())
+                        }
                     }
                 }
             } else {
@@ -128,7 +139,7 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
                 )
                 response = result.asChatCompletionResponse().completionMessage().content().string().toString();
                 if (response == "") {
-                    //Empty content as Llama Stack is returning a tool call
+                    //Empty content as Llama Stack is returning a tool call in non-streaming mode
                     val toolCalls = result.asChatCompletionResponse().completionMessage().toolCalls()
                     return if (toolCalls.isNotEmpty()) {
                         functionDispatch(toolCalls, ctx)
@@ -136,15 +147,12 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
                         "Empty tool calls and model response. File a bug"
                     }
                 }
-                else {
-                    return response;
-                }
             }
         } catch (e : Exception) {
             AppLogging.getInstance().log("Exception on remote inference " + e.message);
-            response = e.message.toString() + ". Check if your remote URL is accessible."
+            return "Exception on remote inference " + e.message
         }
-        return response;
+        return response
     }
 
 
