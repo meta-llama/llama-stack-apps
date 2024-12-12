@@ -1,19 +1,21 @@
 # Llama Stack Android Demo App
 
+[![Maven Central Version](https://img.shields.io/badge/maven%20central-v0.0.58-8A2BE2)](https://central.sonatype.com/artifact/com.llama.llamastack/llama-stack-client-kotlin/0.0.58)
+
 We’re excited to share this Android demo app using both remote and local Llama Stack features! The primary goal of this app is to showcase how to easily build Android apps with Llama models using Llama Stack SDKs in a chat app setup.
 
 This app serves as a valuable resource to inspire your creativity and provide foundational code that you can customize and adapt for your particular use case.
 
 Please dive in and start exploring our demo app today! We look forward to any feedback and are excited to see your innovative ideas to build agentic apps with Llama models. The current demo app is built using both Java and Kotlin. The majority of the activities are built with Java but the interfacing with Llama Stack APIs are in Kotlin. 
 
-NOTE: The current app release is intended to work with Llama Stack Kotlin SDK v0.0.54.1 and Llama Stack v0.0.54. We haven’t tested other versions or combinations. 
+NOTE: The current app release is intended to work with Llama Stack Kotlin SDK v0.0.58 and Llama Stack v0.0.58. We haven’t tested other versions or combinations. 
 
 
 ## Key Concepts
 From this demo app, you will learn many key concepts such as:
 * Building a GenAI Android app with Llama Stack libraries
 * Run inference with Llama Stack Kotlin SDK remotely (via various adapters) and on-device (via ExecuToch with XNNPACK)
-* Use Llama model’s tool-calling features
+* Use Llama model’s custom tool-calling features on both local and remote
 * Local memories for conversational history
 
 The goal is for you to see the type of support Llama Stack Kotlin SDK provides and feel comfortable with leveraging it for your use cases.
@@ -33,7 +35,7 @@ For on-device, here is the list of models we support currently and growing:
 ## Building and Run the Demo App
 1. Clone the repo
 2. Open the project in Android Studio
-3. Add .aar file for local inference: Use and download the `download-prebuilt-et-lib.sh` script file from the [llama-stack-client-kotlin-client-local](https://github.com/meta-llama/llama-stack-client-kotlin/blob/release/0.0.54/llama-stack-client-kotlin-client-local/download-prebuilt-et-lib.sh) directory to your local machine. Place the script in the top level of your Android app where the `app/` directory resides.
+3. Add .aar file for local inference: Use and download the `download-prebuilt-et-lib.sh` script file from the [llama-stack-client-kotlin-client-local](https://github.com/meta-llama/llama-stack-client-kotlin/blob/release/0.0.58/llama-stack-client-kotlin-client-local/download-prebuilt-et-lib.sh) directory to your local machine. Place the script in the top level of your Android app where the `app/` directory resides.
 
 ```
 # downloads the executorch.aar and places it in the newly created directory app/libs
@@ -46,7 +48,7 @@ sh download-prebuilt-et-lib.sh
 The demo app automatically downloads Llama Stack Kotlin SDK from Maven based on this configuration in `build.gradle.kts`: 
 
 ```
-implementation("com.llama.llamastack:llama-stack-client-kotlin:0.0.54.1")
+implementation("com.llama.llamastack:llama-stack-client-kotlin:0.0.58")
 ```
 
 
@@ -89,7 +91,7 @@ adb push tokenizer.bin /data/local/tmp/llama
 * Make sure the mode selector is in `Local`.  Otherwise if you see `Remote` tap it to switch to `Local`.
 
 For remote inference:
-* Launch a Llama Stack server on localhost (we used fireworks and hf-serverless as the distributor) - [Tutorial](https://github.com/meta-llama/llama-stack-client-kotlin/tree/release/0.0.54?tab=readme-ov-file#setup-remote-inferencing)
+* Launch a Llama Stack server on localhost (we used fireworks and hf-serverless as the distributor) - [Tutorial](https://github.com/meta-llama/llama-stack-client-kotlin/tree/release/0.0.58?tab=readme-ov-file#setup-remote-inferencing)
 * On another terminal window, `adb reverse tcp:5050 tcp:5050` where 5050 is the port number, change this to whichever one you use/create in your main llama stack flow
 * Select your Model under the Remote Inference section. For example: meta-llama/Llama-3.2-3B-Instruct
 * Provide the Llama Stack server endpoint in Remote URL. For example: http://localhost:5050
@@ -144,4 +146,3 @@ Llama Stack Kotlin SDK also offers agentic components such as MemoryBank for bui
 
 ## Reporting Issues
 If you encountered any bugs or issues following this tutorial please file a bug/issue here on [Github](https://github.com/meta-llama/llama-stack-apps/issues/).
-
