@@ -587,13 +587,14 @@ public class MainActivity extends AppCompatActivity implements Runnable, Inferen
 
   public void localLlamaStackModeGeneration(String rawPrompt) {
     AppLogging.getInstance().log("Running inference locally.. raw prompt=" + rawPrompt);
-    String modelType = mCurrentSettingsFields.getModelType().toString();
+    String modelName = mCurrentSettingsFields.getModelType().toString();
     String systemPrompt = mCurrentSettingsFields.getSystemPrompt();
     // If you want with conversation history
      String result = exampleLlamaStackLocalInference.inferenceStart(
-             modelType,
+             modelName,
              mMessageAdapter.getRecentSavedTextMessages(AppUtils.CONVERSATION_HISTORY_MESSAGE_LOOKBACK),
-             systemPrompt
+             systemPrompt,
+             this
      );
     float tps = exampleLlamaStackLocalInference.getTps();
     mResultMessage.appendText(result);

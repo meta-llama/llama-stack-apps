@@ -62,6 +62,10 @@ public class Message {
     this.text += text;
   }
 
+  public void setText(String text) {
+    this.text = text;
+  }
+
   public boolean getIsSent() {
     return isSent;
   }
