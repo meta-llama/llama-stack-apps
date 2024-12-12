@@ -48,7 +48,7 @@ fun functionDispatch(toolCalls:List<ToolCall>, ctx: Context): String {
         "Function is not registered and cannot be recognized. Please Add your function in the AvailableFunctions.kt and provide implementation"
     } else{
         // remove hanging "\n"
-        response.dropLast(1)
+        response.removeSuffix("\n")
     }
 }
 
