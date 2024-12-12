@@ -8,13 +8,16 @@ import com.llama.llamastack.models.InferenceChatCompletionParams
 import com.llama.llamastack.models.SamplingParams
 import com.llama.llamastack.models.SystemMessage
 import com.llama.llamastack.models.UserMessage
+import kotlinx.datetime.Clock
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.CompletableFuture
-import kotlinx.datetime.Clock
 
+interface InferenceStreamingCallback {
+    fun onStreamReceived(message: String)
+}
 
 class ExampleLlamaStackRemoteInference(remoteURL: String) {
 
@@ -69,7 +72,7 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
 
         val thread = Thread {
             try {
-                val response = inferenceCall(modelName, temperature, prompt, sysPrompt, ctx);
+                val response = inferenceCall(modelName, temperature, prompt, sysPrompt, ctx, true);
                 future.complete(response)
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -80,7 +83,7 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
 
     }
 
-    private fun inferenceCall(modelName: String, temperature: Double, conversationHistory: ArrayList<Message>, systemPrompt: String, ctx: Context): String {
+    private fun inferenceCall(modelName: String, temperature: Double, conversationHistory: ArrayList<Message>, systemPrompt: String, ctx: Context, streaming: Boolean): String {
         if (client == null) {
             AppLogging.getInstance().log("client is null for remote inference");
             return "[ERROR] client is null for remote inference"
@@ -88,38 +91,68 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
 
         var response = ""
         try {
-            val result = client!!.inference().chatCompletion(
-                InferenceChatCompletionParams.builder()
-                    .modelId(modelName)
-                    .samplingParams(
-                        SamplingParams.builder()
-                            .temperature(temperature)
-                            .build()
-                    )
-                    .messages(
-                        constructLSMessagesFromConversationHistoryAndSystemPrompt(conversationHistory, systemPrompt)
-                    )
-                    .build()
-            )
-            response =
-                result.asChatCompletionResponse().completionMessage().content().string().toString();
-            if (response == "") {
-                //Empty content as Llama Stack is returning a tool call
-                val toolCalls = result.asChatCompletionResponse().completionMessage().toolCalls()
-                return if (toolCalls.isNotEmpty()) {
-                    functionDispatch(toolCalls, ctx)
-                } else {
-                    "Empty tool calls and model response. File a bug"
+            if (streaming) {
+                val result = client!!.inference().chatCompletionStreaming(
+                    InferenceChatCompletionParams.builder()
+                        .modelId(modelName)
+                        .samplingParams(
+                            SamplingParams.builder()
+                                .temperature(temperature)
+                                .build()
+                        )
+                        .messages(
+                            constructLSMessagesFromConversationHistoryAndSystemPrompt(conversationHistory, systemPrompt)
+                        )
+                        .build()
+                )
+                val callback = ctx as InferenceStreamingCallback
+                result.use {
+                    result.asSequence().forEach {
+                        val delta = it.asChatCompletionResponseStreamChunk().event().delta()
+                        if (delta.isToolCallDelta()) {
+                            val toolCall = delta.toolCallDelta()?.content()?.toolCall()
+                            if (toolCall != null) {
+                                callback.onStreamReceived("\n" + functionDispatch(listOf(toolCall), ctx))
+                            } else {
+                                callback.onStreamReceived("\n" + "Empty tool call. File a bug")
+                            }
+
+                        }
+                        if (it.asChatCompletionResponseStreamChunk().event().stopReason().toString() != "end_of_turn") {
+                            callback.onStreamReceived(it.asChatCompletionResponseStreamChunk().event().delta().string().toString())
+                        }
+                    }
                 }
-            }
-            else {
-                return response;
+            } else {
+                val result = client!!.inference().chatCompletion(
+                    InferenceChatCompletionParams.builder()
+                        .modelId(modelName)
+                        .samplingParams(
+                            SamplingParams.builder()
+                                .temperature(temperature)
+                                .build()
+                        )
+                        .messages(
+                            constructLSMessagesFromConversationHistoryAndSystemPrompt(conversationHistory, systemPrompt)
+                        )
+                        .build()
+                )
+                response = result.asChatCompletionResponse().completionMessage().content().string().toString();
+                if (response == "") {
+                    //Empty content as Llama Stack is returning a tool call in non-streaming mode
+                    val toolCalls = result.asChatCompletionResponse().completionMessage().toolCalls()
+                    return if (toolCalls.isNotEmpty()) {
+                        functionDispatch(toolCalls, ctx)
+                    } else {
+                        "Empty tool calls and model response. File a bug"
+                    }
+                }
             }
         } catch (e : Exception) {
             AppLogging.getInstance().log("Exception on remote inference " + e.message);
-            response = e.message.toString() + ". Check if your remote URL is accessible."
+            return "Exception on remote inference " + e.message
         }
-        return response;
+        return response
     }
 
 
