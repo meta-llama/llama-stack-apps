@@ -33,8 +33,6 @@ python -m examples.agents.vacation localhost 5000
 
 ### Simple API Scripts
 ```
-python -m examples.inference.client localhost 5000
-python -m examples.memory.client localhost 5000
 python -m examples.safety.llama_guard_demo localhost 5000
 ```
 
