@@ -6,8 +6,10 @@
 import pytest
 from llama_stack_client import LlamaStackClient
 
+from .env import get_env_or_fail
+
 
 @pytest.fixture
 def llama_stack_client():
     """Fixture to create a fresh LlamaStackClient instance for each test"""
-    return LlamaStackClient(base_url="http://localhost:5000")
+    return LlamaStackClient(base_url=get_env_or_fail("LLAMA_STACK_BASE_URL"))
