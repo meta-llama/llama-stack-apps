@@ -41,7 +41,7 @@ async def test_create_agent_turn():
     )
 
     agent_config = AgentConfig(
-        model="Llama3.1-8B-Instruct",
+        model="meta-llama/Llama-3.1-8B-Instruct",
         instructions="You are a helpful assistant",
         sampling_params={
             "strategy": "greedy",
@@ -51,8 +51,8 @@ async def test_create_agent_turn():
         tools=[],
         tool_choice="auto",
         tool_prompt_format="json",
-        input_shields=["llama_guard"],
-        output_shields=["llama_guard"],
+        input_shields=["meta-llama/Llama-Guard-3-8B"],
+        output_shields=["meta-llama/Llama-Guard-3-8B"],
         enable_session_persistence=False,
     )
 
@@ -101,7 +101,7 @@ async def test_builtin_tool_brave_search():
     )
 
     agent_config = AgentConfig(
-        model="Llama3.1-8B-Instruct",
+        model="meta-llama/Llama-3.1-8B-Instruct",
         instructions="You are a helpful assistant",
         sampling_params={
             "strategy": "greedy",
@@ -207,7 +207,7 @@ async def test_custom_tool():
     )
 
     agent_config = AgentConfig(
-        model="Llama3.2-3B-Instruct",
+        model="meta-llama/Llama-3.2-3B-Instruct",
         instructions="You are a helpful assistant",
         sampling_params={
             "strategy": "greedy",
