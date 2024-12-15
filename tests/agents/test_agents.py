@@ -15,7 +15,11 @@ from .get_boiling_point_tool import GetBoilingPointTool
 
 
 def get_agent_config_with_available_models_shields(llama_stack_client):
-    available_models = [model.identifier for model in llama_stack_client.models.list()]
+    available_models = [
+        model.identifier
+        for model in llama_stack_client.models.list()
+        if model.identifier.startswith("meta-llama")
+    ]
     model_id = available_models[0]
     available_shields = [
         shield.identifier for shield in llama_stack_client.shields.list()
