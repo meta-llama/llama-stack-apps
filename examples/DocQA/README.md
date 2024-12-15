@@ -20,7 +20,7 @@ The above is the workflow diagram for this RAG app. To run the app, please read 
 
 ```bash
 cd docker
-cp docqa_env_template docqv_env
+cp docqa_env_template docqa_env
 ```
 
 2. Then update `model_name` and `document_path` accordingly in your `docqv_env`, for example:
