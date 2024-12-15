@@ -16,14 +16,14 @@ For Mac and Windows users, you need to start the Docker app manually after insta
 
 The above is the workflow diagram for this RAG app. To run the app, please read the following instructions:
 
-1. Copy the template configuration file `docqa_env_template` to create your own `docqv_env` inside the docker folder:
+1. Copy the template configuration file `docqa_env_template` to create your own `docqa_env` inside the docker folder:
 
 ```bash
 cd docker
 cp docqa_env_template docqa_env
 ```
 
-2. Then update `model_name` and `document_path` accordingly in your `docqv_env`, for example:
+2. Then update `model_name` and `document_path` accordingly in your `docqa_env`, for example:
 
 ```
 DOC_PATH=/path/to/your/llama-stack-apps/examples/DocQA/example_data
