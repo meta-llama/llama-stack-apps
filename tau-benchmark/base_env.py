@@ -4,8 +4,6 @@
 # This source code is licensed under the terms described in the LICENSE file in
 # the root directory of this source tree.
 
-from typing import Any, Dict
-
 from .envs.retail.data import load_data as load_retail_data
 
 
@@ -17,8 +15,8 @@ class BaseEnv:
         else:
             raise ValueError(f"Invalid environment name: {env_name}")
 
-    def get_env_name(self) -> str:
-        return self.env_name
+    def reset(self):
+        self.data = load_retail_data()
 
-    def get_data(self) -> Dict[str, Any]:
-        return self.data
+    def __eq__(self, other):
+        return self.data == other.data
