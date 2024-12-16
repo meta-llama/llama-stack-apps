@@ -68,7 +68,9 @@ class ExchangeDeliveredOrderItemsTool(BaseTool):
         if isinstance(item_ids, str) and isinstance(new_item_ids, str):
             try:
                 item_ids = eval(item_ids)
+                item_ids = [str(item_id) for item_id in item_ids]
                 new_item_ids = eval(new_item_ids)
+                new_item_ids = [str(item_id) for item_id in new_item_ids]
             except Exception as e:
                 return f"Error: invalid item ids: {e}"
 
