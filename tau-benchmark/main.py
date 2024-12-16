@@ -78,5 +78,13 @@ def run_single_task(
     agent.env.reset()
 
 
+def main(task_idx: int = 0, user_type: str = "simulated", verbose: bool = True):
+    if task_idx < 0:
+        for task_idx in range(len(TASKS_DEV)):
+            run_single_task(task_idx, user_type, verbose)
+    else:
+        run_single_task(task_idx, user_type, verbose)
+
+
 if __name__ == "__main__":
-    fire.Fire(run_single_task)
+    fire.Fire(main)
