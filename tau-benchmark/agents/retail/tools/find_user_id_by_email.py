@@ -9,10 +9,10 @@ from llama_stack_client.types.tool_param_definition_param import (
     ToolParamDefinitionParam,
 )
 
-from .base import BaseRetailTool
+from ....base_tool import BaseTool
 
 
-class FindUserIdByEmailTool(BaseRetailTool):
+class FindUserIdByEmailTool(BaseTool):
     def get_name(self) -> str:
         return "find_user_id_by_email"
 

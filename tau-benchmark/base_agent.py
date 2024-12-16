@@ -5,6 +5,7 @@
 # the root directory of this source tree.
 
 import uuid
+from typing import List
 
 from llama_stack_client import LlamaStackClient
 from llama_stack_client.lib.agents.agent import Agent
@@ -15,40 +16,23 @@ from llama_stack_client.types.agents.turn_create_response import (
     AgentTurnResponseStreamChunk,
 )
 
-from ..envs.database import RetailDatabaseEnv
-
-from .configs.wiki import WIKI
-from .tools.calculate import CalculateTool
-from .tools.cancel_pending_order import CancelPendingOrderTool
-from .tools.find_user_id_by_email import FindUserIdByEmailTool
+from .base_env import BaseEnv
+from .base_tool import BaseTool
 
 
-class RetailAgent:
-    def __init__(self):
+class TauAgent:
+    def __init__(
+        self,
+        env: BaseEnv,
+        tools: List[BaseTool],
+        agent_config: AgentConfig,
+    ):
         self.client = LlamaStackClient(
             base_url="http://localhost:5000",
         )
-        self.database = RetailDatabaseEnv()
-        self.tools = [
-            CalculateTool(self.database),
-            CancelPendingOrderTool(self.database),
-            FindUserIdByEmailTool(self.database),
-        ]
-        self.agent_config = AgentConfig(
-            model="meta-llama/Llama-3.1-405B-Instruct-FP8",
-            instructions=WIKI,
-            tools=[tool.get_tool_definition() for tool in self.tools],
-            sampling_params={
-                "strategy": "greedy",
-                "temperature": 1.0,
-                "top_p": 0.9,
-            },
-            tool_choice="auto",
-            tool_prompt_format="json",
-            input_shields=[],
-            output_shields=[],
-            enable_session_persistence=False,
-        )
+        self.env = env
+        self.tools = tools
+        self.agent_config = agent_config
         self.agent = Agent(self.client, self.agent_config, custom_tools=self.tools)
         self.session_id = self.agent.create_session(f"test-session-{uuid.uuid4()}")
 

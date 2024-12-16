@@ -4,9 +4,6 @@
 # This source code is licensed under the terms described in the LICENSE file in
 # the root directory of this source tree.
 
-from .data import load_data
+from .retail.retail_agent import get_retail_agent
 
-
-class RetailDatabaseEnv:
-    def __init__(self):
-        self.data = load_data()
+__all__ = ["get_retail_agent"]

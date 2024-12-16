@@ -6,27 +6,30 @@
 import fire
 from termcolor import cprint
 
-from .agents.retail_agent import RetailAgent
+from .agents import get_retail_agent
 from .users.users import HumanUser
 
 
 def main():
     max_steps = 30
-    agent = RetailAgent()
+    agent = get_retail_agent()
 
     user = HumanUser()
     instruction = "You are Yusuf Rossi in 19122. You received your order #W2378156 and wish to exchange the mechanical keyboard for a similar one but with clicky switches and the smart thermostat for one compatible with Google Home instead of Apple HomeKit. If there is no keyboard that is clicky, RGB backlight, full size, you'd rather only exchange the thermostat. You are detail-oriented and want to make sure everything is addressed in one go."
+    last_agent_response = ""
+
     for i in range(max_steps):
         if i == 0:
             user_input = user.reset(instruction)
             cprint(f"(Step {i}) User: {user_input}", "grey")
         else:
-            user_input = user.step(user_input)
+            user_input = user.step(last_agent_response)
             cprint(f"(Step {i}) User: {user_input}", "grey")
 
         # pass user input to agent
         agent_response = agent.step(user_input)
         cprint(f"(Step {i}) Agent: {agent_response}", "grey")
+        last_agent_response = agent_response
 
 
 if __name__ == "__main__":

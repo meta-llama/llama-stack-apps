@@ -11,10 +11,10 @@ from llama_stack_client.types.tool_param_definition_param import (
     ToolParamDefinitionParam,
 )
 
-from .base import BaseRetailTool
+from ....base_tool import BaseTool
 
 
-class CancelPendingOrderTool(BaseRetailTool):
+class CancelPendingOrderTool(BaseTool):
     def get_name(self) -> str:
         return "cancel_pending_order"
 

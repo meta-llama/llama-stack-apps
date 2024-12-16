@@ -10,13 +10,13 @@ from typing import List
 from llama_stack_client.lib.agents.custom_tool import CustomTool
 from llama_stack_client.types import CompletionMessage, ToolResponseMessage
 
-from ...envs.database import RetailDatabaseEnv
+from .base_env import BaseEnv
 
 
-class BaseRetailTool(CustomTool):
-    def __init__(self, database: RetailDatabaseEnv):
+class BaseTool(CustomTool):
+    def __init__(self, env: BaseEnv):
         super().__init__()
-        self.database = database
+        self.database = env
 
     def run(self, messages: List[CompletionMessage]) -> List[ToolResponseMessage]:
         assert len(messages) == 1, "Expected single message"
