@@ -4,7 +4,7 @@
 # This source code is licensed under the terms described in the LICENSE file in
 # the root directory of this source tree.
 import json
-from typing import Dict
+from typing import Dict, List, Union
 
 from llama_stack_client.types.tool_param_definition_param import (
     ToolParamDefinitionParam,
@@ -52,18 +52,19 @@ class ModifyPendingOrderItemsTool(BaseTool):
     def run_impl(
         self,
         order_id: str,
-        item_ids: str,
-        new_item_ids: str,
+        item_ids: Union[str, List[str]],
+        new_item_ids: Union[str, List[str]],
         payment_method_id: str,
     ) -> str:
         data = self.database.data
         products, orders, users = data["products"], data["orders"], data["users"]
 
-        try:
-            item_ids = eval(item_ids)
-            new_item_ids = eval(new_item_ids)
-        except Exception as e:
-            return f"Error: invalid item ids: {e}"
+        if isinstance(item_ids, str) and isinstance(new_item_ids, str):
+            try:
+                item_ids = eval(item_ids)
+                new_item_ids = eval(new_item_ids)
+            except Exception as e:
+                return f"Error: invalid item ids: {e}"
 
         # Check if the order exists and is pending
         if order_id not in orders:

@@ -17,7 +17,9 @@ MAX_STEPS = 30
 STOP_TOKEN = "###STOP###"
 
 
-def run_single_task(task_idx: int = 0, user_type: str = "simulated"):
+def run_single_task(
+    task_idx: int = 0, user_type: str = "simulated", verbose: bool = True
+):
     max_steps = MAX_STEPS
     agent = get_retail_agent()
 
@@ -54,7 +56,8 @@ def run_single_task(task_idx: int = 0, user_type: str = "simulated"):
             {
                 "role": "user",
                 "content": user_input,
-            }
+            },
+            verbose=verbose,
         )
         cprint(f"(Step {i}) 🤖 Agent: ", "light_blue", end="", attrs=["bold"])
         cprint(f" {agent_response.content}", "light_blue")
@@ -63,6 +66,7 @@ def run_single_task(task_idx: int = 0, user_type: str = "simulated"):
 
     # Evaluate if the agent has complete the tasks
     for gt_tool in task.tool_calls:
+        print(gt_tool)
         gt_tools_map[gt_tool.tool_name].run_impl(**gt_tool.arguments)
 
     if gt_env == agent.env:

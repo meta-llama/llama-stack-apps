@@ -41,7 +41,7 @@ class TauAgent:
         self.session_id = self.agent.create_session(f"test-session-{uuid.uuid4()}")
         return self.session_id
 
-    def step(self, message: UserMessage) -> str:
+    def step(self, message: UserMessage, verbose: bool = True) -> str:
         response = self.agent.create_turn(
             messages=[message],
             session_id=self.session_id,
@@ -49,8 +49,9 @@ class TauAgent:
         chunks = [chunk for chunk in response]
         last_chunk = chunks[-1]
 
-        for log in EventLogger().log(chunks):
-            log.print()
+        if verbose:
+            for log in EventLogger().log(chunks):
+                log.print()
 
         while isinstance(last_chunk, ToolResponseMessage):
             response = self.agent.create_turn(
@@ -59,8 +60,9 @@ class TauAgent:
             )
             chunks = [chunk for chunk in response]
             last_chunk = chunks[-1]
-            for log in EventLogger().log(chunks):
-                log.print()
+            if verbose:
+                for log in EventLogger().log(chunks):
+                    log.print()
 
         assert isinstance(last_chunk, AgentTurnResponseStreamChunk)
         return last_chunk.event.payload.turn.output_message
