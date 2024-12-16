@@ -5,7 +5,7 @@
 # the root directory of this source tree.
 
 import json
-from typing import Dict, List
+from typing import Dict
 
 from llama_stack_client.types.tool_param_definition_param import (
     ToolParamDefinitionParam,
@@ -58,12 +58,18 @@ class ExchangeDeliveredOrderItemsTool(BaseTool):
     def run_impl(
         self,
         order_id: str,
-        item_ids: List[str],
-        new_item_ids: List[str],
+        item_ids: str,
+        new_item_ids: str,
         payment_method_id: str,
     ) -> str:
         data = self.database.data
         products, orders, users = data["products"], data["orders"], data["users"]
+
+        try:
+            item_ids = eval(item_ids)
+            new_item_ids = eval(new_item_ids)
+        except Exception as e:
+            return f"Error: invalid item ids: {e}"
 
         # check order exists and is delivered
         if order_id not in orders:

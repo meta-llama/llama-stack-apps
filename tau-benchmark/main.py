@@ -57,7 +57,7 @@ def run_single_task(task_idx: int = 0, user_type: str = "simulated"):
             }
         )
         cprint(f"(Step {i}) 🤖 Agent: ", "light_blue", end="", attrs=["bold"])
-        cprint(f" {agent_response}", "light_blue")
+        cprint(f" {agent_response.content}", "light_blue")
         last_agent_response = agent_response.content
         cprint("-" * 20, "grey")
 
