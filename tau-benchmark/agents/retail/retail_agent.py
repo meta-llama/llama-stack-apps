@@ -18,6 +18,10 @@ from .tools.find_user_id_by_name_zip import FindUserIdByNameZipTool
 from .tools.get_order_details import GetOrderDetailsTool
 from .tools.get_product_details import GetProductDetailsTool
 from .tools.list_all_product_types import ListAllProductTypesTool
+from .tools.modify_pending_order_address import ModifyPendingOrderAddressTool
+from .tools.modify_pending_order_items import ModifyPendingOrderItemsTool
+from .tools.modify_pending_order_payment import ModifyPendingOrderPaymentTool
+from .tools.modify_user_address import ModifyUserAddressTool
 
 
 def get_retail_agent():
@@ -31,6 +35,10 @@ def get_retail_agent():
         GetOrderDetailsTool(env),
         GetProductDetailsTool(env),
         ListAllProductTypesTool(env),
+        ModifyPendingOrderAddressTool(env),
+        ModifyPendingOrderItemsTool(env),
+        ModifyPendingOrderPaymentTool(env),
+        ModifyUserAddressTool(env),
     ]
     agent_config = AgentConfig(
         model="meta-llama/Llama-3.1-405B-Instruct-FP8",
