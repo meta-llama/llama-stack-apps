@@ -7,6 +7,7 @@ import fire
 from termcolor import cprint
 
 from .agents import get_retail_agent
+from .tasks.retail.tasks_dev import TASKS_DEV
 from .users.users import HumanUser
 
 
@@ -15,10 +16,12 @@ def main():
     agent = get_retail_agent()
 
     user = HumanUser()
-    instruction = "You are Yusuf Rossi in 19122. You received your order #W2378156 and wish to exchange the mechanical keyboard for a similar one but with clicky switches and the smart thermostat for one compatible with Google Home instead of Apple HomeKit. If there is no keyboard that is clicky, RGB backlight, full size, you'd rather only exchange the thermostat. You are detail-oriented and want to make sure everything is addressed in one go."
+    task = TASKS_DEV[0]
+    instruction = task.instruction
     last_agent_response = ""
 
     for i in range(max_steps):
+        print("BEFORE", agent.env.data["orders"]["#W5442520"])
         if i == 0:
             user_input = user.reset(instruction)
             cprint(f"(Step {i}) User: {user_input}", "grey")
@@ -27,9 +30,18 @@ def main():
             cprint(f"(Step {i}) User: {user_input}", "grey")
 
         # pass user input to agent
-        agent_response = agent.step(user_input)
+        agent_response = agent.step(
+            {
+                "role": "user",
+                "content": user_input,
+            }
+        )
         cprint(f"(Step {i}) Agent: {agent_response}", "grey")
         last_agent_response = agent_response
+
+        # Evaluate if the agent has complete the task
+        print(task.tool_calls)
+        print("AFTER", agent.env.data["orders"]["#W5442520"])
 
 
 if __name__ == "__main__":

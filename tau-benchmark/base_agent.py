@@ -10,7 +10,7 @@ from typing import List
 from llama_stack_client import LlamaStackClient
 from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.lib.agents.event_logger import EventLogger
-from llama_stack_client.types import ToolResponseMessage
+from llama_stack_client.types import ToolResponseMessage, UserMessage
 from llama_stack_client.types.agent_create_params import AgentConfig
 from llama_stack_client.types.agents.turn_create_response import (
     AgentTurnResponseStreamChunk,
@@ -41,14 +41,9 @@ class TauAgent:
         self.session_id = self.agent.create_session(f"test-session-{uuid.uuid4()}")
         return self.session_id
 
-    def step(self, user_prompt: str) -> str:
+    def step(self, message: UserMessage) -> str:
         response = self.agent.create_turn(
-            messages=[
-                {
-                    "role": "user",
-                    "content": user_prompt,
-                },
-            ],
+            messages=[message],
             session_id=self.session_id,
         )
         chunks = [chunk for chunk in response]
@@ -57,13 +52,12 @@ class TauAgent:
         for log in EventLogger().log(chunks):
             log.print()
 
-        if isinstance(last_chunk, ToolResponseMessage):
-            # NOTE: custom tools needs another turn to get the actual response
-            response_after_tool_call = self.agent.create_turn(
+        while isinstance(last_chunk, ToolResponseMessage):
+            response = self.agent.create_turn(
                 messages=[last_chunk],
                 session_id=self.session_id,
             )
-            chunks = [chunk for chunk in response_after_tool_call]
+            chunks = [chunk for chunk in response]
             last_chunk = chunks[-1]
             for log in EventLogger().log(chunks):
                 log.print()

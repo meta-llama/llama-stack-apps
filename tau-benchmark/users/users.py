@@ -26,6 +26,14 @@ class HumanUser(BaseUser):
         return input("> ")
 
 
+# class SimulatedUser(BaseUser):
+#     def reset(self, instruction: str) -> str:
+#         return input(f"Initializing User...\n{instruction}\n> ")
+
+#     def step(self, content: str) -> str:
+#         return input("> ")
+
+
 # class LLMUserSimulationEnv(BaseUserSimulationEnv):
 #     def __init__(self, model: str, provider: str) -> None:
 #         super().__init__()
