@@ -3,32 +3,29 @@
 #
 # This source code is licensed under the terms described in the LICENSE file in
 # the root directory of this source tree.
-# import os
-
 import fire
+from termcolor import cprint
 
-from envs.wiki import WIKI
-from llama_stack_client import LlamaStackClient
-from llama_stack_client.types.agent_create_params import AgentConfig
-
-
-def run_retail_agent():
-    client = LlamaStackClient(
-        base_url="http://localhost:5000",
-    )
-
-    available_models = [model.identifier for model in client.models.list()]
-    model_id = "meta-llama/Llama-3.1-405B-Instruct-FP8"
-
-    agent_config = AgentConfig(
-        model=model_id,
-        instructions=WIKI,
-        tools=[],
-    )
+from .agents.retail_agent import RetailAgent
+from .users.users import HumanUser
 
 
 def main():
-    run_retail_agent()
+    max_steps = 30
+    agent = RetailAgent()
+
+    user = HumanUser()
+    instruction = "You are Yusuf Rossi in 19122. You received your order #W2378156 and wish to exchange the mechanical keyboard for a similar one but with clicky switches and the smart thermostat for one compatible with Google Home instead of Apple HomeKit. If there is no keyboard that is clicky, RGB backlight, full size, you'd rather only exchange the thermostat. You are detail-oriented and want to make sure everything is addressed in one go."
+    for i in range(max_steps):
+        if i == 0:
+            user_input = user.reset(instruction)
+            cprint(f"User (Step {i}): {user_input}", "green")
+        else:
+            user_input = user.step(user_input)
+            cprint(f"User (Step {i}): {user_input}", "green")
+
+        # pass user input to agent
+        agent.step(user_input)
 
 
 if __name__ == "__main__":
