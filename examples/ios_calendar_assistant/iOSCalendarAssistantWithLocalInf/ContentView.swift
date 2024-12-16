@@ -27,7 +27,10 @@ struct ContentView: View {
   @State var isShowingEventModal = false
 
   private let inference: LocalInference
-  private let agents: LocalAgents
+  private let localAgents: LocalAgents
+  private let remoteAgents: RemoteAgents
+  @State private var isUsingLocalAgents = true
+
   @State var agentId = ""
   @State var agenticSystemSessionId = ""
 
@@ -35,7 +38,12 @@ struct ContentView: View {
 
   public init () {
     self.inference = LocalInference(queue: runnerQueue)
-    self.agents = LocalAgents(inference: self.inference)
+    self.localAgents = LocalAgents(inference: self.inference)
+    self.remoteAgents = RemoteAgents(url: URL(string: "http://localhost:5000")!)
+  }
+
+  var agents: Agents {
+    get { isUsingLocalAgents ? self.localAgents : self.remoteAgents }
   }
 
   private var placeholder: String {
@@ -51,14 +59,22 @@ struct ContentView: View {
   var body: some View {
     NavigationView {
       VStack {
+        Picker("Agent Type", selection: $isUsingLocalAgents) {
+          Text("Local").tag(true)
+          Text("Remote").tag(false)
+        }
+        .pickerStyle(.segmented)
+        .padding()
         MessageListView(messages: $messages)
-          .gesture(
-            DragGesture().onChanged { value in
-              if value.translation.height > 10 {
-                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-              }
-            }
-          )
+                  .gesture(
+                    DragGesture().onChanged { value in
+                      if value.translation.height > 10 {
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                      }
+                    }
+                  )
+        Spacer()
+
         HStack {
           TextField(placeholder, text: $prompt, axis: .vertical)
             .padding(8)
@@ -277,7 +293,7 @@ struct ContentView: View {
       }
 
       let bundle = Bundle.main
-      let modelPath = bundle.url(forResource: "llama3_2_8da4w_32g_inference_len_2048", withExtension: "pte")?.relativePath
+      let modelPath = bundle.url(forResource: "llama3_2_spinquant_oct23", withExtension: "pte")?.relativePath
       let tokenizerPath = bundle.url(forResource: "tokenizer", withExtension: "model")?.relativePath
       inference.loadModel(
         modelPath: modelPath!,
@@ -287,7 +303,6 @@ struct ContentView: View {
 
       Task {
         messages.append(Message(text: text))
-        messages.append(Message(type: .summary))
 
         do {
           let createSystemResponse = try await self.agents.create(
@@ -296,11 +311,11 @@ struct ContentView: View {
                 enable_session_persistence: false,
                 instructions: "You are a helpful assistant",
                 max_infer_iters: 1,
-                model: "Meta-Llama3.1-8B-Instruct",
+                model: "Llama3.1-8B-Instruct",
                 tools: [
-                  Components.Schemas.AgentConfig.toolsPayloadPayload.FunctionCallToolDefinition(
-                    CustomTools.getCreateEventTool()
-                  )
+                 Components.Schemas.AgentConfig.toolsPayloadPayload.FunctionCallToolDefinition(
+                   CustomTools.getCreateEventTool()
+                 )
                 ]
               )
             )
@@ -312,12 +327,13 @@ struct ContentView: View {
           )
           self.agenticSystemSessionId = createSessionResponse.session_id
 
+          messages.append(Message(type: .summary))
           try await summarizeConversation(prompt: text)
 
-          messages.append(Message(type: .actionItems))
-          try await actionItems(prompt: text)
+         messages.append(Message(type: .actionItems))
+         try await actionItems(prompt: text)
 
-          try await callTools(prompt: text)
+         try await callTools(prompt: text)
         } catch {
           print("Error: \(error)")
         }

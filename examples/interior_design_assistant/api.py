@@ -5,9 +5,7 @@
 # the root directory of this source tree.
 
 import asyncio
-import base64
 import json
-import mimetypes
 import textwrap
 import uuid
 from pathlib import Path
@@ -20,21 +18,14 @@ from examples.interior_design_assistant.utils import (
     data_url_from_image,
 )
 
-from llama_models.llama3.api.datatypes import ImageMedia, URL
+from llama_models.llama3.api.datatypes import ImageMedia
 
 from llama_stack_client import LlamaStackClient
-from llama_stack_client.types import SamplingParams, UserMessage
-from llama_stack_client.types.agent_create_params import (
-    AgentConfig,
-    AgentConfigToolMemoryToolDefinition,
-)
-from llama_stack_client.types.agents.agents_turn_stream_chunk import (
-    AgentsTurnStreamChunk,
-)
-from llama_stack_client.types.memory_insert_params import Document
+from llama_stack_client.types import MemoryToolDefinition, SamplingParams
+from llama_stack_client.types.agent_create_params import AgentConfig
 from termcolor import cprint
 
-MODEL = "Llama3.2-11B-Vision-Instruct"
+MODEL = "meta-llama/Llama-3.2-11B-Vision-Instruct"
 
 
 class InterioAgent:
@@ -85,7 +76,7 @@ class InterioAgent:
             Remember to only list furniture items you see in the image. Just suggest item names without any additional text or explanations.
             For eg. "Couch" instead of "grey sectional couch"
 
-            Return JSON as suggested, Do not return any other text or explanations.
+            Please return as suggested format, Do not return any other text or explanations.
             """
         )
         resposne = self.client.agents.session.create(
@@ -194,7 +185,7 @@ class InterioAgent:
             sampling_params=SamplingParams(strategy="greedy", temperature=0.0),
             tools=[
                 # Enable memory as a tool for RAG
-                AgentConfigToolMemoryToolDefinition(
+                MemoryToolDefinition(
                     type="memory",
                     max_chunks=5,
                     max_tokens_in_context=2048,
@@ -265,13 +256,13 @@ class InterioAgent:
         self.live_bank = "interio_bank"
         providers = self.client.providers.list()
         self.client.memory_banks.register(
-            memory_bank={
-                "identifier": self.live_bank,
+            memory_bank_id=self.live_bank,
+            params={
                 "embedding_model": "all-MiniLM-L6-v2",
                 "chunk_size_in_tokens": 512,
                 "overlap_size_in_tokens": 64,
-                "provider_id": providers["memory"][0].provider_id,
-            }
+            },
+            provider_id=providers["memory"][0].provider_id,
         )
 
         local_dir = Path(local_dir)

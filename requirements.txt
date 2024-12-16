@@ -1,11 +1,6 @@
-fastapi
 fire
-httpx
-mesop
 python-dotenv
 setuptools
-uvicorn
 yfinance
 gradio
-llama-stack>=0.0.47
-llama-stack-client
+llama-stack-client>=0.0.61

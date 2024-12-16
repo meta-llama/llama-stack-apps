@@ -5,8 +5,6 @@
 # the root directory of this source tree.
 
 import asyncio
-import base64
-import mimetypes
 import os
 
 import gradio as gr

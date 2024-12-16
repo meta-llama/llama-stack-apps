@@ -4,17 +4,16 @@
 # This source code is licensed under the terms described in the LICENSE file in
 # the root directory of this source tree.
 
-# Copyright (c) Meta Platforms, Inc. and affiliates.
-# This software may be used and distributed in accordance with the terms of the Llama 3 Community License Agreement.
-
 import asyncio
 
 import fire
-from common.client_utils import *  # noqa: F403
 
+from llama_stack_client import LlamaStackClient
+from llama_stack_client.lib.agents.agent import Agent
+from llama_stack_client.lib.agents.event_logger import EventLogger
 from llama_stack_client.types import Attachment
-
-from .multi_turn import execute_turns, prompt_to_turn
+from llama_stack_client.types.agent_create_params import AgentConfig
+from termcolor import colored
 
 
 async def run_main(host: str, port: int, disable_safety: bool = False):
@@ -35,40 +34,92 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
         for i, url in enumerate(urls)
     ]
 
-    agent_config = await make_agent_config_with_custom_tools(
-        model="Llama3.1-8B-Instruct",
-        disable_safety=disable_safety,
-        # Enable attachements to be chunked and added to memory for RAG
-        # Very useful for long attachments that might not fit in context
-        tool_config=QuickToolConfig(attachment_behavior="rag"),
+    client = LlamaStackClient(
+        base_url=f"http://{host}:{port}",
     )
 
-    await execute_turns(
-        agent_config=agent_config,
-        custom_tools=[],
-        turn_inputs=[
-            prompt_to_turn(
-                "I am attaching some documentation for Torchtune. Help me answer questions I will ask next.",
-                attachments=attachments,
-            ),
-            prompt_to_turn(
-                "What are the top 5 topics that were explained? Only list succinct bullet points.",
-            ),
-            prompt_to_turn("Was anything related to 'Llama3' discussed, if so what?"),
-            prompt_to_turn(
-                "Tell me how to use LoRA",
-            ),
-            prompt_to_turn(
-                "What about Quantization?",
-            ),
+    available_shields = [shield.identifier for shield in client.shields.list()]
+    if not available_shields:
+        print(colored("No available shields. Disabling safety.", "yellow"))
+    else:
+        print(f"Available shields found: {available_shields}")
+    available_models = [model.identifier for model in client.models.list()]
+    if not available_models:
+        print(colored("No available models. Exiting.", "red"))
+        return
+
+    selected_model = available_models[0]
+    print(f"Using model: {selected_model}")
+
+    agent_config = AgentConfig(
+        model=selected_model,
+        instructions="You are a helpful assistant",
+        sampling_params={
+            "strategy": "greedy",
+            "temperature": 1.0,
+            "top_p": 0.9,
+        },
+        tools=[
+            {
+                "type": "memory",
+                "memory_bank_configs": [],
+                "query_generator_config": {"type": "default", "sep": " "},
+                "max_tokens_in_context": 4096,
+                "max_chunks": 10,
+            },
         ],
-        host=host,
-        port=port,
+        tool_choice="auto",
+        tool_prompt_format="json",
+        input_shields=available_shields if available_shields else [],
+        output_shields=available_shields if available_shields else [],
+        enable_session_persistence=False,
     )
 
+    agent = Agent(client, agent_config)
+    session_id = agent.create_session("test-session")
+    print(f"Created session_id={session_id} for Agent({agent.agent_id})")
 
-def main(host: str, port: int, disable_safety: bool = False):
-    asyncio.run(run_main(host, port, disable_safety))
+    user_prompts = [
+        (
+            "I am attaching some documentation for Torchtune. Help me answer questions I will ask next.",
+            attachments,
+        ),
+        (
+            "What are the top 5 topics that were explained? Only list succinct bullet points.",
+            None,
+        ),
+        (
+            "Was anything related to 'Llama3' discussed, if so what?",
+            None,
+        ),
+        (
+            "Tell me how to use LoRA",
+            None,
+        ),
+        (
+            "What about Quantization?",
+            None,
+        ),
+    ]
+
+    for prompt in user_prompts:
+        response = agent.create_turn(
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt[0],
+                }
+            ],
+            attachments=prompt[1],
+            session_id=session_id,
+        )
+
+        for log in EventLogger().log(response):
+            log.print()
+
+
+def main(host: str, port: int):
+    asyncio.run(run_main(host, port))
 
 
 if __name__ == "__main__":

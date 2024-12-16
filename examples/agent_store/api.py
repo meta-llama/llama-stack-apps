@@ -1,24 +1,29 @@
-import json
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+# All rights reserved.
+#
+# This source code is licensed under the terms described in the LICENSE file in
+# the root directory of this source tree.
+
 import os
+import sys
 import textwrap
 import uuid
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
 from dotenv import load_dotenv
+
 from llama_stack_client import LlamaStackClient
-from llama_stack_client.types import Attachment, SamplingParams, UserMessage
-from llama_stack_client.types.agent_create_params import (
-    AgentConfig,
-    AgentConfigToolMemoryToolDefinition,
-    AgentConfigToolMemoryToolDefinitionMemoryBankConfigUnionMember0,
-    AgentConfigToolSearchToolDefinition,
+from llama_stack_client.types import (
+    Attachment,
+    MemoryToolDefinition,
+    SamplingParams,
+    SearchToolDefinition,
+    UserMessage,
 )
-from llama_stack_client.types.agents.agents_turn_stream_chunk import (
-    AgentsTurnStreamChunk,
-)
+from llama_stack_client.types.agent_create_params import AgentConfig
 from llama_stack_client.types.memory_insert_params import Document
-from termcolor import cprint
+from termcolor import colored
 
 from .utils import data_url_from_file
 
@@ -31,9 +36,16 @@ class AgentChoice(Enum):
 
 
 class AgentStore:
-    def __init__(self, host, port, model) -> None:
-        self.model = model
+    def __init__(self, host, port) -> None:
         self.client = LlamaStackClient(base_url=f"http://{host}:{port}")
+        available_models = [model.identifier for model in self.client.models.list()]
+        if not available_models:
+            print(colored("No available models. Exiting.", "red"))
+            sys.exit(1)
+
+        self.model = available_models[0]
+        print(f"Using model: {self.model}")
+
         self.agents = {}
         self.sessions = {}
         self.first_turn = {}
@@ -58,13 +70,13 @@ class AgentStore:
         self.live_bank = "live_bank"
         providers = self.client.providers.list()
         self.client.memory_banks.register(
-            memory_bank={
-                "identifier": self.live_bank,
+            memory_bank_id=self.live_bank,
+            params={
                 "embedding_model": "all-MiniLM-L6-v2",
                 "chunk_size_in_tokens": 512,
                 "overlap_size_in_tokens": 64,
-                "provider_id": providers["memory"][0].provider_id,
-            }
+            },
+            provider_id=providers["memory"][0].provider_id,
         )
         # FIXME: To avoid empty banks
         self.append_to_live_memory_bank(
@@ -78,17 +90,30 @@ class AgentStore:
         agent_params: Optional[Dict[str, Any]] = None,
     ) -> str:
         if agent_type == AgentChoice.WebSearch:
+            if "BRAVE_SEARCH_API_KEY" not in os.environ:
+                print(
+                    colored(
+                        "You must set the BRAVE_SEARCH_API_KEY environment variable to use this example.",
+                        "red",
+                    )
+                )
+                sys.exit(1)
+
             tools = [
-                AgentConfigToolSearchToolDefinition(
+                SearchToolDefinition(
                     type="brave_search",
                     engine="brave",
                     api_key=os.getenv("BRAVE_SEARCH_API_KEY"),
                 ),
-                AgentConfigToolMemoryToolDefinition(
+                MemoryToolDefinition(
                     type="memory",
                     max_chunks=5,
                     max_tokens_in_context=2048,
                     memory_bank_configs=[],
+                    query_generator_config={
+                        "type": "default",
+                        "sep": " ",
+                    },
                 ),
             ]
             user_instructions = textwrap.dedent(
@@ -121,17 +146,21 @@ class AgentStore:
         elif agent_type == AgentChoice.Memory:
             bank_ids = agent_params.get("bank_ids", [])
             tools = [
-                AgentConfigToolMemoryToolDefinition(
+                MemoryToolDefinition(
                     type="memory",
                     max_chunks=5,
                     max_tokens_in_context=2048,
                     memory_bank_configs=[
-                        AgentConfigToolMemoryToolDefinitionMemoryBankConfigUnionMember0(
-                            type="vector",
-                            bank_id=bank_id,
-                        )
+                        {
+                            "type": "vector",
+                            "bank_id": bank_id,
+                        }
                         for bank_id in bank_ids
                     ],
+                    query_generator_config={
+                        "type": "default",
+                        "sep": " ",
+                    },
                 ),
             ]
             user_instructions = ""
@@ -175,13 +204,13 @@ class AgentStore:
         providers = self.client.providers.list()
         # create a memory bank
         self.client.memory_banks.register(
-            memory_bank={
-                "identifier": "memory_bank",
+            memory_bank_id="memory_bank",
+            params={
                 "embedding_model": "all-MiniLM-L6-v2",
                 "chunk_size_in_tokens": 512,
                 "overlap_size_in_tokens": 64,
-                "provider_id": providers["memory"][0].provider_id,
-            }
+            },
+            provider_id=providers["memory"][0].provider_id,
         )
         # cprint(f"Created bank: {json.dumps(bank, indent=4)}", color="green")
 

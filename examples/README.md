@@ -3,7 +3,7 @@
 This folder contains some example client scripts using our Python SDK for client to connect with Llama Stack Distros. To run the example scripts:
 
 ## Step 0. Start Server
-- Follow steps in our [Getting Started](https://github.com/meta-llama/llama-stack/blob/main/docs/getting_started.md) guide to setup a Llama Stack server.
+- Follow steps in our [Getting Started](https://llama-stack.readthedocs.io/en/latest/) guide to setup a Llama Stack server.
 
 ## Step 1. Run Client
 First, setup depenencies via
@@ -25,25 +25,19 @@ python -m examples.agents.hello localhost 5000
 ```
 python -m examples.agents.hello localhost 5000
 python -m examples.agents.inflation localhost 5000
-python -m examples.agents.llama_guard_demo localhost 5000
 python -m examples.agents.podcast_transcript localhost 5000
 python -m examples.agents.rag_as_attachments localhost 5000
 python -m examples.agents.rag_with_memory_bank localhost 5000
 python -m examples.agents.vacation localhost 5000
 ```
 
-### Simple API Scripts
-```
-python examples/inference/client.py localhost 5000
-python examples/memory/client.py localhost 5000
-python examples/safety/client.py localhost 5000
-```
-
 # Demo Apps
+### `agent_store`
 ```
-PYTHONPATH=. with-proxy mesop app/main.py
+python -m examples.agent_store.app localhost 5000
 ```
 
+### `interior_design_assistant`
 ```
-PYTHONPATH=. with-proxy gradio examples/agent_store/app.py
+python -m examples.interior_design_assistant.app
 ```

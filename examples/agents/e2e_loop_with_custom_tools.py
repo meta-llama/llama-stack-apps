@@ -3,48 +3,125 @@
 #
 # This source code is licensed under the terms described in the LICENSE file in
 # the root directory of this source tree.
-# Copyright (c) Meta Platforms, Inc. and affiliates.
-# This software may be used and distributed in accordance with the terms of the Llama 3 Community License Agreement.
 import asyncio
+import os
 
 import fire
-
-# from llama_stack_client.agents import *  # noqa: F403
-from dotenv import load_dotenv
 from examples.custom_tools.ticker_data import TickerDataTool
 from examples.custom_tools.web_search import WebSearchTool
-from common.client_utils import *  # noqa: F403
 
-from .multi_turn import *  # noqa: F403
+from llama_stack_client import LlamaStackClient
+from llama_stack_client.lib.agents.agent import Agent
+from llama_stack_client.lib.agents.event_logger import EventLogger
+from llama_stack_client.types.agent_create_params import AgentConfig
 
 
-def main(host: str, port: int, disable_safety: bool = False):
-    api_keys = load_api_keys_from_env()
-    custom_tools = [TickerDataTool(), WebSearchTool(api_keys.brave)]
-    agent_config = asyncio.run(
-        make_agent_config_with_custom_tools(
-            model="Llama3.2-3B-Instruct",
-            tool_config=QuickToolConfig(
-                custom_tools=custom_tools,
-                prompt_format="python_list",
-            ),
-            disable_safety=disable_safety,
-        )
+async def run_main(host: str, port: int, disable_safety: bool = False):
+    client = LlamaStackClient(
+        base_url=f"http://{host}:{port}",
     )
-    asyncio.run(
-        execute_turns(
-            agent_config=agent_config,
-            custom_tools=custom_tools,
-            turn_inputs=[
-                prompt_to_turn(
-                    "What was the closing price of ticker 'GOOG' for 2023 ?"
-                ),
-                prompt_to_turn("Who was the 42nd president of the United States?"),
+
+    available_shields = [shield.identifier for shield in client.shields.list()]
+    if not available_shields:
+        print("No available shields. Disable safety.")
+    else:
+        print(f"Available shields found: {available_shields}")
+
+    available_models = [model.identifier for model in client.models.list()]
+    supported_models = [x for x in available_models if "3.2" in x and "Vision" not in x]
+    if not supported_models:
+        raise ValueError(
+            "No supported models found. Make sure to have a Llama 3.2 model."
+        )
+    else:
+        selected_model = supported_models[0]
+        print(f"Using model: {selected_model}")
+
+    agent_config = AgentConfig(
+        model=selected_model,
+        instructions="You are a helpful assistant",
+        sampling_params={
+            "strategy": "greedy",
+            "temperature": 1.0,
+            "top_p": 0.9,
+        },
+        tools=[
+            {
+                "type": "brave_search",
+                "engine": "brave",
+                "api_key": os.getenv("BRAVE_SEARCH_API_KEY"),
+            },
+            {
+                "type": "code_interpreter",
+            },
+            {
+                "function_name": "get_ticker_data",
+                "description": "Get yearly closing prices for a given ticker symbol",
+                "parameters": {
+                    "ticker_symbol": {
+                        "param_type": "str",
+                        "description": "The ticker symbol for which to get the data. eg. '^GSPC'",
+                        "required": True,
+                    },
+                    "start": {
+                        "param_type": "str",
+                        "description": "Start date, eg. '2021-01-01'",
+                        "required": True,
+                    },
+                    "end": {
+                        "param_type": "str",
+                        "description": "End date, eg. '2024-12-31'",
+                        "required": True,
+                    },
+                },
+                "type": "function_call",
+            },
+            {
+                "function_name": "web_search",
+                "description": "Search the web for a given query",
+                "parameters": {
+                    "query": {
+                        "param_type": "str",
+                        "description": "The query to search for",
+                        "required": True,
+                    }
+                },
+                "type": "function_call",
+            },
+        ],
+        tool_choice="auto",
+        tool_prompt_format="python_list",
+        input_shields=available_shields if available_shields else [],
+        output_shields=available_shields if available_shields else [],
+        enable_session_persistence=False,
+    )
+    custom_tools = [TickerDataTool(), WebSearchTool(os.getenv("BRAVE_SEARCH_API_KEY"))]
+
+    agent = Agent(client, agent_config, custom_tools)
+    session_id = agent.create_session("test-session")
+    print(f"Created session_id={session_id} for Agent({agent.agent_id})")
+
+    user_prompts = [
+        "What was the closing price of ticker 'GOOG' for 2023 ?",
+        "Who was the 42nd president of the United States?",
+    ]
+    for prompt in user_prompts:
+        response = agent.create_turn(
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt,
+                }
             ],
-            host=host,
-            port=port,
+            session_id=session_id,
         )
-    )
+
+        for log in EventLogger().log(response):
+            log.print()
+
+
+def main(host: str, port: int):
+    asyncio.run(run_main(host, port))
 
 
 if __name__ == "__main__":

@@ -4,72 +4,122 @@
 # This source code is licensed under the terms described in the LICENSE file in
 # the root directory of this source tree.
 
-# Copyright (c) Meta Platforms, Inc. and affiliates.
-# This software may be used and distributed in accordance with the terms of the Llama 3 Community License Agreement.
-
 import asyncio
+import os
 
 import fire
-from termcolor import cprint
 
-from llama_stack_client.types import *  # noqa: F403
-from llama_stack_client.types.agent_create_params import *  # noqa: F403
-from common.client_utils import *  # noqa: F403
-
-from .multi_turn import execute_turns, prompt_to_turn
+from llama_stack_client import LlamaStackClient
+from llama_stack_client.lib.agents.agent import Agent
+from llama_stack_client.lib.agents.event_logger import EventLogger
+from llama_stack_client.types import Attachment
+from llama_stack_client.types.agent_create_params import AgentConfig
+from termcolor import colored
 
 
 async def run_main(host: str, port: int, disable_safety: bool = False):
-    api_keys = load_api_keys_from_env()
-    agent_config = await make_agent_config_with_custom_tools(
-        model="Llama3.1-8B-Instruct",
-        disable_safety=disable_safety,
-        tool_config=QuickToolConfig(
-            # Enable builtin tools
-            tool_definitions=[
-                # web search ( search the web for current info)
-                search_tool_defn(api_keys),
-                # code interpreter (allowing for loading attachements and reading them)
-                AgentConfigToolCodeInterpreterToolDefinition(type="code_interpreter"),
-            ],
-            custom_tools=[],
-            # Enables file ananlysis mode ( instead of RAG mode )
-            attachment_behavior="code_interpreter",
-        ),
+    if "BRAVE_SEARCH_API_KEY" not in os.environ:
+        print(
+            colored(
+                "You must set the BRAVE_SEARCH_API_KEY environment variable to use the Search tool which is required for this example.",
+                "red",
+            )
+        )
+        return
+
+    client = LlamaStackClient(
+        base_url=f"http://{host}:{port}",
     )
 
-    transcript_path = "https://raw.githubusercontent.com/meta-llama/llama-stack-apps/main/examples/resources/transcript_shorter.txt"
+    available_shields = [shield.identifier for shield in client.shields.list()]
+    if not available_shields:
+        print(colored("No available shields. Disabling safety.", "yellow"))
+    else:
+        print(f"Available shields found: {available_shields}")
+    available_models = [model.identifier for model in client.models.list()]
+    if not available_models:
+        print(colored("No available models. Exiting.", "red"))
+        return
 
-    await execute_turns(
-        agent_config=agent_config,
-        custom_tools=[],
-        turn_inputs=[
-            prompt_to_turn(
-                "here is a podcast transcript, can you summarize it",
-                attachments=[
-                    Attachment(
-                        content=transcript_path,
-                        mime_type="text/plain",
-                    ),
-                ],
-            ),
-            prompt_to_turn("What are the top 3 salient topics that were discussed ?"),
-            prompt_to_turn("Was anything related to 'H100' discussed ?"),
-            prompt_to_turn(
-                "While this podcast happened in April, 2024 can you provide an update from the web on what were the key developments that have happened in the last 3 months since then ?"
-            ),
-            prompt_to_turn(
-                "Imagine these people meet again in 1 year, what might be three good follow ups to discuss ?"
-            ),
-            prompt_to_turn("Can you rewrite these followups in hindi ?"),
+    selected_model = available_models[0]
+    print(f"Using model: {selected_model}")
+
+    agent_config = AgentConfig(
+        model=selected_model,
+        instructions="You are a helpful assistant",
+        sampling_params={
+            "strategy": "greedy",
+            "temperature": 1.0,
+            "top_p": 0.9,
+        },
+        tools=[
+            {
+                "type": "brave_search",
+                "engine": "brave",
+                "api_key": os.getenv("BRAVE_SEARCH_API_KEY"),
+            },
+            {
+                "type": "code_interpreter",
+            },
         ],
-        host=host,
-        port=port,
+        tool_choice="required",
+        tool_prompt_format="json",
+        input_shields=available_shields if available_shields else [],
+        output_shields=available_shields if available_shields else [],
+        enable_session_persistence=False,
     )
 
+    agent = Agent(client, agent_config)
+    session_id = agent.create_session("test-session")
+    print(f"Created session_id={session_id} for Agent({agent.agent_id})")
 
-def main(host: str, port: int, disable_safety: bool = False):
-    asyncio.run(run_main(host, port, disable_safety))
+    user_prompts = [
+        (
+            "Heres is a podcast transcript as attachment, can you summarize it",
+            [
+                Attachment(
+                    content="https://raw.githubusercontent.com/meta-llama/llama-stack-apps/main/examples/resources/transcript_shorter.txt",
+                    mime_type="text/plain",
+                )
+            ],
+        ),
+        ("What are the top 3 salient topics that were discussed ?", None),
+        (
+            "Was anything related to 'H100' discussed ?",
+            None,
+        ),
+        (
+            "While this podcast happened in April, 2024 can you provide an update from the web on what were the key developments that have happened in the last 3 months since then ?",
+            None,
+        ),
+        (
+            "Imagine these people meet again in 1 year, what might be three good follow ups to discuss ?",
+            None,
+        ),
+        (
+            "Can you rewrite these followups in hindi ?",
+            None,
+        ),
+    ]
+
+    for prompt in user_prompts:
+        response = agent.create_turn(
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt[0],
+                }
+            ],
+            attachments=prompt[1],
+            session_id=session_id,
+        )
+
+        async for log in EventLogger().log(response):
+            log.print()
+
+
+def main(host: str, port: int):
+    asyncio.run(run_main(host, port))
 
 
 if __name__ == "__main__":

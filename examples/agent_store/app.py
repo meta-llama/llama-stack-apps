@@ -5,7 +5,6 @@
 # the root directory of this source tree.
 
 import asyncio
-import os
 
 import fire
 
@@ -14,7 +13,6 @@ import gradio as gr
 from examples.agent_store.api import AgentChoice, AgentStore
 
 
-MODEL = "Llama3.1-8B-Instruct"
 CHATBOT = None
 SELECTED_AGENT = None
 BANK_ID = "5f126596-87d8-4b9f-a44d-3a5b93bfc171"
@@ -22,10 +20,10 @@ CHAT_HISTORY = {}
 CONTEXT = {}
 
 
-def initialize(host: str, port: int, model: str, bank_id_str: str):
+def initialize(host: str, port: int, bank_id_str: str):
     global CHATBOT
 
-    CHATBOT = AgentStore(host, port, model)
+    CHATBOT = AgentStore(host, port)
     if bank_id_str:
         bank_ids = bank_id_str.split(",")
     else:
@@ -143,13 +141,11 @@ with gr.Blocks(
 def main(
     host: str = "localhost",
     port: int = 5000,
-    model: str = MODEL,
     bank_ids: str = "",
 ):
     initialize(
         host,
         port,
-        model,
         bank_ids,
     )
     demo.launch(server_name="0.0.0.0", server_port=7860)

@@ -3,77 +3,89 @@
 #
 # This source code is licensed under the terms described in the LICENSE file in
 # the root directory of this source tree.
-
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 # This software may be used and distributed in accordance with the terms of the Llama 3 Community License Agreement.
 
 import asyncio
+import os
+from typing import Optional
 
 import fire
-from common.client_utils import *  # noqa: F403
-
 from llama_stack_client import LlamaStackClient
+from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.lib.agents.event_logger import EventLogger
-
-from llama_stack_client.types import *  # noqa: F403
 from llama_stack_client.types.agent_create_params import AgentConfig
-from termcolor import cprint
-
-from .multi_turn import *  # noqa: F403
+from termcolor import colored
 
 
-class Agent:
-    def __init__(self, host: str, port: int):
-        self.client = LlamaStackClient(
-            base_url=f"http://{host}:{port}",
+async def run_main(
+    host: str,
+    port: int,
+    use_https: bool = False,
+    cert_path: Optional[str] = None,
+):
+    if "BRAVE_SEARCH_API_KEY" not in os.environ:
+        print(
+            colored(
+                "Warning: BRAVE_SEARCH_API_KEY is not set; will not use Search tool.",
+                "yellow",
+            )
         )
 
-    def create_agent(self, agent_config: AgentConfig):
-        agentic_system_create_response = self.client.agents.create(
-            agent_config=agent_config,
-        )
-        self.agent_id = agentic_system_create_response.agent_id
-        agentic_system_create_session_response = self.client.agents.session.create(
-            agent_id=agentic_system_create_response.agent_id,
-            session_name="test_session",
-        )
-        self.session_id = agentic_system_create_session_response.session_id
+    # Construct the base URL with the appropriate protocol
+    protocol = "https" if use_https else "http"
+    base_url = f"{protocol}://{host}:{port}"
 
-    async def execute_turn(self, content: str):
-        response = self.client.agents.turn.create(
-            agent_id=self.agent_id,
-            session_id=self.session_id,
-            messages=[
-                UserMessage(content=content, role="user"),
-            ],
-            stream=True,
-        )
-        for chunk in response:
-            if chunk.event.payload.event_type != "turn_complete":
-                yield chunk
+    # Configure client with SSL certificate if provided
+    client_kwargs = {"base_url": base_url}
+    if use_https and cert_path:
+        client_kwargs["verify"] = cert_path
 
+    client = LlamaStackClient(**client_kwargs)
 
-async def run_main(host: str, port: int, disable_safety: bool = False):
-    tool_definitions = [
-        AgentConfigToolSearchToolDefinition(
-            type="brave_search", engine="brave", api_key="YOUR_API_KEY"
-        )
-    ]
+    available_shields = [shield.identifier for shield in client.shields.list()]
+    if not available_shields:
+        print(colored("No available shields. Disabling safety.", "yellow"))
+    else:
+        print(f"Available shields found: {available_shields}")
+
+    available_models = [model.identifier for model in client.models.list()]
+    if not available_models:
+        print(colored("No available models. Exiting.", "red"))
+        return
+    else:
+        selected_model = available_models[0]
+        print(f"Using model: {selected_model}")
 
     agent_config = AgentConfig(
-        model="Llama3.1-8B-Instruct",
+        model=selected_model,
         instructions="You are a helpful assistant",
-        sampling_params=SamplingParams(strategy="greedy", temperature=1.0, top_p=0.9),
-        tools=tool_definitions,
+        sampling_params={
+            "strategy": "greedy",
+            "temperature": 1.0,
+            "top_p": 0.9,
+        },
+        tools=(
+            [
+                {
+                    "type": "brave_search",
+                    "engine": "brave",
+                    "api_key": os.getenv("BRAVE_SEARCH_API_KEY"),
+                }
+            ]
+            if os.getenv("BRAVE_SEARCH_API_KEY")
+            else []
+        ),
         tool_choice="auto",
         tool_prompt_format="function_tag",
-        input_shields=[],
-        output_shields=[],
+        input_shields=available_shields if available_shields else [],
+        output_shields=available_shields if available_shields else [],
         enable_session_persistence=False,
     )
 
-    agent = Agent(host=host, port=port)
-    agent.create_agent(agent_config)
+    agent = Agent(client, agent_config)
+    session_id = agent.create_session("test-session")
+    print(f"Created session_id={session_id} for Agent({agent.agent_id})")
 
     user_prompts = [
         "I am planning a trip to Switzerland, what are the top 3 places to visit?",
@@ -82,18 +94,27 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
         "What is the capital of France?",
     ]
 
-    iterator = agent.execute_turn(content="What is the capital of France?")
-
     for prompt in user_prompts:
-        cprint(f"User> {prompt}", color="white", attrs=["bold"])
-        response = agent.execute_turn(content=prompt)
-        async for log in EventLogger().log(response):
-            if log is not None:
-                log.print()
+        response = agent.create_turn(
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt,
+                }
+            ],
+            session_id=session_id,
+        )
+        for log in EventLogger().log(response):
+            log.print()
 
 
-def main(host: str, port: int, disable_safety: bool = False):
-    asyncio.run(run_main(host, port, disable_safety))
+def main(
+    host: str,
+    port: int,
+    use_https: bool = False,
+    cert_path: Optional[str] = None,
+):
+    asyncio.run(run_main(host, port, use_https, cert_path))
 
 
 if __name__ == "__main__":
