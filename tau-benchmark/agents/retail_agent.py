@@ -19,6 +19,8 @@ from ..envs.database import RetailDatabaseEnv
 
 from .configs.wiki import WIKI
 from .tools.calculate import CalculateTool
+from .tools.cancel_pending_order import CancelPendingOrderTool
+from .tools.find_user_id_by_email import FindUserIdByEmailTool
 
 
 class RetailAgent:
@@ -29,6 +31,8 @@ class RetailAgent:
         self.database = RetailDatabaseEnv()
         self.tools = [
             CalculateTool(self.database),
+            CancelPendingOrderTool(self.database),
+            FindUserIdByEmailTool(self.database),
         ]
         self.agent_config = AgentConfig(
             model="meta-llama/Llama-3.1-405B-Instruct-FP8",
@@ -48,6 +52,11 @@ class RetailAgent:
         self.agent = Agent(self.client, self.agent_config, custom_tools=self.tools)
         self.session_id = self.agent.create_session(f"test-session-{uuid.uuid4()}")
 
+    def reset(self) -> str:
+        # Clear the session
+        self.session_id = self.agent.create_session(f"test-session-{uuid.uuid4()}")
+        return self.session_id
+
     def step(self, user_prompt: str) -> str:
         response = self.agent.create_turn(
             messages=[
@@ -65,6 +74,7 @@ class RetailAgent:
             log.print()
 
         if isinstance(last_chunk, ToolResponseMessage):
+            # NOTE: custom tools needs another turn to get the actual response
             response_after_tool_call = self.agent.create_turn(
                 messages=[last_chunk],
                 session_id=self.session_id,

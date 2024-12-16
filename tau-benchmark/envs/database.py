@@ -22,3 +22,6 @@ class RetailDatabaseEnv:
 
     def update_product(self, product_id: str, product: dict) -> None:
         pass
+
+    def cancel_pending_order(self, order_id: str, reason: str) -> None:
+        self.data["orders"][order_id]["status"] = "cancelled"

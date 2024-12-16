@@ -3,24 +3,16 @@
 #
 # This source code is licensed under the terms described in the LICENSE file in
 # the root directory of this source tree.
+from typing import Dict
 
-import json
-from typing import Dict, List
-
-from llama_stack_client.lib.agents.custom_tool import CustomTool
-from llama_stack_client.types import CompletionMessage, ToolResponseMessage
 from llama_stack_client.types.tool_param_definition_param import (
     ToolParamDefinitionParam,
 )
 
-from ...envs.database import RetailDatabaseEnv
+from .base import BaseRetailTool
 
 
-class CalculateTool(CustomTool):
-    def __init__(self, database: RetailDatabaseEnv):
-        super().__init__()
-        self.database = database
-
+class CalculateTool(BaseRetailTool):
     def get_name(self) -> str:
         return "calculate"
 
@@ -35,23 +27,6 @@ class CalculateTool(CustomTool):
                 required=True,
             ),
         }
-
-    def run(self, messages: List[CompletionMessage]) -> List[ToolResponseMessage]:
-        assert len(messages) == 1, "Expected single message"
-        message = messages[0]
-        tool_call = message.tool_calls[0]
-        try:
-            response = self.run_impl(**tool_call.arguments)
-            response_str = json.dumps(response, ensure_ascii=False)
-        except Exception as e:
-            response_str = f"Error when running tool: {e}"
-        message = ToolResponseMessage(
-            call_id=tool_call.call_id,
-            tool_name=tool_call.tool_name,
-            content=response_str,
-            role="ipython",
-        )
-        return [message]
 
     def run_impl(self, expression: str) -> str:
         if not all(char in "0123456789+-*/(). " for char in expression):
