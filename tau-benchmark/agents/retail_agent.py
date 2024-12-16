@@ -9,7 +9,11 @@ import uuid
 from llama_stack_client import LlamaStackClient
 from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.lib.agents.event_logger import EventLogger
+from llama_stack_client.types import ToolResponseMessage
 from llama_stack_client.types.agent_create_params import AgentConfig
+from llama_stack_client.types.agents.turn_create_response import (
+    AgentTurnResponseStreamChunk,
+)
 
 from ..envs.database import RetailDatabaseEnv
 
@@ -54,5 +58,21 @@ class RetailAgent:
             ],
             session_id=self.session_id,
         )
-        for log in EventLogger().log(response):
+        chunks = [chunk for chunk in response]
+        last_chunk = chunks[-1]
+
+        for log in EventLogger().log(chunks):
             log.print()
+
+        if isinstance(last_chunk, ToolResponseMessage):
+            response_after_tool_call = self.agent.create_turn(
+                messages=[last_chunk],
+                session_id=self.session_id,
+            )
+            chunks = [chunk for chunk in response_after_tool_call]
+            last_chunk = chunks[-1]
+            for log in EventLogger().log(chunks):
+                log.print()
+
+        assert isinstance(last_chunk, AgentTurnResponseStreamChunk)
+        return last_chunk.event.payload.turn.output_message

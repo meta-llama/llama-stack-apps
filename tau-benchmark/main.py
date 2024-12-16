@@ -19,13 +19,14 @@ def main():
     for i in range(max_steps):
         if i == 0:
             user_input = user.reset(instruction)
-            cprint(f"User (Step {i}): {user_input}", "green")
+            cprint(f"(Step {i}) User: {user_input}", "grey")
         else:
             user_input = user.step(user_input)
-            cprint(f"User (Step {i}): {user_input}", "green")
+            cprint(f"(Step {i}) User: {user_input}", "grey")
 
         # pass user input to agent
-        agent.step(user_input)
+        agent_response = agent.step(user_input)
+        cprint(f"(Step {i}) Agent: {agent_response}", "grey")
 
 
 if __name__ == "__main__":
