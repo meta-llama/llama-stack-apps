@@ -75,7 +75,7 @@ INFO:     Uvicorn running on http://[::]:5000 (Press CTRL+C to quit)
 
 ### 3. Test agents demo script
 
-We have built sample demo scripts for interating with the Stack server.
+We have built sample demo scripts for interacting with the Stack server.
 
 With the server running, you may run to test out an simple Agent
 
@@ -125,7 +125,7 @@ Optionally, you can setup API keys for custom tools:
 - [WolframAlpha](https://developer.wolframalpha.com/): store in `WOLFRAM_ALPHA_API_KEY` environment variable
 - [Brave Search](https://brave.com/search/api/): store in `BRAVE_SEARCH_API_KEY` environment variable
 
-You may see other ways of interating in [Agent Store README.md](https://github.com/meta-llama/llama-stack-apps/tree/registry/examples/agent_store)
+You may see other ways of interacting in [Agent Store README.md](https://github.com/meta-llama/llama-stack-apps/tree/registry/examples/agent_store)
 
 ## Create agentic systems and interact with the Stack server
 
