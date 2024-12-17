@@ -125,7 +125,7 @@ Optionally, you can setup API keys for custom tools:
 - [WolframAlpha](https://developer.wolframalpha.com/): store in `WOLFRAM_ALPHA_API_KEY` environment variable
 - [Brave Search](https://brave.com/search/api/): store in `BRAVE_SEARCH_API_KEY` environment variable
 
-You may see other ways of interacting in [Agent Store README.md](https://github.com/meta-llama/llama-stack-apps/tree/registry/examples/agent_store)
+You may see other ways of interacting in [Agent Store README.md](https://github.com/meta-llama/llama-stack-apps/tree/main/examples/agent_store)
 
 ## Create agentic systems and interact with the Stack server
 
