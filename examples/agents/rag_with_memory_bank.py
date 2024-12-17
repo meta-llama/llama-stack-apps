@@ -48,6 +48,7 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
     client.memory_banks.register(
         memory_bank_id="test_bank",
         params={
+            "memory_bank_type": "vector",
             "embedding_model": "all-MiniLM-L6-v2",
             "chunk_size_in_tokens": 512,
             "overlap_size_in_tokens": 64,
