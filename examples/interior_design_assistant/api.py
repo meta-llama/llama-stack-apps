@@ -148,7 +148,7 @@ class InterioAgent:
         message = {
             "role": "user",
             "content": [
-                {"type": "image", "data": {"uri": data_url}},
+                {"type": "image", "url": {"uri": data_url}},
                 {
                     "type": "text",
                     "text": text,

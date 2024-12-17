@@ -56,7 +56,7 @@ def main(host: str, port: int, image_dir: str, output_dir: str):
             "content": [
                 {
                     "type": "image",
-                    "data": {
+                    "url": {
                         "uri": data_url_from_image(full_path),
                     },
                 },

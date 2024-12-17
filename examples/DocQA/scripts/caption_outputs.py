@@ -65,7 +65,7 @@ class DocumentProcessor:
                 "content": [
                     {
                         "type": "image",
-                        "data": {
+                        "url": {
                             "uri": data_url,
                         },
                     },
