@@ -61,7 +61,9 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
         bank_id="test_bank",
         documents=documents,
     )
-    available_models = [model.identifier for model in client.models.list()]
+    available_models = [
+        model.identifier for model in client.models.list() if model.model_type == "llm"
+    ]
     if not available_models:
         print(colored("No available models. Exiting.", "red"))
         return
