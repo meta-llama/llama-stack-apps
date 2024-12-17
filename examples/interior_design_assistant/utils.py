@@ -8,6 +8,7 @@ import base64
 import mimetypes
 import uuid
 
+import json
 
 # TODO: This should move into a common util as will be needed by all apps
 def data_url_from_image(file_path):
