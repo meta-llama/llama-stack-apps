@@ -18,8 +18,6 @@ from examples.interior_design_assistant.utils import (
     data_url_from_image,
 )
 
-from llama_models.llama3.api.datatypes import ImageMedia
-
 from llama_stack_client import LlamaStackClient
 from llama_stack_client.types import MemoryToolDefinition, SamplingParams
 from llama_stack_client.types.agent_create_params import AgentConfig
@@ -176,7 +174,7 @@ class InterioAgent:
         print(result)
         return [r["description"].strip() for r in json.loads(result.strip())]
 
-    async def retrieve_images(self, description: str) -> List[ImageMedia]:
+    async def retrieve_images(self, description: str):
         """
         Retrieve images from the memory bank that match the description
         """
@@ -248,7 +246,13 @@ class InterioAgent:
             """
         )
         description = f"Description: {description}"
-        message = {"role": "user", "content": [prompt, description]}
+        message = {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": prompt},
+                {"type": "text", "text": description},
+            ],
+        }
 
         response = create_single_turn(self.client, agent_config, [message])
         return json.loads(response.strip())
