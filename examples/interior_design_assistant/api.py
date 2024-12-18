@@ -85,10 +85,13 @@ class InterioAgent:
 
         message = {
             "role": "user",
-            "content": [{"image": {"uri": data_url}}, text],
+            "content": [
+                {"type": "image", "url": {"uri": data_url}},
+                {"type": "text", "text": text},
+            ],
         }
 
-        generator = self.client.agents.turn.create(
+        response = self.client.agents.turn.create(
             agent_id=self.agent_id,
             session_id=resposne.session_id,
             messages=[message],
@@ -96,7 +99,7 @@ class InterioAgent:
         )
 
         result = ""
-        for chunk in generator:
+        for chunk in response:
             payload = chunk.event.payload
             if payload.event_type == "turn_complete":
                 turn = payload.turn
