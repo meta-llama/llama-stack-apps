@@ -1,16 +1,16 @@
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+# All rights reserved.
+#
+# This source code is licensed under the terms described in the LICENSE file in
+# the root directory of this source tree.
+
 import asyncio
-import json
 import os
 import re
 import uuid
-from queue import Queue
-from threading import Thread
-from typing import AsyncGenerator, Generator, List, Optional
+from typing import Generator, List
 
-import chromadb
 import gradio as gr
-import requests
-from chromadb.utils import embedding_functions
 from dotenv import load_dotenv
 from llama_stack_client import LlamaStackClient
 from llama_stack_client.lib.agents.agent import Agent
@@ -102,6 +102,7 @@ class LlamaChatInterface:
             self.client.memory_banks.register(
                 memory_bank_id=self.memory_bank_id,
                 params={
+                    "memory_bank_type": "vector",
                     "embedding_model": "all-MiniLM-L6-v2",
                     "chunk_size_in_tokens": 100,
                     "overlap_size_in_tokens": 10,
@@ -109,7 +110,7 @@ class LlamaChatInterface:
                 provider_id=provider_id,
             )
             await self.load_documents()
-            print(f"Memory bank registered.")
+            print("Memory bank registered.")
 
     async def load_documents(self):
         """Load documents from the specified directory into memory bank."""

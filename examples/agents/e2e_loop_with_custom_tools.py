@@ -27,7 +27,9 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
     else:
         print(f"Available shields found: {available_shields}")
 
-    available_models = [model.identifier for model in client.models.list()]
+    available_models = [
+        model.identifier for model in client.models.list() if model.model_type == "llm"
+    ]
     supported_models = [x for x in available_models if "3.2" in x and "Vision" not in x]
     if not supported_models:
         raise ValueError(

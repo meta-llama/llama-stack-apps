@@ -147,7 +147,13 @@ class InterioAgent:
 
         message = {
             "role": "user",
-            "content": [{"image": {"uri": data_url}}, text],
+            "content": [
+                {"type": "image", "url": {"uri": data_url}},
+                {
+                    "type": "text",
+                    "text": text,
+                },
+            ],
         }
 
         resposne = self.client.agents.session.create(
@@ -258,6 +264,7 @@ class InterioAgent:
         self.client.memory_banks.register(
             memory_bank_id=self.live_bank,
             params={
+                "memory_bank_type": "vector",
                 "embedding_model": "all-MiniLM-L6-v2",
                 "chunk_size_in_tokens": 512,
                 "overlap_size_in_tokens": 64,

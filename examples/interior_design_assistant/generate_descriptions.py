@@ -54,8 +54,16 @@ def main(host: str, port: int, image_dir: str, output_dir: str):
         message = {
             "role": "user",
             "content": [
-                {"image": {"uri": data_url_from_image(full_path)}},
-                "Describe the design, style, color, material and other aspects of the fireplace in this photo. Respond in one paragraph, no bullet points or sections.",
+                {
+                    "type": "image",
+                    "url": {
+                        "uri": data_url_from_image(full_path),
+                    },
+                },
+                {
+                    "type": "text",
+                    "text": "Describe the design, style, color, material and other aspects of the fireplace in this photo. Respond in one paragraph, no bullet points or sections.",
+                },
             ],
         }
 

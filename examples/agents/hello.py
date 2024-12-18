@@ -32,7 +32,10 @@ def main(host: str, port: int):
         print(colored("No available shields. Disabling safety.", "yellow"))
     else:
         print(f"Available shields found: {available_shields}")
-    available_models = [model.identifier for model in client.models.list()]
+
+    available_models = [
+        model.identifier for model in client.models.list() if model.model_type == "llm"
+    ]
     if not available_models:
         print(colored("No available models. Exiting.", "red"))
         return
