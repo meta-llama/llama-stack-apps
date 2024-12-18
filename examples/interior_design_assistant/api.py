@@ -105,9 +105,13 @@ class InterioAgent:
                 turn = payload.turn
                 break
 
-        # print(turn.output_message.content)
         result = turn.output_message.content
-        d = json.loads(result.strip())
+        try:
+            d = json.loads(result.strip())
+        except Exception:
+            cprint(f"Error parsing JSON output: {result}", color="red")
+            raise
+
         return d
 
     async def suggest_alternatives(
