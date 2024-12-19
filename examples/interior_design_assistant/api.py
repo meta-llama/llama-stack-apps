@@ -21,9 +21,15 @@ from examples.interior_design_assistant.utils import (
 from llama_stack_client import LlamaStackClient
 from llama_stack_client.types import MemoryToolDefinition, SamplingParams
 from llama_stack_client.types.agent_create_params import AgentConfig
+from pydantic import BaseModel
 from termcolor import cprint
 
 MODEL = "meta-llama/Llama-3.2-11B-Vision-Instruct"
+
+
+class Output(BaseModel):
+    description: str
+    items: list[str]
 
 
 class InterioAgent:
@@ -44,12 +50,17 @@ class InterioAgent:
             instructions="",
             sampling_params=SamplingParams(strategy="greedy", temperature=0.0),
             enable_session_persistence=True,
+            response_format={
+                "type": "json_schema",
+                "json_schema": Output.model_json_schema()
+            }
         )
         response = self.client.agents.create(
             agent_config=agent_config,
         )
         self.agent_id = response.agent_id
         return self.agent_id
+
 
     async def list_items(self, file_path: str) -> List[str]:
         """
