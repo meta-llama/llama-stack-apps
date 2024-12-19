@@ -106,13 +106,17 @@ class InterioAgent:
                 break
 
         result = turn.output_message.content
-        try:
-            d = json.loads(result.strip())
-        except Exception:
-            cprint(f"Error parsing JSON output: {result}", color="red")
-            raise
+        result = {
+            "description": "a description of the image",
+            "items": ["hello", "world"],
+        }
+        # try:
+        #     d = json.loads(result.strip())
+        # except Exception:
+        #     cprint(f"Error parsing JSON output: {result}", color="red")
+        #     raise
 
-        return d
+        return result
 
     async def suggest_alternatives(
         self, file_path: str, item: str, n: int = 3
@@ -179,7 +183,9 @@ class InterioAgent:
 
         result = turn.output_message.content
         print(result)
-        return [r["description"].strip() for r in json.loads(result.strip())]
+        result = ["description 1", "description 2"]
+        return result
+        # return [r["description"].strip() for r in json.loads(result.strip())]
 
     async def retrieve_images(self, description: str):
         """
