@@ -61,7 +61,6 @@ class InterioAgent:
         self.agent_id = response.agent_id
         return self.agent_id
 
-
     async def list_items(self, file_path: str) -> List[str]:
         """
         Analyze the image using multimodal llm
@@ -117,13 +116,9 @@ class InterioAgent:
                 break
 
         result = turn.output_message.content
-        try:
-            d = json.loads(result.strip())
-        except Exception:
-            cprint(f"Error parsing JSON output: {result}", color="red")
-            raise
+        result = json.loads(result.strip())
 
-        return d
+        return result
 
     async def suggest_alternatives(
         self, file_path: str, item: str, n: int = 3
@@ -172,13 +167,13 @@ class InterioAgent:
             ],
         }
 
-        resposne = self.client.agents.session.create(
+        response = self.client.agents.session.create(
             agent_id=self.agent_id,
             session_name=uuid.uuid4().hex,
         )
         generator = self.client.agents.turn.create(
             agent_id=self.agent_id,
-            session_id=resposne.session_id,
+            session_id=response.session_id,
             messages=[message],
             stream=True,
         )
@@ -189,8 +184,8 @@ class InterioAgent:
                 turn = payload.turn
 
         result = turn.output_message.content
-        print(result)
-        return [r["description"].strip() for r in json.loads(result.strip())]
+        result = json.loads(result.strip())
+        return [result["description"].strip()]
 
     async def retrieve_images(self, description: str):
         """
