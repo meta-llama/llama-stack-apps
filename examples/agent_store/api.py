@@ -38,7 +38,11 @@ class AgentChoice(Enum):
 class AgentStore:
     def __init__(self, host, port) -> None:
         self.client = LlamaStackClient(base_url=f"http://{host}:{port}")
-        available_models = [model.identifier for model in self.client.models.list()]
+        available_models = [
+            model.identifier
+            for model in self.client.models.list()
+            if model.model_type == "llm"
+        ]
         if not available_models:
             print(colored("No available models. Exiting.", "red"))
             sys.exit(1)
