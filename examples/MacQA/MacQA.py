@@ -33,61 +33,98 @@ CHROMA_PORT = int(os.getenv("CHROMA_PORT", "6000"))
 YAML_PATH = os.getenv("YAML_PATH", "./llama_stack_run.yaml")
 YAML = """
 version: '2'
-built_at: '2024-10-08T17:40:45.325529'
-image_name: local
+image_name: ollama
 docker_image: null
-conda_env: local
+conda_env: ollama
 apis:
-- shields
 - agents
-- models
-- memory
-- memory_banks
+- datasetio
+- eval
 - inference
+- memory
 - safety
+- scoring
+- telemetry
 providers:
   inference:
-  - provider_id: remote::ollama
+  - provider_id: ollama
     provider_type: remote::ollama
     config:
-      url: http://127.0.0.1:11434
-  memory:
-  - provider_id: remote::chromadb
-    provider_type: remote::chromadb
-    config:
-      host: localhost
-      port: 6000
-      protocol: http
+      url: http://localhost:11434
+  - provider_id: sentence-transformers
+    provider_type: inline::sentence-transformers
+    config: {}
   safety:
-  - provider_id: inline::llama-guard-0
+  - provider_id: llama-guard
     provider_type: inline::llama-guard
+    config: {}
+  memory:
+  - provider_id: faiss
+    provider_type: inline::faiss
     config:
-      excluded_categories: []
+      kvstore:
+        type: sqlite
+        namespace: null
+        db_path: .ollama/faiss_store.db
   agents:
-  - provider_id: inline::meta-reference-0
+  - provider_id: meta-reference
     provider_type: inline::meta-reference
     config:
       persistence_store:
-        namespace: null
         type: sqlite
-        db_path: ./runtime/kvstore.db
+        namespace: null
+        db_path: .ollama/agents_store.db
   telemetry:
-  - provider_id: inline::meta-reference-0
+  - provider_id: meta-reference
+    provider_type: inline::meta-reference
+    config:
+      service_name: llama-stack
+      sinks: console,sqlite
+      sqlite_db_path: .ollama/trace_store.db
+  eval:
+  - provider_id: meta-reference
     provider_type: inline::meta-reference
     config: {}
-metadata_store: null
+  datasetio:
+  - provider_id: huggingface
+    provider_type: remote::huggingface
+    config: {}
+  - provider_id: localfs
+    provider_type: inline::localfs
+    config: {}
+  scoring:
+  - provider_id: basic
+    provider_type: inline::basic
+    config: {}
+  - provider_id: llm-as-judge
+    provider_type: inline::llm-as-judge
+    config: {}
+  - provider_id: braintrust
+    provider_type: inline::braintrust
+    config:
+      openai_api_key: 
+metadata_store:
+  namespace: null
+  type: sqlite
+  db_path: .ollama/registry.db
 models:
 - metadata: {}
-  model_id: meta-llama/Llama-3.2-1B-Instruct
-  provider_id: null
-  provider_model_id: llama3.2:1b-instruct-fp16
+  model_id: MODEL_NAME_PLACEHOLDER
+  provider_id: ollama
+  provider_model_id: null
+  model_type: llm
+- metadata:
+    embedding_dimension: 384
+  model_id: all-MiniLM-L6-v2
+  provider_id: sentence-transformers
+  provider_model_id: null
+  model_type: embedding
 shields: []
 memory_banks: []
 datasets: []
 scoring_fns: []
 eval_tasks: []
 """
-
 CUSTOM_CSS = """
 .context-block {
     font-size: 0.8em;
@@ -361,11 +398,12 @@ def create_gradio_interface(
                 # Function to handle the initial input and transition to the chat interface
                 def setup_chat_interface(folder_path, model_name):
                     global MODEL_NAME
+                    global YAML
                     global DOCS_DIR
-                    print("Starting Chroma server...")
-                    subprocess.Popen(
-                        f"chroma run --host localhost --port {CHROMA_PORT} --path {folder_path}".split()
-                    )
+                    # print("Starting Chroma server...")
+                    # subprocess.Popen(
+                    #     f"chroma run --host localhost --port {CHROMA_PORT} --path {folder_path}".split()
+                    # )
                     DOCS_DIR = folder_path
                     subprocess.run(["sleep", "10"], capture_output=True)
                     MODEL_NAME = model_name
@@ -375,12 +413,14 @@ def create_gradio_interface(
                         "meta-llama/Llama-3.1-8B-Instruct": "llama3.1:8b-instruct-fp16",
                     }
                     ollama_name = ollama_name_dict[model_name]
+                    print("Starting Ollama server...")
                     subprocess.Popen(
                         f"ollama run {ollama_name} --keepalive=99h".split(),
                         stdout=subprocess.DEVNULL,
                     )
-                    subprocess.run(["sleep", "10"], capture_output=True)
+                    subprocess.run(["sleep", "3"], capture_output=True)
                     print("Starting LlamaStack server...")
+                    YAML = YAML.replace("MODEL_NAME_PLACEHOLDER", MODEL_NAME)
                     save_yaml()
                     subprocess.Popen(
                         f"python -m llama_stack.distribution.server.server --yaml-config {YAML_PATH} --disable-ipv6".split()
