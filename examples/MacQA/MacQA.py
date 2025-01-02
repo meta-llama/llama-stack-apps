@@ -14,6 +14,10 @@ from typing import AsyncGenerator, Generator, List, Optional
 import gradio as gr
 import requests
 from dotenv import load_dotenv
+from llama_stack.apis.memory_banks.memory_banks import VectorMemoryBankParams
+
+from llama_stack.distribution.library_client import LlamaStackAsLibraryClient
+
 from llama_stack_client import LlamaStackClient
 from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.lib.agents.event_logger import EventLogger
@@ -182,14 +186,16 @@ class LlamaChatInterface:
         self.session_id = None
         self.memory_bank_id = "chroma_bank"
 
-    async def initialize_system(self):
+    def initialize_system(self):
         """Initialize the entire system including memory bank and agent."""
-        self.client = LlamaStackClient(base_url=f"http://{self.host}:{self.port}")
+        # self.client = LlamaStackClient(base_url=f"http://{self.host}:{self.port}")
+        self.client = LlamaStackAsLibraryClient(YAML_PATH)
+        self.client.initialize()
         self.docs_dir = DOCS_DIR
-        await self.setup_memory_bank()
-        await self.initialize_agent()
+        self.setup_memory_bank()
+        self.initialize_agent()
 
-    async def setup_memory_bank(self):
+    def setup_memory_bank(self):
         """Set up the memory bank if it doesn't exist."""
         providers = self.client.providers.list()
         provider_id = providers["memory"][0].provider_id
@@ -204,16 +210,22 @@ class LlamaChatInterface:
             self.client.memory_banks.register(
                 memory_bank_id=self.memory_bank_id,
                 params={
+                    "memory_bank_type": "vector",
                     "embedding_model": "all-MiniLM-L6-v2",
                     "chunk_size_in_tokens": 100,
                     "overlap_size_in_tokens": 10,
                 },
+                # params=VectorMemoryBankParams(
+                #     embedding_model="all-MiniLM-L6-v2",
+                #     chunk_size_in_tokens=100,
+                #     overlap_size_in_tokens=10,
+                # ),
                 provider_id=provider_id,
             )
-            await self.load_documents()
+            self.load_documents()
             print(f"Memory bank registered.")
 
-    async def load_documents(self):
+    def load_documents(self):
         """Load documents from the specified directory into memory bank."""
         documents = []
         for filename in os.listdir(self.docs_dir):
@@ -236,7 +248,7 @@ class LlamaChatInterface:
             )
             print(f"Loaded {len(documents)} documents from {self.docs_dir}")
 
-    async def initialize_agent(self):
+    def initialize_agent(self):
         """Initialize the agent with model registration and configuration."""
 
         agent_config = AgentConfig(
@@ -267,8 +279,8 @@ class LlamaChatInterface:
         history = history or []
         history.append([message, ""])
 
-        if self.agent is None:
-            asyncio.run(self.initialize_system())
+        # if self.agent is None:
+        #     asyncio.run(self.initialize_system())
 
         response = self.agent.create_turn(
             messages=[{"role": "user", "content": message}],
@@ -379,7 +391,6 @@ def create_gradio_interface(
         clear.click(clear_chat, outputs=[chatbot, msg], queue=False)
 
         msg.submit(lambda: None, None, None, api_name=False)
-        # interface.load(fn=chat_interface.initialize_system)
 
     # Combine both interfaces
     with gr.Blocks(theme=gr.themes.Soft(), css=CUSTOM_CSS) as demo:
@@ -424,12 +435,13 @@ def create_gradio_interface(
                         stdout=subprocess.DEVNULL,
                     )
                     subprocess.run(["sleep", "3"], capture_output=True)
-                    print("Starting LlamaStack server...")
+                    print("Starting LlamaStack direct client...")
                     YAML = YAML.replace("MODEL_NAME_PLACEHOLDER", MODEL_NAME)
                     save_yaml()
-                    subprocess.Popen(
-                        f"python -m llama_stack.distribution.server.server --yaml-config {YAML_PATH} --disable-ipv6".split()
-                    )
+                    # subprocess.Popen(
+                    #     f"python -m llama_stack.distribution.server.server --yaml-config {YAML_PATH} --disable-ipv6".split()
+                    # )
+                    chat_interface.initialize_system()
                     return (
                         f"Model {model_name} inference started, and  {folder_path} loaded to DB. You can now go to Chat tab and start chatting!",
                     )
