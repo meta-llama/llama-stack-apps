@@ -1,18 +1,9 @@
-import asyncio
-import json
 import os
 import re
-import socket
 import subprocess
-import time
-import uuid
-from contextlib import closing
-from queue import Queue
-from threading import Thread
-from typing import AsyncGenerator, Generator, List, Optional
+from typing import Generator, List, Optional
 
 import gradio as gr
-import requests
 from dotenv import load_dotenv
 from llama_stack.apis.memory_banks.memory_banks import VectorMemoryBankParams
 
@@ -27,13 +18,8 @@ from llama_stack_client.types.memory_insert_params import Document
 # Load environment variables
 load_dotenv()
 
-HOST = os.getenv("HOST", "localhost")
-PORT = int(os.getenv("PORT", "5000"))
 GRADIO_SERVER_PORT = int(os.getenv("GRADIO_SERVER_PORT", "7861"))
-# MODEL_NAME = os.getenv("MODEL_NAME", "meta-llama/Llama-3.2-1B-Instruct")
-# if use_gpu, then the documents will be processed to output folder
 DOCS_DIR = None
-CHROMA_PORT = int(os.getenv("CHROMA_PORT", "6000"))
 YAML_PATH = os.getenv("YAML_PATH", "./llama_stack_run.yaml")
 YAML = """
 version: '2'
@@ -177,9 +163,7 @@ CUSTOM_CSS = """
 
 
 class LlamaChatInterface:
-    def __init__(self, host: str, port: int):
-        self.host = host
-        self.port = port
+    def __init__(self):
         self.docs_dir = None
         self.client = None
         self.agent = None
@@ -188,7 +172,6 @@ class LlamaChatInterface:
 
     def initialize_system(self):
         """Initialize the entire system including memory bank and agent."""
-        # self.client = LlamaStackClient(base_url=f"http://{self.host}:{self.port}")
         self.client = LlamaStackAsLibraryClient(YAML_PATH)
         self.client.initialize()
         self.docs_dir = DOCS_DIR
@@ -215,11 +198,6 @@ class LlamaChatInterface:
                     "chunk_size_in_tokens": 100,
                     "overlap_size_in_tokens": 10,
                 },
-                # params=VectorMemoryBankParams(
-                #     embedding_model="all-MiniLM-L6-v2",
-                #     chunk_size_in_tokens=100,
-                #     overlap_size_in_tokens=10,
-                # ),
                 provider_id=provider_id,
             )
             self.load_documents()
@@ -270,7 +248,7 @@ class LlamaChatInterface:
             enable_session_persistence=True,
         )
         self.agent = Agent(self.client, agent_config)
-        self.session_id = self.agent.create_session(f"session-{uuid.uuid4()}")
+        self.session_id = self.agent.create_session(f"session-macqa")
 
     def chat_stream(
         self, message: str, history: List[List[str]]
@@ -278,9 +256,6 @@ class LlamaChatInterface:
         """Stream chat responses token by token with proper history handling."""
         history = history or []
         history.append([message, ""])
-
-        # if self.agent is None:
-        #     asyncio.run(self.initialize_system())
 
         response = self.agent.create_turn(
             messages=[{"role": "user", "content": message}],
@@ -331,11 +306,9 @@ class LlamaChatInterface:
 
 
 def create_gradio_interface(
-    host: str = HOST,
-    port: int = PORT,
     docs_dir: str = DOCS_DIR,
 ):
-    chat_interface = LlamaChatInterface(host, port)
+    chat_interface = LlamaChatInterface()
     with gr.Blocks(theme=gr.themes.Soft(), css=CUSTOM_CSS) as main_interface:
         gr.Markdown("# LlamaStack Chat")
 
@@ -416,10 +389,6 @@ def create_gradio_interface(
                     global MODEL_NAME
                     global YAML
                     global DOCS_DIR
-                    # print("Starting Chroma server...")
-                    # subprocess.Popen(
-                    #     f"chroma run --host localhost --port {CHROMA_PORT} --path {folder_path}".split()
-                    # )
                     DOCS_DIR = folder_path
                     subprocess.run(["sleep", "10"], capture_output=True)
                     MODEL_NAME = model_name
@@ -438,9 +407,6 @@ def create_gradio_interface(
                     print("Starting LlamaStack direct client...")
                     YAML = YAML.replace("MODEL_NAME_PLACEHOLDER", MODEL_NAME)
                     save_yaml()
-                    # subprocess.Popen(
-                    #     f"python -m llama_stack.distribution.server.server --yaml-config {YAML_PATH} --disable-ipv6".split()
-                    # )
                     chat_interface.initialize_system()
                     return (
                         f"Model {model_name} inference started, and  {folder_path} loaded to DB. You can now go to Chat tab and start chatting!",
@@ -456,44 +422,16 @@ def create_gradio_interface(
     return demo
 
 
-def checkports():
-    # Check if the ports are available
-    for port in [CHROMA_PORT, GRADIO_SERVER_PORT, PORT]:
-        if not is_port_available(port):
-            print(f"Port {port} is not available.")
-            return False
-    return True
-
-
-def is_port_available(port):
-    with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
-        try:
-            s.bind((HOST, port))
-        except socket.error as e:
-            print(e)
-            return False
-    return True
-
-
 def save_yaml():
     with open(YAML_PATH, "w") as f:
         f.write(YAML)
     print("YAML file saved.")
 
 
-# def start_servers():
-#     if not checkports():
-#         print("Ports are not available. Please check and try again.")
-#     else:
-#         save_yaml()
-#         # Start the LlamaStack server
-#         print("Starting Chroma server...")
-#         subprocess.Popen(f"chroma run --host localhost --port {CHROMA_PORT} --path {DOCS_DIR}".split())
-#         subprocess.run(["sleep", "10"], capture_output=True)
-#         print("Starting LlamaStack server...")
-#         subprocess.Popen(f"python -m llama_stack.distribution.server.server --yaml-config {YAML_PATH} --disable-ipv6".split())
 if __name__ == "__main__":
     # Create and launch the Gradio interface
 
     interface = create_gradio_interface()
-    interface.launch(server_name=HOST, server_port=GRADIO_SERVER_PORT, debug=True)
+    interface.launch(
+        server_name="localhost", server_port=GRADIO_SERVER_PORT, debug=True
+    )
