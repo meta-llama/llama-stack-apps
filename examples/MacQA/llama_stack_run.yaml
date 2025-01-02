@@ -26,13 +26,10 @@ providers:
     provider_type: inline::llama-guard
     config: {}
   memory:
-  - provider_id: faiss
-    provider_type: inline::faiss
+  - provider_id: inline::chromadb
+    provider_type: inline::chromadb
     config:
-      kvstore:
-        type: sqlite
-        namespace: null
-        db_path: ~/.llama/distributions/ollama/faiss_store.db
+      db_path: ./runtime/chromadb
   agents:
   - provider_id: meta-reference
     provider_type: inline::meta-reference
@@ -40,14 +37,14 @@ providers:
       persistence_store:
         type: sqlite
         namespace: null
-        db_path: ~/.llama/distributions/ollama/agents_store.db
+        db_path: .ollama/agents_store.db
   telemetry:
   - provider_id: meta-reference
     provider_type: inline::meta-reference
     config:
       service_name: llama-stack
       sinks: console,sqlite
-      sqlite_db_path: ~/.llama/distributions/ollama/trace_store.db
+      sqlite_db_path: .ollama/trace_store.db
   eval:
   - provider_id: meta-reference
     provider_type: inline::meta-reference
@@ -73,7 +70,7 @@ providers:
 metadata_store:
   namespace: null
   type: sqlite
-  db_path: ~/.llama/distributions/ollama/registry.db
+  db_path: .ollama/registry.db
 models:
 - metadata: {}
   model_id: meta-llama/Llama-3.2-1B-Instruct
