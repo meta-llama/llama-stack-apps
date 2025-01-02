@@ -1,6 +1,7 @@
 import os
 import re
 import subprocess
+from multiprocessing import freeze_support
 from typing import Generator, List, Optional
 
 import gradio as gr
@@ -430,7 +431,7 @@ def save_yaml():
 
 if __name__ == "__main__":
     # Create and launch the Gradio interface
-
+    freeze_support()
     interface = create_gradio_interface()
     interface.launch(
         server_name="localhost", server_port=GRADIO_SERVER_PORT, debug=True
