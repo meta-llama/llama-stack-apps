@@ -2,7 +2,7 @@
 
 This is a coding agent that can read a GitHub issue, write code and submits a PR with a fix. It currently performs 5% on [SWE-Bench lite](https://www.swebench.com/). Demo:
 
-https://github.com/user-attachments/assets/3f214430-aeb8-412e-ad5e-0c173e0cfbc7
+https://github.com/user-attachments/assets/1c579e25-7630-404c-8ce5-1b72c2a22c1c
 
 ## What You Need
 - A GitHub account
