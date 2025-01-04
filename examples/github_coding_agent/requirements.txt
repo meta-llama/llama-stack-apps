@@ -1,0 +1,8 @@
+argparse
+requests
+python-dotenv
+pydantic
+llama-stack-client
+llama-models
+# Required for llama-models
+blobfile
