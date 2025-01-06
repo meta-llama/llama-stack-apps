@@ -121,7 +121,7 @@ def run_agent(
     )
     message += f"""
     <working_directory>
-    {os.path.join(SANDBOX_DIR, repo)}
+    {os.path.join(AGENT_WORKING_DIR, repo)}
     </working_directory>
 
     <file_tree>
