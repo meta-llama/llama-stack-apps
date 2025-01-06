@@ -14,6 +14,7 @@ from llama_stack_client.lib.inference.event_logger import EventLogger
 from llama_stack_client.types import UserMessage
 from llama_stack_client.types.agent_create_params import AgentConfig
 from llama_stack_client.types.memory_insert_params import Document
+from llama_stack.providers.registry import *
 
 
 def main(config_path: str):

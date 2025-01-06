@@ -30,11 +30,11 @@ conda_env: ollama
 apis:
 - agents
 - datasetio
-- eval
+# - eval
 - inference
 - memory
 - safety
-- scoring
+# - scoring
 - telemetry
 providers:
   inference:
@@ -77,10 +77,10 @@ providers:
       service_name: llama-stack
       sinks: console,sqlite
       sqlite_db_path: ./runtime/trace_store.db
-  eval:
-  - provider_id: meta-reference
-    provider_type: inline::meta-reference
-    config: {}
+#   eval:
+#   - provider_id: meta-reference
+#     provider_type: inline::meta-reference
+#     config: {}
   datasetio:
   - provider_id: huggingface
     provider_type: remote::huggingface
@@ -88,17 +88,17 @@ providers:
   - provider_id: localfs
     provider_type: inline::localfs
     config: {}
-  scoring:
-  - provider_id: basic
-    provider_type: inline::basic
-    config: {}
-  - provider_id: llm-as-judge
-    provider_type: inline::llm-as-judge
-    config: {}
-  - provider_id: braintrust
-    provider_type: inline::braintrust
-    config:
-      openai_api_key: 
+#   scoring:
+#   - provider_id: basic
+#     provider_type: inline::basic
+#     config: {}
+#   - provider_id: llm-as-judge
+#     provider_type: inline::llm-as-judge
+#     config: {}
+#   - provider_id: braintrust
+#     provider_type: inline::braintrust
+#     config:
+#       openai_api_key: 
 metadata_store:
   namespace: null
   type: sqlite
