@@ -30,11 +30,9 @@ conda_env: ollama
 apis:
 - agents
 - datasetio
-# - eval
 - inference
 - memory
 - safety
-# - scoring
 - telemetry
 providers:
   inference:
@@ -57,11 +55,6 @@ providers:
         type: sqlite
         namespace: null
         db_path: ./runtime/faiss_store.db
-#   memory:
-#   - provider_id: inline::chromadb
-#     provider_type: inline::chromadb
-#     config:
-#       db_path: ./runtime/chromadb
   agents:
   - provider_id: meta-reference
     provider_type: inline::meta-reference
@@ -77,10 +70,6 @@ providers:
       service_name: llama-stack
       sinks: console,sqlite
       sqlite_db_path: ./runtime/trace_store.db
-#   eval:
-#   - provider_id: meta-reference
-#     provider_type: inline::meta-reference
-#     config: {}
   datasetio:
   - provider_id: huggingface
     provider_type: remote::huggingface
@@ -88,17 +77,6 @@ providers:
   - provider_id: localfs
     provider_type: inline::localfs
     config: {}
-#   scoring:
-#   - provider_id: basic
-#     provider_type: inline::basic
-#     config: {}
-#   - provider_id: llm-as-judge
-#     provider_type: inline::llm-as-judge
-#     config: {}
-#   - provider_id: braintrust
-#     provider_type: inline::braintrust
-#     config:
-#       openai_api_key: 
 metadata_store:
   namespace: null
   type: sqlite
@@ -391,7 +369,6 @@ def create_gradio_interface(
                     global YAML
                     global DOCS_DIR
                     DOCS_DIR = folder_path
-                    subprocess.run(["sleep", "10"], capture_output=True)
                     MODEL_NAME = model_name
                     ollama_name_dict = {
                         "meta-llama/Llama-3.2-1B-Instruct": "llama3.2:1b-instruct-fp16",

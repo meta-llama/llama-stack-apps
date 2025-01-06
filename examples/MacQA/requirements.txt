@@ -1,5 +1,4 @@
-llama-stack==0.0.57
-llama-stack-client==0.0.57
+llama-stack==0.0.63
 sentence_transformers
-chromadb
 gradio
+pyinstaller
