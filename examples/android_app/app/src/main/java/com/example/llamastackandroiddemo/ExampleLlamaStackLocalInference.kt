@@ -7,6 +7,7 @@ import com.llama.llamastack.client.local.LlamaStackClientLocalClient
 import com.llama.llamastack.core.JsonNumber
 import com.llama.llamastack.models.CompletionMessage
 import com.llama.llamastack.models.InferenceChatCompletionParams
+import com.llama.llamastack.models.InterleavedContent
 import com.llama.llamastack.models.SystemMessage
 import com.llama.llamastack.models.UserMessage
 import kotlinx.datetime.Clock
@@ -162,7 +163,7 @@ class ExampleLlamaStackLocalInference(
         messageList.add(
             InferenceChatCompletionParams.Message.ofSystemMessage(
                 SystemMessage.builder()
-                    .content(SystemMessage.Content.ofString(systemPrompt))
+                    .content(InterleavedContent.ofString(systemPrompt))
                     .role(SystemMessage.Role.SYSTEM)
                     .build()
             )
@@ -174,7 +175,7 @@ class ExampleLlamaStackLocalInference(
                 // User message
                 inferenceMessage = InferenceChatCompletionParams.Message.ofUserMessage(
                     UserMessage.builder()
-                        .content(UserMessage.Content.ofString(chat.text))
+                        .content(InterleavedContent.ofString(chat.text))
                         .role(UserMessage.Role.USER)
                         .build()
                 )
@@ -182,7 +183,7 @@ class ExampleLlamaStackLocalInference(
                 // Assistant message (aka previous prompt response)
                 inferenceMessage = InferenceChatCompletionParams.Message.ofCompletionMessage(
                     CompletionMessage.builder()
-                        .content(CompletionMessage.Content.ofString(chat.text))
+                        .content(InterleavedContent.ofString(chat.text))
                         .stopReason(CompletionMessage.StopReason.END_OF_MESSAGE)
                         .toolCalls(emptyList())
                         .role(CompletionMessage.Role.ASSISTANT)
