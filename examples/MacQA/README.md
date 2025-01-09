@@ -10,9 +10,10 @@ This is an end-to-end Retrieval Augmented Generation (RAG) App leveraging llama-
 ### How to run:
 
 1. Open Ollama software.
-2. Double click `MacQA.app` in the folder, optionally you can move this `MacQA.app` to Application folder to have it installed.
-3. Open `http://localhost:7861/`, then type the path of data folder and choose the model for the Ollama inference.
-4. Wait for the setup to be ready and click `Chat` tab to start chating to this app.
+2. Open the `MacQA.dmg` and move `MacQA.app` to Application folder to have it installed.
+3. Double click `MacQA.app` in the Application folder.
+4. Open `http://localhost:7861/`, then type the path of data folder and choose the model for the Ollama inference.
+5. Wait for the setup to be ready and click `Chat` tab to start chating to this app.
 
 ### How to build the app (Optional):
 
