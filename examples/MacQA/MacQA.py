@@ -21,84 +21,7 @@ load_dotenv()
 
 GRADIO_SERVER_PORT = int(os.getenv("GRADIO_SERVER_PORT", "7861"))
 DOCS_DIR = None
-YAML_PATH = os.getenv("YAML_PATH", "./llama_stack_run.yaml")
-YAML = """
-version: '2'
-image_name: ollama
-docker_image: null
-conda_env: ollama
-apis:
-- agents
-- datasetio
-- inference
-- memory
-- safety
-- telemetry
-providers:
-  inference:
-  - provider_id: ollama
-    provider_type: remote::ollama
-    config:
-      url: http://localhost:11434
-  - provider_id: sentence-transformers
-    provider_type: inline::sentence-transformers
-    config: {}
-  safety:
-  - provider_id: llama-guard
-    provider_type: inline::llama-guard
-    config: {}
-  memory:
-  - provider_id: faiss
-    provider_type: inline::faiss
-    config:
-      kvstore:
-        type: sqlite
-        namespace: null
-        db_path: ./runtime/faiss_store.db
-  agents:
-  - provider_id: meta-reference
-    provider_type: inline::meta-reference
-    config:
-      persistence_store:
-        type: sqlite
-        namespace: null
-        db_path: ./runtime/agents_store.db
-  telemetry:
-  - provider_id: meta-reference
-    provider_type: inline::meta-reference
-    config:
-      service_name: llama-stack
-      sinks: console,sqlite
-      sqlite_db_path: ./runtime/trace_store.db
-  datasetio:
-  - provider_id: huggingface
-    provider_type: remote::huggingface
-    config: {}
-  - provider_id: localfs
-    provider_type: inline::localfs
-    config: {}
-metadata_store:
-  namespace: null
-  type: sqlite
-  db_path: ./runtime/registry.db
-models:
-- metadata: {}
-  model_id: MODEL_NAME_PLACEHOLDER
-  provider_id: ollama
-  provider_model_id: null
-  model_type: llm
-- metadata:
-    embedding_dimension: 384
-  model_id: all-MiniLM-L6-v2
-  provider_id: sentence-transformers
-  provider_model_id: null
-  model_type: embedding
-shields: []
-memory_banks: []
-datasets: []
-scoring_fns: []
-eval_tasks: []
-"""
+
 CUSTOM_CSS = """
 .context-block {
     font-size: 0.8em;
@@ -151,7 +74,13 @@ class LlamaChatInterface:
 
     def initialize_system(self):
         """Initialize the entire system including memory bank and agent."""
-        self.client = LlamaStackAsLibraryClient(YAML_PATH)
+        #path_to_yaml = os.path.abspath(os.path.join(os.path.dirname(__file__), "llama_stack_run.yaml"))
+        self.client = LlamaStackAsLibraryClient("ollama")
+        print(type(self.client.async_client.config),self.client.async_client.config)
+        self.client.async_client.config.apis=['agents', 'datasetio', 'inference', 'memory', 'safety', 'telemetry']
+        del self.client.async_client.config.providers['scoring']
+        del self.client.async_client.config.providers['eval']
+        print(1111,self.client.async_client.config)
         self.client.initialize()
         self.docs_dir = DOCS_DIR
         self.setup_memory_bank()
@@ -233,13 +162,20 @@ class LlamaChatInterface:
         self, message: str, history: List[List[str]]
     ) -> Generator[List[List[str]], None, None]:
         """Stream chat responses token by token with proper history handling."""
-        history = history or []
-        history.append([message, ""])
+        try:
+            history = history or []
+            history.append([message, ""])
 
-        response = self.agent.create_turn(
-            messages=[{"role": "user", "content": message}],
-            session_id=self.session_id,
-        )
+            response = self.agent.create_turn(
+                messages=[{"role": "user", "content": message}],
+                session_id=self.session_id,
+            )
+        except Exception as e:
+            print(f"Error: {e}")
+            raise gr.exceptions.Error(e)
+            return (
+                f"Error: {e}",
+            )
 
         current_response = ""
         context_shown = False
@@ -366,7 +302,6 @@ def create_gradio_interface(
                 # Function to handle the initial input and transition to the chat interface
                 def setup_chat_interface(folder_path, model_name):
                     global MODEL_NAME
-                    global YAML
                     global DOCS_DIR
                     DOCS_DIR = folder_path
                     MODEL_NAME = model_name
@@ -376,16 +311,23 @@ def create_gradio_interface(
                         "meta-llama/Llama-3.1-8B-Instruct": "llama3.1:8b-instruct-fp16",
                     }
                     ollama_name = ollama_name_dict[model_name]
-                    print("Starting Ollama server...")
-                    subprocess.Popen(
-                        f"ollama run {ollama_name} --keepalive=99h".split(),
-                        stdout=subprocess.DEVNULL,
-                    )
-                    subprocess.run(["sleep", "3"], capture_output=True)
-                    print("Starting LlamaStack direct client...")
-                    YAML = YAML.replace("MODEL_NAME_PLACEHOLDER", MODEL_NAME)
-                    save_yaml()
-                    chat_interface.initialize_system()
+                    try:
+                        print("Starting Ollama server...")
+                        subprocess.Popen(
+                            f"/usr/local/bin/ollama run {ollama_name} --keepalive=99h".split(),
+                            stdout=subprocess.DEVNULL,
+                        )
+                        subprocess.run(["sleep", "3"], capture_output=True)
+                        print("Starting LlamaStack direct client...")
+                        os.environ["INFERENCE_MODEL"] = model_name
+                        print("Using model: ", model_name)  
+                        chat_interface.initialize_system()
+                    except Exception as e:
+                        print(f"Error: {e}")
+                        raise gr.exceptions.Error(e)
+                        return (
+                            f"Error: {e}",
+                        )
                     return (
                         f"Model {model_name} inference started, and  {folder_path} loaded to DB. You can now go to Chat tab and start chatting!",
                     )
@@ -400,10 +342,6 @@ def create_gradio_interface(
     return demo
 
 
-def save_yaml():
-    with open(YAML_PATH, "w") as f:
-        f.write(YAML)
-    print("YAML file saved.")
 
 
 if __name__ == "__main__":

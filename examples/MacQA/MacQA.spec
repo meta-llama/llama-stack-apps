@@ -14,10 +14,12 @@ datas += collect_data_files('gradio_client')
 datas += collect_data_files('gradio')
 datas += collect_data_files('safehttpx')
 datas += collect_data_files('llama_stack')
+datas += collect_data_files('llama_stack',subdir='providers',include_py_files=True)
 datas += collect_data_files('llama_models')
 datas += collect_data_files('llama_stack_client')
 datas += collect_data_files('blobfile')
-datas += ( '/Users/kaiwu/work/llama-stack/llama_stack/providers', 'llama_stack/providers' ),
+
+
 
 a = Analysis(
     ['MacQA.py'],
@@ -40,16 +42,13 @@ pyz = PYZ(a.pure)
 exe = EXE(
     pyz,
     a.scripts,
-    a.binaries,
-    a.datas,
     [],
+    exclude_binaries=True,
     name='MacQA',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    upx_exclude=[],
-    runtime_tmpdir=None,
     console=True,
     disable_windowed_traceback=False,
     argv_emulation=False,
@@ -57,3 +56,16 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
 )
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.datas,
+    strip=False,
+    upx=True,
+    upx_exclude=[],
+    name='MacQA',
+)
+app = BUNDLE(coll,
+             name='MacQA.app',
+             icon='MacQA.icns',
+             bundle_identifier=None)

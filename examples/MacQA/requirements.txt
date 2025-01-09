@@ -1,4 +1,11 @@
+opentelemetry-exporter-otlp-proto-http
+datasets
+pypdf
+chardet
 llama-stack==0.0.63
+faiss-cpu
+ollama
 sentence_transformers
+aiosqlite
 gradio
 pyinstaller

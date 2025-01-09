@@ -1,0 +1,1 @@
+../../Resources/pyarrow/scalar.pxi

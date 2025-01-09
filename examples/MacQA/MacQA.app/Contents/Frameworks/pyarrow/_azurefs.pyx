@@ -1,0 +1,1 @@
+../../Resources/pyarrow/_azurefs.pyx

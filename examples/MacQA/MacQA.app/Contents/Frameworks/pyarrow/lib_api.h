@@ -1,0 +1,1 @@
+../../Resources/pyarrow/lib_api.h

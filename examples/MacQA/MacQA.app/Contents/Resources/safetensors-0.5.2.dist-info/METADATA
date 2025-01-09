@@ -1,0 +1,127 @@
+Metadata-Version: 2.4
+Name: safetensors
+Version: 0.5.2
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Education
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
+Classifier: Typing :: Typed
+Requires-Dist: numpy >=1.21.6 ; extra == 'numpy'
+Requires-Dist: safetensors[numpy] ; extra == 'torch'
+Requires-Dist: torch >=1.10 ; extra == 'torch'
+Requires-Dist: safetensors[numpy] ; extra == 'tensorflow'
+Requires-Dist: tensorflow >=2.11.0 ; extra == 'tensorflow'
+Requires-Dist: safetensors[numpy] ; extra == 'pinned-tf'
+Requires-Dist: tensorflow ==2.18.0 ; extra == 'pinned-tf'
+Requires-Dist: safetensors[numpy] ; extra == 'jax'
+Requires-Dist: flax >=0.6.3 ; extra == 'jax'
+Requires-Dist: jax >=0.3.25 ; extra == 'jax'
+Requires-Dist: jaxlib >=0.3.25 ; extra == 'jax'
+Requires-Dist: mlx >=0.0.9 ; extra == 'mlx'
+Requires-Dist: safetensors[numpy] ; extra == 'paddlepaddle'
+Requires-Dist: paddlepaddle >=2.4.1 ; extra == 'paddlepaddle'
+Requires-Dist: black ==22.3 ; extra == 'quality'
+Requires-Dist: click ==8.0.4 ; extra == 'quality'
+Requires-Dist: isort >=5.5.4 ; extra == 'quality'
+Requires-Dist: flake8 >=3.8.3 ; extra == 'quality'
+Requires-Dist: safetensors[numpy] ; extra == 'testing'
+Requires-Dist: h5py >=3.7.0 ; extra == 'testing'
+Requires-Dist: huggingface-hub >=0.12.1 ; extra == 'testing'
+Requires-Dist: setuptools-rust >=1.5.2 ; extra == 'testing'
+Requires-Dist: pytest >=7.2.0 ; extra == 'testing'
+Requires-Dist: pytest-benchmark >=4.0.0 ; extra == 'testing'
+Requires-Dist: hypothesis >=6.70.2 ; extra == 'testing'
+Requires-Dist: safetensors[torch] ; extra == 'all'
+Requires-Dist: safetensors[numpy] ; extra == 'all'
+Requires-Dist: safetensors[pinned-tf] ; extra == 'all'
+Requires-Dist: safetensors[jax] ; extra == 'all'
+Requires-Dist: safetensors[paddlepaddle] ; extra == 'all'
+Requires-Dist: safetensors[quality] ; extra == 'all'
+Requires-Dist: safetensors[testing] ; extra == 'all'
+Requires-Dist: safetensors[all] ; extra == 'dev'
+Provides-Extra: numpy
+Provides-Extra: torch
+Provides-Extra: tensorflow
+Provides-Extra: pinned-tf
+Provides-Extra: jax
+Provides-Extra: mlx
+Provides-Extra: paddlepaddle
+Provides-Extra: quality
+Provides-Extra: testing
+Provides-Extra: all
+Provides-Extra: dev
+Author-email: Nicolas Patry <patry.nicolas@protonmail.com>
+Requires-Python: >=3.7
+Description-Content-Type: text/markdown; charset=UTF-8; variant=GFM
+Project-URL: Homepage, https://github.com/huggingface/safetensors
+Project-URL: Source, https://github.com/huggingface/safetensors
+
+## Installation
+
+```
+pip install safetensors
+```
+
+
+## Usage
+
+### Numpy
+
+```python
+from safetensors.numpy import save_file, load_file
+import numpy as np
+
+tensors = {
+   "a": np.zeros((2, 2)),
+   "b": np.zeros((2, 3), dtype=np.uint8)
+}
+
+save_file(tensors, "./model.safetensors")
+
+
+# Now loading
+loaded = load_file("./model.safetensors")
+```
+
+### Torch
+
+```python
+from safetensors.torch import save_file, load_file
+import torch
+
+tensors = {
+   "a": torch.zeros((2, 2)),
+   "b": torch.zeros((2, 3), dtype=torch.uint8)
+}
+
+save_file(tensors, "./model.safetensors")
+
+
+# Now loading
+loaded = load_file("./model.safetensors")
+```
+
+### Developing
+
+```
+# inside ./safetensors/bindings/python
+pip install .[dev]
+```
+Should be enough to install this library locally.
+
+### Testing
+
+```
+# inside ./safetensors/bindings/python
+pip install .[dev]
+pytest -sv tests/
+```
+

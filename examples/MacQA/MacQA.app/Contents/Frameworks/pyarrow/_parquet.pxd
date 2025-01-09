@@ -1,0 +1,1 @@
+../../Resources/pyarrow/_parquet.pxd
