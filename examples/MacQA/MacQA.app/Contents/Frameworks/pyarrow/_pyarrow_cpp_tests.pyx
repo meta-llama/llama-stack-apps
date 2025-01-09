@@ -1,1 +1,0 @@
-../../Resources/pyarrow/_pyarrow_cpp_tests.pyx

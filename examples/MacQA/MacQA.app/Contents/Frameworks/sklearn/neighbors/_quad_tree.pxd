@@ -1,1 +1,0 @@
-../../../Resources/sklearn/neighbors/_quad_tree.pxd

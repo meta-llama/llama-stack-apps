@@ -1,1 +1,0 @@
-../../Resources/pyarrow/config.pxi

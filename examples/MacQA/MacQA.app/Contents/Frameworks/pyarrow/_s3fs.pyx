@@ -1,1 +1,0 @@
-../../Resources/pyarrow/_s3fs.pyx

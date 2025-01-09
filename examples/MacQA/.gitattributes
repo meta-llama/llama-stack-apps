@@ -1,2 +1,1 @@
 MacQA filter=lfs diff=lfs merge=lfs -text
-MacQA.app filter=lfs diff=lfs merge=lfs -text

@@ -1,1 +1,0 @@
-../../Resources/pyarrow/__init__.pxd

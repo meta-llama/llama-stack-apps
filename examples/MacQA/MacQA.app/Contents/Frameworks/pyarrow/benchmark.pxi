@@ -1,1 +1,0 @@
-../../Resources/pyarrow/benchmark.pxi

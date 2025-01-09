@@ -1,1 +1,0 @@
-../../Resources/pyarrow/types.pxi

@@ -1,1 +1,0 @@
-../../Resources/torch/_tensor_docs.py
