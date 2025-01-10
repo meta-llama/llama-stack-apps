@@ -19,13 +19,13 @@ You can either do local inference with Ollama or choose a cloud provider:
 
 If you want to use Ollama to run inference, please follow [Ollama's download instruction](https://ollama.com/download) to install Ollama.  Before running the app, please open Ollama software and download the model you want to use, eg. type `ollama pull llama3.2:1b-instruct-fp16` in terminal. Only 1B, 3B and 8B model are supported as most machine can not run models bigger than 8B locally.
 
-**Cloud API**:
+**Cloud Provider**:
 
-Register an account in TogetherAI or FireworksAI to get an API key.
+Register an account in [TogetherAI](https://www.together.ai/) or [FireworksAI](https://fireworks.ai/) to get an API key.
 
 ### How to run MacQA app:
 
-1. To get the dmg file, you can just download raw file from [here](https://github.com/meta-llama/llama-stack-apps/blob/mac-rag/examples/DocQA/MacQA.dmg) or use git clone by first following instructions [here](https://docs.github.com/en/repositories/working-with-files/managing-large-files/installing-git-large-file-storage) to enable git lfs and do another `git pull`.
+1. To get the dmg file, you can just download raw file from [here](https://github.com/meta-llama/llama-stack-apps/blob/docqav2/examples/DocQA/MacQA.dmg) or use git clone by first following instructions [here](https://docs.github.com/en/repositories/working-with-files/managing-large-files/installing-git-large-file-storage) to enable git lfs and do another `git pull`.
 2. Open the `MacQA.dmg` in the folder and move `MacQA.app` to Application folder to have it installed.
 
 3. Double click `MacQA.app` in the Application folder.
@@ -37,7 +37,7 @@ Register an account in TogetherAI or FireworksAI to get an API key.
 
 ![Chat](./data/assets/MacQA_chat.png)
 
-6. Use `Activity Monitor` to quit the `MacQA.app`.
+6. Use `Activity Monitor` to quit the `MacQA.app`. Please do not run multiple `MacQA.app` processes at the same time, as it will cause port conflict.
 
 ### How to build the MacQA app:
 
@@ -45,8 +45,8 @@ Register an account in TogetherAI or FireworksAI to get an API key.
 2. Run `pip install -r build_app_env.txt` to install required pypi packages.
 3. Run `python MacQA.py` make sure everything works.
 4. UPX is a executable packer to reduce the size of our App, we need to download UPX zip corresponding to your machine platform from [UPX website](https://github.com/upx/upx/releases/) to this folder and unzip it.
-5. Compile MacQA.py with correct upx path, eg. `pyinstaller --upx-dir ./upx-4.2.4-arm64_linux MacQA.spec`, the one-clickable app should be in `./dist/MacQA.app` (This step may take ~10 mins).
-6. Optionally, you can move the MacQA.app to Application folder to have it locally installed.
+5. We will use Pyinstaller to build the app from `MacQA.py` file. Please use it with correct upx path, eg. `pyinstaller --upx-dir ./upx-4.2.4-arm64_linux MacQA.spec`, the one-clickable app should be in `./dist/MacQA.app` (This step may take ~10 mins).
+6. Optionally, you can move the MacQA.app to Application folder now to have it locally installed.
 7. Alternatively, if you want to create a .dmg file for easier distribution. You can follow those steps:
 
  - Copy ./dist/MacQA.app to a new folder.
