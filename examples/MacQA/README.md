@@ -5,17 +5,26 @@ This is an end-to-end Retrieval Augmented Generation (RAG) App leveraging llama-
 
 ### Prerequisite:
 
-**Install Ollama**: This app use ollama to run inference, please follow [ollama's download instruction](https://ollama.com/download) to install Ollama. Make sure there is a binary `/usr/local/bin/ollama`.
+You can either do local inference with Ollama or choose a cloud provider:
+
+**Local Inference**:
+
+1. Install Ollama: If you want to use Ollama to run inference, please follow [Ollama's download instruction](https://ollama.com/download) to install Ollama. Only 1B, 3B and 8B model are supported as most machine can not run models bigger than 8B locally.
+
+**Cloud API**:
+
+1. Register an account in TogetherAI or FireworksAI to get an API key.
 
 ### How to run:
 
-1. Open Ollama software and download the model you want to use, eg. `ollama pull llama3.2:1b-instruct-fp16
+1. If you choose do local inference, please open Ollama software and download the model you want to use, eg. `ollama pull llama3.2:1b-instruct-fp16
 `
 2. To get the dmg file, you can just download raw file from [here](https://github.com/meta-llama/llama-stack-apps/blob/mac-rag/examples/MacQA/MacQA.dmg) or use git clone by first following instructions [here](https://docs.github.com/en/repositories/working-with-files/managing-large-files/installing-git-large-file-storage) to enable git lfs and do another `git pull`.
 2. Open the `MacQA.dmg` in the folder and move `MacQA.app` to Application folder to have it installed.
 3. Double click `MacQA.app` in the Application folder.
-4. Open `http://localhost:7861/`, then type the path of data folder and choose the model for the Ollama inference.
+4. Open `http://localhost:7861/`, then type the path of data folder then select the models and providers. Put your API key if you choose to use TogetherAI or FireworksAI.
 5. Wait for the setup to be ready and click `Chat` tab to start chating to this app.
+6. Use `Activity Monitor` to quit the `MacQA.app`.
 
 ### How to build the app (Optional):
 

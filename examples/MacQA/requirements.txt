@@ -1,3 +1,5 @@
+together
+fireworks-ai
 opentelemetry-exporter-otlp-proto-http
 datasets
 pypdf

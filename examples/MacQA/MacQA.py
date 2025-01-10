@@ -70,12 +70,12 @@ class LlamaChatInterface:
         self.client = None
         self.agent = None
         self.session_id = None
-        self.memory_bank_id = "chroma_bank"
+        self.memory_bank_id = "doc_bank"
 
-    def initialize_system(self):
+    def initialize_system(self,provider_name="ollama"):
         """Initialize the entire system including memory bank and agent."""
         #path_to_yaml = os.path.abspath(os.path.join(os.path.dirname(__file__), "llama_stack_run.yaml"))
-        self.client = LlamaStackAsLibraryClient("ollama")
+        self.client = LlamaStackAsLibraryClient(provider_name)
         print(type(self.client.async_client.config),self.client.async_client.config)
         self.client.async_client.config.apis=['agents', 'datasetio', 'inference', 'memory', 'safety', 'telemetry']
         del self.client.async_client.config.providers['scoring']
@@ -103,8 +103,8 @@ class LlamaChatInterface:
                 params={
                     "memory_bank_type": "vector",
                     "embedding_model": "all-MiniLM-L6-v2",
-                    "chunk_size_in_tokens": 100,
-                    "overlap_size_in_tokens": 10,
+                    "chunk_size_in_tokens": 200,
+                    "overlap_size_in_tokens": 20,
                 },
                 provider_id=provider_id,
             )
@@ -147,8 +147,8 @@ class LlamaChatInterface:
                     "memory_bank_configs": [
                         {"bank_id": self.memory_bank_id, "type": "vector"}
                     ],
-                    "max_tokens_in_context": 300,
-                    "max_chunks": 5,
+                    "max_tokens_in_context": 800,
+                    "max_chunks": 4,
                 }
             ],
             tool_choice="auto",
@@ -284,7 +284,7 @@ def create_gradio_interface(
     with gr.Blocks(theme=gr.themes.Soft(), css=CUSTOM_CSS) as demo:
         with gr.Tab("Setup", visible=True) as setup_tab:
             with gr.Blocks(theme=gr.themes.Soft(), css=CUSTOM_CSS) as initial_interface:
-                gr.Markdown("## Enter Data Folder Path and Select a Llama Model Name")
+                gr.Markdown("## Use the following options to setup the chat interface")
                 folder_path_input = gr.Textbox(label="Data Folder Path")
                 # folder_path_input = gr.File(label="Select Data Directory for RAG", file_count="directory")
                 model_name_input = gr.Dropdown(
@@ -292,36 +292,66 @@ def create_gradio_interface(
                         "meta-llama/Llama-3.2-1B-Instruct",
                         "meta-llama/Llama-3.2-3B-Instruct",
                         "meta-llama/Llama-3.1-8B-Instruct",
+                        "meta-llama/Llama-3.1-70B-Instruct",
+                        "meta-llama/Llama-3.1-405B-Instruct",
                     ],
                     value="meta-llama/Llama-3.2-1B-Instruct",
                     label="Llama Model Name",
                 )
+                provider_name = gr.Dropdown(
+                    choices=[
+                        "ollama",
+                        "together",
+                        "fireworks",
+                    ],
+                    value="ollama",
+                    label="Provider List",
+                )
+                api_key = gr.Textbox(label="Put your API key here if you choose together or fireworks provider")
                 setup_button = gr.Button("Setup Chat Interface")
                 setup_output = gr.Textbox(label="Setup", interactive=False)
 
                 # Function to handle the initial input and transition to the chat interface
-                def setup_chat_interface(folder_path, model_name):
+                def setup_chat_interface(folder_path, model_name,provider_name,api_key):
                     global MODEL_NAME
                     global DOCS_DIR
                     DOCS_DIR = folder_path
                     MODEL_NAME = model_name
-                    ollama_name_dict = {
+                    if provider_name == "ollama":
+                        ollama_name_dict = {
                         "meta-llama/Llama-3.2-1B-Instruct": "llama3.2:1b-instruct-fp16",
                         "meta-llama/Llama-3.2-3B-Instruct": "llama3.2:3b-instruct-fp16",
                         "meta-llama/Llama-3.1-8B-Instruct": "llama3.1:8b-instruct-fp16",
-                    }
-                    ollama_name = ollama_name_dict[model_name]
+                        }
+                        if model_name not in ollama_name_dict:
+                            raise gr.exceptions.Error(
+                                f"Model {model_name} is not supported currently, please use 1B, 3B and 8B model."
+                            )
+                        else:
+                            ollama_name = ollama_name_dict[model_name]
+                        try:
+                            print("Starting Ollama server...")
+                            subprocess.Popen(
+                                f"/usr/local/bin/ollama run {ollama_name} --keepalive=99h".split(),
+                                stdout=subprocess.DEVNULL,
+                            )
+                            subprocess.run(["sleep", "3"], capture_output=True)
+                        except Exception as e:
+                            print(f"Error: {e}")
+                            raise gr.exceptions.Error(e)
+                            return (
+                                f"Error: {e}",
+                            )
+                    elif provider_name == "together":
+                        os.environ['TOGETHER_API_KEY'] = api_key
+                    elif provider_name == "fireworks":
+                        os.environ['FIREWORKS_API_KEY'] = api_key 
                     try:
-                        print("Starting Ollama server...")
-                        subprocess.Popen(
-                            f"/usr/local/bin/ollama run {ollama_name} --keepalive=99h".split(),
-                            stdout=subprocess.DEVNULL,
-                        )
-                        subprocess.run(["sleep", "3"], capture_output=True)
                         print("Starting LlamaStack direct client...")
                         os.environ["INFERENCE_MODEL"] = model_name
-                        print("Using model: ", model_name)  
-                        chat_interface.initialize_system()
+                        print("Using model: ", model_name) 
+                        print("Using provider: ", provider_name) 
+                        chat_interface.initialize_system(provider_name)
                     except Exception as e:
                         print(f"Error: {e}")
                         raise gr.exceptions.Error(e)
@@ -329,12 +359,12 @@ def create_gradio_interface(
                             f"Error: {e}",
                         )
                     return (
-                        f"Model {model_name} inference started, and  {folder_path} loaded to DB. You can now go to Chat tab and start chatting!",
+                        f"Model {model_name} inference started using provider {provider_name}, and  {folder_path} loaded to DB. You can now go to Chat tab and start chatting!",
                     )
 
                 setup_button.click(
                     setup_chat_interface,
-                    inputs=[folder_path_input, model_name_input],
+                    inputs=[folder_path_input, model_name_input,provider_name,api_key],
                     outputs=setup_output,
                 )
         with gr.Tab("Chat", visible=True) as chat_tab:
@@ -351,3 +381,4 @@ if __name__ == "__main__":
     interface.launch(
         server_name="localhost", server_port=GRADIO_SERVER_PORT, debug=True
     )
+
