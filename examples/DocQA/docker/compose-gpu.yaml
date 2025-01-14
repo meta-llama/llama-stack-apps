@@ -1,16 +1,4 @@
 services:
-  chromadb:
-    image: ghcr.io/chroma-core/chroma:latest
-    env_file: "docqa_env"
-    environment:
-      - IS_PERSISTENT=TRUE
-      - CHROMA_HOST_PORT=${CHROMA_PORT}
-    network_mode: "host"
-    volumes:
-      - ${DOC_PATH}:/chroma/chroma
-    tty: true
-    ports:
-      - "6000:6000"
   ollama:
     image: ollama/ollama:latest
     env_file: "docqa_env"
@@ -18,12 +6,11 @@ services:
     environment:
       - MODEL_NAME=${MODEL_NAME}
       - OLLAMA_KEEP_ALIVE=99h
-      - OLLAMA_HOST=127.0.0.1:14343
     volumes:
       - ollama:/root/.ollama # this solution synchronizes with the docker volume and loads the model rocket fast
       - ./ollama_start.sh:/root/ollama_start.sh
     ports:
-      - "14343:14343"
+      - "11434:11434"
     tty: true
     deploy:
       resources: # enable GPUs
@@ -38,7 +25,7 @@ services:
     env_file: "docqa_env"
     network_mode: "host"
     environment:
-      - LLAMA_STACK_PORT=${LLAMA_STACK_PORT}
+      - USE_DOCKER=true
     tty: true
     volumes:
       - ~/.llama:/root/.llama

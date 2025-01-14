@@ -43,9 +43,9 @@ Register an account in [TogetherAI](https://www.together.ai/) or [FireworksAI](h
 
 1. Create a new python venv, eg. `conda create -n build_app python=3.10` and then `conda activate build_app` to use it.
 2. Run `pip install -r build_app_env.txt` to install required pypi packages.
-3. Run `python MacQA.py` make sure everything works.
+3. Run `python app.py` make sure everything works.
 4. UPX is a executable packer to reduce the size of our App, we need to download UPX zip corresponding to your machine platform from [UPX website](https://github.com/upx/upx/releases/) to this folder and unzip it.
-5. We will use Pyinstaller to build the app from `MacQA.py` file. Please use it with correct upx path, eg. `pyinstaller --upx-dir ./upx-4.2.4-arm64_linux MacQA.spec`, the one-clickable app should be in `./dist/MacQA.app` (This step may take ~10 mins).
+5. We will use Pyinstaller to build the app from `app.py` file. Please use it with correct upx path, eg. `pyinstaller --upx-dir ./upx-4.2.4-arm64_linux MacQA.spec`, the one-clickable app should be in `./dist/MacQA.app` (This step may take ~10 mins).
 6. Optionally, you can move the MacQA.app to Application folder now to have it locally installed.
 7. Alternatively, if you want to create a .dmg file for easier distribution. You can follow those steps:
 
@@ -73,7 +73,7 @@ The above is the workflow diagram for this RAG app. To run the app, please read 
 
 ```bash
 cd docker
-cp docqa_env_template docqv_env
+cp docqa_env_template docqa_env
 ```
 
 2. Then update `model_name` and `document_path` accordingly in your `docqv_env`, for example:
@@ -82,9 +82,8 @@ cp docqa_env_template docqv_env
 DOC_PATH=/path/to/your/llama-stack-apps/examples/DocQA/example_data
 MODEL_NAME=llama3.2:1b-instruct-fp16
 HOST=localhost
-LLAMA_STACK_PORT=5000
-CHROMA_PORT=6000
-GRADIO_SERVER_PORT=7860
+LLAMA_STACK_PORT=5001
+GRADIO_SERVER_PORT=7861
 USE_GPU_FOR_DOC_INGESTION=false
 ```
 

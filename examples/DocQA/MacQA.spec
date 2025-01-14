@@ -22,7 +22,7 @@ datas += collect_data_files('blobfile')
 
 
 a = Analysis(
-    ['MacQA.py'],
+    ['app.py'],
     pathex=[],
     binaries=[],
     datas=datas,
