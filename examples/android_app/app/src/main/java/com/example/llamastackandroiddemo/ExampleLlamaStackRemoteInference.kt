@@ -3,7 +3,6 @@ package com.example.llamastackandroiddemo
 import android.content.Context
 import com.llama.llamastack.client.LlamaStackClientClient
 import com.llama.llamastack.client.okhttp.LlamaStackClientOkHttpClient
-import com.llama.llamastack.models.CompletionMessage
 import com.llama.llamastack.models.InferenceChatCompletionParams
 import com.llama.llamastack.models.InterleavedContent
 import com.llama.llamastack.models.SamplingParams
@@ -99,6 +98,7 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
                         .samplingParams(
                             SamplingParams.builder()
                                 .temperature(temperature)
+                                .strategy(SamplingParams.Strategy.GREEDY)
                                 .build()
                         )
                         .messages(
@@ -131,6 +131,7 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
                         .samplingParams(
                             SamplingParams.builder()
                                 .temperature(temperature)
+                                .strategy(SamplingParams.Strategy.GREEDY)
                                 .build()
                         )
                         .messages(
@@ -185,11 +186,11 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
             } else {
                 // Assistant message (aka previous prompt response)
                 inferenceMessage = InferenceChatCompletionParams.Message.ofCompletionMessage(
-                    CompletionMessage.builder()
+                    InferenceChatCompletionParams.Message.CompletionMessage.builder()
                         .content(InterleavedContent.ofString(chat.text))
-                        .stopReason(CompletionMessage.StopReason.END_OF_MESSAGE)
+                        .stopReason(InferenceChatCompletionParams.Message.CompletionMessage.StopReason.END_OF_MESSAGE)
                         .toolCalls(emptyList())
-                        .role(CompletionMessage.Role.ASSISTANT)
+                        .role(InferenceChatCompletionParams.Message.CompletionMessage.Role.ASSISTANT)
                         .build()
                 )
             }
