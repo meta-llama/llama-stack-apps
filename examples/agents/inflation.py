@@ -8,13 +8,11 @@ import asyncio
 import os
 
 import fire
-
 from llama_stack_client import LlamaStackClient
 from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.lib.agents.event_logger import EventLogger
-from llama_stack_client.types import Attachment
 from llama_stack_client.types.agent_create_params import AgentConfig
-
+from llama_stack_client.types.agents.turn_create_params import Document
 from termcolor import colored
 
 
@@ -31,13 +29,15 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
         base_url=f"http://{host}:{port}",
     )
 
-    available_shields = [shield.identifier for shield in client.shields.list()]
+    available_shields = [shield.identifier for shield in client.shields.list().data]
     if not available_shields:
         print(colored("No available shields. Disabling safety.", "yellow"))
     else:
         print(f"Available shields found: {available_shields}")
     available_models = [
-        model.identifier for model in client.models.list() if model.model_type == "llm"
+        model.identifier
+        for model in client.models.list().data
+        if model.model_type == "llm"
     ]
     if not available_models:
         print(colored("No available models. Exiting.", "red"))
@@ -48,29 +48,18 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
 
     agent_config = AgentConfig(
         model=selected_model,
-        instructions="You are a helpful assistant",
         sampling_params={
-            "strategy": "greedy",
-            "temperature": 1.0,
-            "top_p": 0.9,
+            "strategy": {"type": "top_p", "temperature": 1.0, "top_p": 0.9},
         },
+        instructions="You are a helpful assistant",
         tools=(
             (
-                [
-                    {
-                        "type": "brave_search",
-                        "engine": "brave",
-                        "api_key": os.getenv("BRAVE_SEARCH_API_KEY"),
-                    }
-                ]
+                ["builtin::websearch"]
                 if os.getenv("BRAVE_SEARCH_API_KEY")
+                or os.getenv("TAVILY_SEARCH_API_KEY")
                 else []
             )
-            + [
-                {
-                    "type": "code_interpreter",
-                }
-            ]
+            + ["builtin::code_interpreter"]
         ),
         tool_choice="required",
         tool_prompt_format="json",
@@ -87,7 +76,7 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
         (
             "Here is a csv, can you describe it ?",
             [
-                Attachment(
+                Document(
                     content="https://raw.githubusercontent.com/meta-llama/llama-stack-apps/main/examples/resources/inflation.csv",
                     mime_type="test/csv",
                 )
@@ -109,7 +98,7 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
                     "content": prompt[0],
                 }
             ],
-            attachments=prompt[1],
+            documents=prompt[1],
             session_id=session_id,
         )
 

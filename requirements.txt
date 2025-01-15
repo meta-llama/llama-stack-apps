@@ -3,4 +3,4 @@ python-dotenv
 setuptools
 yfinance
 gradio
-llama-stack-client>=0.0.63
+llama-stack-client>=0.1.0rc1

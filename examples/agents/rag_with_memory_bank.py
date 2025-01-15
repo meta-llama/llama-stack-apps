@@ -7,7 +7,6 @@
 import asyncio
 
 import fire
-
 from llama_stack_client import LlamaStackClient
 from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.lib.agents.event_logger import EventLogger
@@ -38,7 +37,7 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
     client = LlamaStackClient(base_url=f"http://{host}:{port}")
     providers = client.providers.list()
 
-    available_shields = [shield.identifier for shield in client.shields.list()]
+    available_shields = [shield.identifier for shield in client.shields.list().data]
     if not available_shields:
         print(colored("No available shields. Disabling safety.", "yellow"))
     else:
@@ -53,7 +52,7 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
             "chunk_size_in_tokens": 512,
             "overlap_size_in_tokens": 64,
         },
-        provider_id=providers["memory"][0].provider_id,
+        provider_id=providers.memory[0]["provider_id"],
     )
 
     # insert some documents
@@ -62,7 +61,9 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
         documents=documents,
     )
     available_models = [
-        model.identifier for model in client.models.list() if model.model_type == "llm"
+        model.identifier
+        for model in client.models.list().data
+        if model.model_type == "llm"
     ]
     if not available_models:
         print(colored("No available models. Exiting.", "red"))
@@ -75,19 +76,9 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
         model=selected_model,
         instructions="You are a helpful assistant",
         sampling_params={
-            "strategy": "greedy",
-            "temperature": 1.0,
-            "top_p": 0.9,
+            "strategy": {"type": "top_p", "temperature": 1.0, "top_p": 0.9},
         },
-        tools=[
-            {
-                "type": "memory",
-                "memory_bank_configs": [{"bank_id": "test_bank", "type": "vector"}],
-                "query_generator_config": {"type": "default", "sep": " "},
-                "max_tokens_in_context": 4096,
-                "max_chunks": 10,
-            }
-        ],
+        tools=["builtin::memory"],
         tool_choice="auto",
         tool_prompt_format="json",
         input_shields=available_shields if available_shields else [],

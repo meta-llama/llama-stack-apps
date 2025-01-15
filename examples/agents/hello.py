@@ -6,7 +6,6 @@
 import os
 
 import fire
-
 from llama_stack_client import LlamaStackClient
 from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.lib.agents.event_logger import EventLogger
@@ -27,14 +26,16 @@ def main(host: str, port: int):
         base_url=f"http://{host}:{port}",
     )
 
-    available_shields = [shield.identifier for shield in client.shields.list()]
+    available_shields = [shield.identifier for shield in client.shields.list().data]
     if not available_shields:
         print(colored("No available shields. Disabling safety.", "yellow"))
     else:
         print(f"Available shields found: {available_shields}")
 
     available_models = [
-        model.identifier for model in client.models.list() if model.model_type == "llm"
+        model.identifier
+        for model in client.models.list().data
+        if model.model_type == "llm"
     ]
     if not available_models:
         print(colored("No available models. Exiting.", "red"))
@@ -47,9 +48,7 @@ def main(host: str, port: int):
         model=selected_model,
         instructions="You are a helpful assistant",
         sampling_params={
-            "strategy": "greedy",
-            "temperature": 1.0,
-            "top_p": 0.9,
+            "strategy": {"type": "top_p", "temperature": 1.0, "top_p": 0.9},
         },
         tools=(
             [

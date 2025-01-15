@@ -8,10 +8,7 @@ import json
 from typing import Dict
 
 import requests
-
-from llama_stack_client.types.tool_param_definition_param import (
-    ToolParamDefinitionParam,
-)
+from llama_stack_client.types.tool_def_param import Parameter
 
 from .single_message import SingleMessageCustomTool
 
@@ -142,10 +139,11 @@ class WebSearchTool(SingleMessageCustomTool):
     def get_description(self) -> str:
         return "Search the web for a given query"
 
-    def get_params_definition(self) -> Dict[str, ToolParamDefinitionParam]:
+    def get_params_definition(self) -> Dict[str, Parameter]:
         return {
-            "query": ToolParamDefinitionParam(
-                param_type="str",
+            "query": Parameter(
+                name="query",
+                parameter_type="str",
                 description="The query to search for",
                 required=True,
             )

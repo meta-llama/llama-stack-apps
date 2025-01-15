@@ -6,9 +6,7 @@
 from typing import Dict
 
 import yfinance as yf
-from llama_stack_client.types.tool_param_definition_param import (
-    ToolParamDefinitionParam,
-)
+from llama_stack_client.types.tool_def_param import Parameter
 
 from .single_message import SingleMessageCustomTool
 
@@ -22,20 +20,23 @@ class TickerDataTool(SingleMessageCustomTool):
     def get_description(self) -> str:
         return "Get yearly closing prices for a given ticker symbol"
 
-    def get_params_definition(self) -> Dict[str, ToolParamDefinitionParam]:
+    def get_params_definition(self) -> Dict[str, Parameter]:
         return {
-            "ticker_symbol": ToolParamDefinitionParam(
-                param_type="str",
+            "ticker_symbol": Parameter(
+                name="ticker_symbol",
+                parameter_type="str",
                 description="The ticker symbol for which to get the data. eg. '^GSPC'",
                 required=True,
             ),
-            "start": ToolParamDefinitionParam(
-                param_type="str",
+            "start": Parameter(
+                name="start",
+                parameter_type="str",
                 description="Start date, eg. '2021-01-01'",
                 required=True,
             ),
-            "end": ToolParamDefinitionParam(
-                param_type="str",
+            "end": Parameter(
+                name="end",
+                parameter_type="str",
                 description="End date, eg. '2024-12-31'",
                 required=True,
             ),
