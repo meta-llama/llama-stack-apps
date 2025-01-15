@@ -74,17 +74,29 @@ class LlamaChatInterface:
         self.session_id = None
         self.memory_bank_id = "doc_bank"
 
-    def initialize_system(self,provider_name="ollama"):
+    def initialize_system(self, provider_name="ollama"):
         """Initialize the entire system including memory bank and agent."""
-        #path_to_yaml = os.path.abspath(os.path.join(os.path.dirname(__file__), "llama_stack_run.yaml"))
+        # path_to_yaml = os.path.abspath(os.path.join(os.path.dirname(__file__), "llama_stack_run.yaml"))
         self.client = LlamaStackAsLibraryClient(provider_name)
-        #print(type(self.client.async_client.config),self.client.async_client.config)
-        
+        print(type(self.client.async_client.config), self.client.async_client.config)
+
         # Disable scoring and eval by modifying the config
-        self.client.async_client.config.apis=['agents', 'datasetio', 'inference', 'memory', 'safety', 'telemetry']
-        del self.client.async_client.config.providers['scoring']
-        del self.client.async_client.config.providers['eval']
-        
+        self.client.async_client.config.apis = [
+            "agents",
+            "datasetio",
+            "inference",
+            "memory",
+            "safety",
+            "telemetry",
+            "tool_runtime",
+        ]
+        del self.client.async_client.config.providers["scoring"]
+        del self.client.async_client.config.providers["eval"]
+        self.client.async_client.config.providers["tool_runtime"] = []
+        # print(
+        #     111, type(self.client.async_client.config), self.client.async_client.config
+        # )
+
         self.client.initialize()
         self.docs_dir = DOCS_DIR
         self.setup_memory_bank()
@@ -93,10 +105,9 @@ class LlamaChatInterface:
     def setup_memory_bank(self):
         """Set up the memory bank if it doesn't exist."""
         providers = self.client.providers.list()
-        provider_id = providers["memory"][0].provider_id
+        provider_id = providers.memory[0]["provider_id"]
         memory_banks = self.client.memory_banks.list()
-        print(f"Memory banks: {memory_banks}")
-
+        print("Memory banks: ", memory_banks)
         # Check if memory bank exists by identifier
         if any(bank.identifier == self.memory_bank_id for bank in memory_banks):
             print(f"Memory bank '{self.memory_bank_id}' exists.")
@@ -177,9 +188,7 @@ class LlamaChatInterface:
         except Exception as e:
             print(f"Error: {e}")
             raise gr.exceptions.Error(e)
-            return (
-                f"Error: {e}",
-            )
+            return (f"Error: {e}",)
 
         current_response = ""
         context_shown = False
@@ -288,8 +297,12 @@ def create_gradio_interface(
     with gr.Blocks(theme=gr.themes.Soft(), css=CUSTOM_CSS) as demo:
         if not USE_DOCKER:
             with gr.Tab("Setup", visible=True) as setup_tab:
-                with gr.Blocks(theme=gr.themes.Soft(), css=CUSTOM_CSS) as initial_interface:
-                    gr.Markdown("## Use the following options to setup the chat interface")
+                with gr.Blocks(
+                    theme=gr.themes.Soft(), css=CUSTOM_CSS
+                ) as initial_interface:
+                    gr.Markdown(
+                        "## Use the following options to setup the chat interface"
+                    )
                     folder_path_input = gr.Textbox(label="Data Folder Path")
                     # folder_path_input = gr.File(label="Select Data Directory for RAG", file_count="directory")
                     model_name_input = gr.Dropdown(
@@ -312,21 +325,25 @@ def create_gradio_interface(
                         value="ollama",
                         label="Provider List",
                     )
-                    api_key = gr.Textbox(label="Put your API key here if you choose together or fireworks provider")
+                    api_key = gr.Textbox(
+                        label="Put your API key here if you choose together or fireworks provider"
+                    )
                     setup_button = gr.Button("Setup Chat Interface")
                     setup_output = gr.Textbox(label="Setup", interactive=False)
 
                     # Function to handle the initial input and transition to the chat interface
-                    def setup_chat_interface(folder_path, model_name,provider_name,api_key):
+                    def setup_chat_interface(
+                        folder_path, model_name, provider_name, api_key
+                    ):
                         global MODEL_NAME
                         global DOCS_DIR
                         DOCS_DIR = folder_path
                         MODEL_NAME = model_name
                         if provider_name == "ollama":
                             ollama_name_dict = {
-                            "meta-llama/Llama-3.2-1B-Instruct": "llama3.2:1b-instruct-fp16",
-                            "meta-llama/Llama-3.2-3B-Instruct": "llama3.2:3b-instruct-fp16",
-                            "meta-llama/Llama-3.1-8B-Instruct": "llama3.1:8b-instruct-fp16",
+                                "meta-llama/Llama-3.2-1B-Instruct": "llama3.2:1b-instruct-fp16",
+                                "meta-llama/Llama-3.2-3B-Instruct": "llama3.2:3b-instruct-fp16",
+                                "meta-llama/Llama-3.1-8B-Instruct": "llama3.1:8b-instruct-fp16",
                             }
                             if model_name not in ollama_name_dict:
                                 raise gr.exceptions.Error(
@@ -344,43 +361,42 @@ def create_gradio_interface(
                             except Exception as e:
                                 print(f"Error: {e}")
                                 raise gr.exceptions.Error(e)
-                                return (
-                                    f"Error: {e}",
-                                )
+                                return (f"Error: {e}",)
                         elif provider_name == "together":
-                            os.environ['TOGETHER_API_KEY'] = api_key
+                            os.environ["TOGETHER_API_KEY"] = api_key
                         elif provider_name == "fireworks":
-                            os.environ['FIREWORKS_API_KEY'] = api_key 
+                            os.environ["FIREWORKS_API_KEY"] = api_key
                         try:
                             print("Starting LlamaStack direct client...")
                             os.environ["INFERENCE_MODEL"] = model_name
-                            print("Using model: ", model_name) 
-                            print("Using provider: ", provider_name) 
+                            print("Using model: ", model_name)
+                            print("Using provider: ", provider_name)
                             chat_interface.initialize_system(provider_name)
                         except Exception as e:
                             print(f"Error: {e}")
                             raise gr.exceptions.Error(e)
-                            return (
-                                f"Error: {e}",
-                            )
+                            return (f"Error: {e}",)
                         return (
                             f"Model {model_name} inference started using provider {provider_name}, and  {folder_path} loaded to DB. You can now go to Chat tab and start chatting!",
                         )
 
                     setup_button.click(
                         setup_chat_interface,
-                        inputs=[folder_path_input, model_name_input,provider_name,api_key],
+                        inputs=[
+                            folder_path_input,
+                            model_name_input,
+                            provider_name,
+                            api_key,
+                        ],
                         outputs=setup_output,
                     )
         else:
             # Use Docker to run the chat interface, only support Ollama, no need to setup.
             os.environ["INFERENCE_MODEL"] = MODEL_NAME
-            chat_interface.initialize_system('ollama')
+            chat_interface.initialize_system("ollama")
         with gr.Tab("Chat", visible=True) as chat_tab:
             main_interface.render()
     return demo
-
-
 
 
 if __name__ == "__main__":
