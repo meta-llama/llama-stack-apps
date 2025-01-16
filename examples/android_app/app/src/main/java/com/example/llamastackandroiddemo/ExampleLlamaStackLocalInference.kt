@@ -107,7 +107,7 @@ class ExampleLlamaStackLocalInference(
         }
         val thread = Thread {
             try {
-                val response = inferenceCall(modelName, conversationHistory, sysPrompt, ctx);
+                val response = inferenceCall(modelName, conversationHistory, sysPrompt, ctx, true);
                 future.complete(response)
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -117,7 +117,7 @@ class ExampleLlamaStackLocalInference(
         return future.get();
     }
 
-    private fun inferenceCall(modelName: String, conversationHistory: ArrayList<Message>, systemPrompt: String, ctx: Context): String? {
+    private fun inferenceCall(modelName: String, conversationHistory: ArrayList<Message>, systemPrompt: String, ctx: Context, streaming: Boolean): String? {
         // Multi prompt/ chat history use case
         if (client == null) {
             AppLogging.getInstance().log("client is null for local inference");
@@ -126,31 +126,53 @@ class ExampleLlamaStackLocalInference(
         AppLogging.getInstance().log("local inference with prompt=${conversationHistory.last().text}")
         val sequenceLength = ModelUtils.getSequenceLengthForConversationHistory(conversationHistory, systemPrompt)
         var response = ""
-        val result = client!!.inference().chatCompletion(
-            InferenceChatCompletionParams.builder()
-                .modelId(modelName)
-                .putAdditionalQueryParam("seq_len", sequenceLength.toString())
-                .messages(
-                    constructLSMessagesFromConversationHistoryAndSystemPrompt(conversationHistory, systemPrompt)
-                )
-                .build()
-        )
-        response = result.asChatCompletionResponse().completionMessage().content().string().toString();
-        tps =
-            (result.asChatCompletionResponse()._additionalProperties()["tps"] as JsonNumber).value as Float
+        if (streaming) {
+            val result = client!!.inference().chatCompletionStreaming(
+                InferenceChatCompletionParams.builder()
+                    .modelId(modelName)
+                    .putAdditionalQueryParam("seq_len", sequenceLength.toString())
+                    .messages(
+                        constructLSMessagesFromConversationHistoryAndSystemPrompt(conversationHistory, systemPrompt)
+                    )
+                    .build()
+            )
+            val callback = ctx as InferenceStreamingCallback
+            result.use {
+                result.asSequence().forEach {
+                    println(it)
+                    callback.onStreamReceived(it.asChatCompletionResponseStreamChunk().event().delta().string().toString())
+                }
+            }
+        } else {
+            val result = client!!.inference().chatCompletion(
+                InferenceChatCompletionParams.builder()
+                    .modelId(modelName)
+                    .putAdditionalQueryParam("seq_len", sequenceLength.toString())
+                    .messages(
+                        constructLSMessagesFromConversationHistoryAndSystemPrompt(conversationHistory, systemPrompt)
+                    )
+                    .build()
+            )
+            response = result.asChatCompletionResponse().completionMessage().content().string().toString();
+            tps =
+                (result.asChatCompletionResponse()._additionalProperties()["tps"] as JsonNumber).value as Float
 
-        if (response == "") {
-            //Empty content as Llama Stack is returning a tool call
-            val toolCalls = result.asChatCompletionResponse().completionMessage().toolCalls()
-            return if (toolCalls.isNotEmpty()) {
-                functionDispatch(toolCalls, ctx)
-            } else {
-                "Empty tool calls and model response. File a bug"
+            //TODO: Location for the below may change
+            if (response == "") {
+                //Empty content as Llama Stack is returning a tool call
+                val toolCalls = result.asChatCompletionResponse().completionMessage().toolCalls()
+                return if (toolCalls.isNotEmpty()) {
+                    functionDispatch(toolCalls, ctx)
+                } else {
+                    "Empty tool calls and model response. File a bug"
+                }
+            }
+            else {
+                return response;
             }
         }
-        else {
-            return response;
-        }
+
+        return response
     }
 
     private fun constructLSMessagesFromConversationHistoryAndSystemPrompt(
