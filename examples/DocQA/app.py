@@ -78,7 +78,7 @@ class LlamaChatInterface:
         """Initialize the entire system including memory bank and agent."""
         # path_to_yaml = os.path.abspath(os.path.join(os.path.dirname(__file__), "llama_stack_run.yaml"))
         self.client = LlamaStackAsLibraryClient(provider_name)
-        print(type(self.client.async_client.config), self.client.async_client.config)
+        #print(type(self.client.async_client.config), self.client.async_client.config)
 
         # Disable scoring and eval by modifying the config
         self.client.async_client.config.apis = [
@@ -90,9 +90,16 @@ class LlamaChatInterface:
             "telemetry",
             "tool_runtime",
         ]
+        #self.client.async_client.config.tool_groups = []
         del self.client.async_client.config.providers["scoring"]
         del self.client.async_client.config.providers["eval"]
-        self.client.async_client.config.providers["tool_runtime"] = []
+
+        # only enable memory_runtime
+        tool_runtime = [] 
+        for provider in self.client.async_client.config.providers["tool_runtime"]:
+            if provider.provider_id == 'memory-runtime':
+                tool_runtime.append(provider)
+        self.client.async_client.config.providers["tool_runtime"] = tool_runtime
         # print(
         #     111, type(self.client.async_client.config), self.client.async_client.config
         # )
@@ -105,11 +112,12 @@ class LlamaChatInterface:
     def setup_memory_bank(self):
         """Set up the memory bank if it doesn't exist."""
         providers = self.client.providers.list()
-        provider_id = providers.memory[0]["provider_id"]
+        memory_provider = [provider for provider in providers if provider.api == "memory"]
+        provider_id = memory_provider[0].provider_id
         memory_banks = self.client.memory_banks.list()
         print("Memory banks: ", memory_banks)
         # Check if memory bank exists by identifier
-        if any(bank.identifier == self.memory_bank_id for bank in memory_banks):
+        if memory_banks and any(bank.identifier == self.memory_bank_id for bank in memory_banks):
             print(f"Memory bank '{self.memory_bank_id}' exists.")
         else:
             print(f"Memory bank '{self.memory_bank_id}' does not exist. Creating...")
@@ -155,19 +163,12 @@ class LlamaChatInterface:
         agent_config = AgentConfig(
             model=MODEL_NAME,
             instructions="You are a helpful assistant that can answer questions based on provided documents. Return your answer short and concise, less than 50 words.",
-            sampling_params={"strategy": "greedy", "temperature": 1.0, "top_p": 0.9},
-            tools=[
-                {
-                    "type": "memory",
-                    "memory_bank_configs": [
-                        {"bank_id": self.memory_bank_id, "type": "vector"}
-                    ],
-                    "max_tokens_in_context": 800,
-                    "max_chunks": 4,
+            toolgroups = [
+            {
+                "name": "builtin::memory",
+                "args" : {"memory_bank_ids": [self.memory_bank_id]} 
                 }
             ],
-            tool_choice="auto",
-            tool_prompt_format="json",
             enable_session_persistence=True,
         )
         self.agent = Agent(self.client, agent_config)
@@ -191,46 +192,18 @@ class LlamaChatInterface:
             return (f"Error: {e}",)
 
         current_response = ""
-        context_shown = False
 
         for log in EventLogger().log(response):
             log.print()
             if hasattr(log, "content"):
                 # Format context blocks if present
-                if not context_shown and "Retrieved context from banks" in str(log):
-                    context = self.format_context(str(log))
-                    current_response = context + current_response
-                    context_shown = True
-                else:
+                if "tool_execution>" not in str(log):
                     current_response += log.content
 
                 history[-1][1] = current_response
                 yield history.copy()
 
-    def format_context(self, log_str: str) -> str:
-        """Format the context block with custom styling."""
-        # Extract context and clean up the markers
-        context_match = re.search(
-            r"Retrieved context from banks:.*?\n(.*?===.*?===.*?)(?=\n>|$)",
-            log_str,
-            re.DOTALL,
-        )
-        if context_match:
-            context = context_match.group(1).strip()
-            # Remove the marker lines
-            context = re.sub(
-                r"====\s*Here are the retrieved documents for relevant context:\s*===\s*START-RETRIEVED-CONTEXT\s*===\s*",
-                "",
-                context,
-                flags=re.IGNORECASE,
-            )
-            return f"""
-<div class="context-block">
-    <div class="context-title">Retrieved Context</div>
-    <div class="context-content">{context}</div>
-</div>
-"""
-        return ""
+    
 
 
 def create_gradio_interface(
