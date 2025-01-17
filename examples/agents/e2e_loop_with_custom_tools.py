@@ -21,16 +21,14 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
         base_url=f"http://{host}:{port}",
     )
 
-    available_shields = [shield.identifier for shield in client.shields.list().data]
+    available_shields = [shield.identifier for shield in client.shields.list()]
     if not available_shields:
         print("No available shields. Disable safety.")
     else:
         print(f"Available shields found: {available_shields}")
 
     available_models = [
-        model.identifier
-        for model in client.models.list().data
-        if model.model_type == "llm"
+        model.identifier for model in client.models.list() if model.model_type == "llm"
     ]
     supported_models = [x for x in available_models if "3.2" in x and "Vision" not in x]
     if not supported_models:
@@ -50,7 +48,7 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
         sampling_params={
             "strategy": {"type": "top_p", "temperature": 1.0, "top_p": 0.9},
         },
-        tools=[
+        toolgroups=[
             "builtin::code_interpreter",
         ],
         client_tools=[

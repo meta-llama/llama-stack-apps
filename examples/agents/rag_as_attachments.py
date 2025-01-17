@@ -37,15 +37,13 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
         base_url=f"http://{host}:{port}",
     )
 
-    available_shields = [shield.identifier for shield in client.shields.list().data]
+    available_shields = [shield.identifier for shield in client.shields.list()]
     if not available_shields:
         print(colored("No available shields. Disabling safety.", "yellow"))
     else:
         print(f"Available shields found: {available_shields}")
     available_models = [
-        model.identifier
-        for model in client.models.list().data
-        if model.model_type == "llm"
+        model.identifier for model in client.models.list() if model.model_type == "llm"
     ]
     if not available_models:
         print(colored("No available models. Exiting.", "red"))

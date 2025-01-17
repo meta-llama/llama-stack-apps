@@ -35,9 +35,11 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
     ]
 
     client = LlamaStackClient(base_url=f"http://{host}:{port}")
-    providers = client.providers.list()
+    memory_providers = [
+        provider for provider in client.providers.list() if provider.api == "memory"
+    ]
 
-    available_shields = [shield.identifier for shield in client.shields.list().data]
+    available_shields = [shield.identifier for shield in client.shields.list()]
     if not available_shields:
         print(colored("No available shields. Disabling safety.", "yellow"))
     else:
@@ -52,7 +54,7 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
             "chunk_size_in_tokens": 512,
             "overlap_size_in_tokens": 64,
         },
-        provider_id=providers.memory[0]["provider_id"],
+        provider_id=memory_providers[0].provider_id,
     )
 
     # insert some documents
@@ -61,9 +63,7 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
         documents=documents,
     )
     available_models = [
-        model.identifier
-        for model in client.models.list().data
-        if model.model_type == "llm"
+        model.identifier for model in client.models.list() if model.model_type == "llm"
     ]
     if not available_models:
         print(colored("No available models. Exiting.", "red"))
