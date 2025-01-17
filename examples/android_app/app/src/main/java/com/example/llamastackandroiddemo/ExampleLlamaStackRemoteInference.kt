@@ -28,6 +28,7 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
             client = LlamaStackClientOkHttpClient
                 .builder()
                 .baseUrl(remoteURL)
+                .headers(mapOf("x-llamastack-client-version" to listOf("0.1.0")))
                 .build()
         } catch (e: Exception) {
             client = null
@@ -97,9 +98,15 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
                         .modelId(modelName)
                         .samplingParams(
                             SamplingParams.builder()
-                                .temperature(temperature)
-                                .strategy(SamplingParams.Strategy.GREEDY)
-                                .build()
+                                .strategy(
+                                    SamplingParams.Strategy.ofGreedySamplingStrategy(
+                                        SamplingParams.Strategy.GreedySamplingStrategy.builder()
+                                            .type(
+                                                SamplingParams.Strategy.GreedySamplingStrategy.Type
+                                                    .GREEDY
+                                        ).build()
+                                    )
+                                ).build()
                         )
                         .messages(
                             constructLSMessagesFromConversationHistoryAndSystemPrompt(conversationHistory, systemPrompt)
@@ -120,7 +127,10 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
 
                         }
                         if (it.asChatCompletionResponseStreamChunk().event().stopReason().toString() != "end_of_turn") {
-                            callback.onStreamReceived(it.asChatCompletionResponseStreamChunk().event().delta().string().toString())
+                            callback.onStreamReceived(
+                                it.asChatCompletionResponseStreamChunk().event().delta().textDelta()
+                                    ?.text().toString()
+                            )
                         }
                     }
                 }
@@ -130,9 +140,15 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
                         .modelId(modelName)
                         .samplingParams(
                             SamplingParams.builder()
-                                .temperature(temperature)
-                                .strategy(SamplingParams.Strategy.GREEDY)
-                                .build()
+                                .strategy(
+                                    SamplingParams.Strategy.ofGreedySamplingStrategy(
+                                        SamplingParams.Strategy.GreedySamplingStrategy.builder()
+                                            .type(
+                                                SamplingParams.Strategy.GreedySamplingStrategy.Type
+                                                    .GREEDY
+                                            ).build()
+                                    )
+                                ).build()
                         )
                         .messages(
                             constructLSMessagesFromConversationHistoryAndSystemPrompt(conversationHistory, systemPrompt)
