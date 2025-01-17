@@ -139,8 +139,22 @@ class ExampleLlamaStackLocalInference(
             val callback = ctx as InferenceStreamingCallback
             result.use {
                 result.asSequence().forEach {
-                    println(it)
-                    callback.onStreamReceived(it.asChatCompletionResponseStreamChunk().event().delta().string().toString())
+                    val delta = it.asChatCompletionResponseStreamChunk().event().delta()
+                    if(delta.isToolCallDelta()) {
+                        val toolCall = delta.toolCallDelta()?.content()?.toolCall()
+                        if (toolCall != null) {
+                            callback.onStreamReceived("\n" + functionDispatch(listOf(toolCall), ctx))
+                        } else {
+                            callback.onStreamReceived("\n" + "Empty tool call. File a bug")
+                        }
+                    }
+                    if (it.asChatCompletionResponseStreamChunk().event().stopReason().toString() != "end_of_turn") {
+                        callback.onStreamReceived(it.asChatCompletionResponseStreamChunk().event().delta().string().toString())
+                    } else {
+                        // response is complete so stats like tps is available
+                        tps = (it.asChatCompletionResponseStreamChunk()._additionalProperties()["tps"] as JsonNumber).value as Float
+                        callback.onStatStreamReceived(tps)
+                    }
                 }
             }
         } else {
@@ -157,9 +171,8 @@ class ExampleLlamaStackLocalInference(
             tps =
                 (result.asChatCompletionResponse()._additionalProperties()["tps"] as JsonNumber).value as Float
 
-            //TODO: Location for the below may change
             if (response == "") {
-                //Empty content as Llama Stack is returning a tool call
+                //Empty content as Llama Stack is returning a tool call for non-streaming
                 val toolCalls = result.asChatCompletionResponse().completionMessage().toolCalls()
                 return if (toolCalls.isNotEmpty()) {
                     functionDispatch(toolCalls, ctx)
@@ -167,12 +180,8 @@ class ExampleLlamaStackLocalInference(
                     "Empty tool calls and model response. File a bug"
                 }
             }
-            else {
-                return response;
-            }
         }
-
-        return response
+        return response;
     }
 
     private fun constructLSMessagesFromConversationHistoryAndSystemPrompt(
