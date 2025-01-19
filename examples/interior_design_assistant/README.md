@@ -25,7 +25,7 @@ pip install -r requirements.txt
 
 ## Pre-requisite
 
-1. You are required to download Llama3.2-11B-Vision-Instruct model to run this demo, follow the steps to download [here](https://github.com/meta-llama/llama-stack/blob/main/docs/cli_reference.md#step-1-get-the-models).
+1. You are required to download Llama3.2-11B-Vision-Instruct model to run this demo, follow the steps to download [here](https://huggingface.co/meta-llama/Llama-3.2-11B-Vision-Instruct).
 
 
 ## Starting the app
