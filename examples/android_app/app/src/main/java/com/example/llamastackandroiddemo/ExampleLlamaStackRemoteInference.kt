@@ -17,6 +17,7 @@ import java.util.concurrent.CompletableFuture
 
 interface InferenceStreamingCallback {
     fun onStreamReceived(message: String)
+    fun onStatStreamReceived(tps: Float)
 }
 
 class ExampleLlamaStackRemoteInference(remoteURL: String) {

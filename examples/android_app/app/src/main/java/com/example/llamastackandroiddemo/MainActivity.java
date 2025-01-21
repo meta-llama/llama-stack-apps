@@ -642,4 +642,13 @@ public class MainActivity extends AppCompatActivity implements Runnable, Inferen
             });
   }
 
+  @Override
+  public void onStatStreamReceived(float tps) {
+    AppLogging.getInstance().log("this is stats received: " + tps);
+    runOnUiThread(
+            () -> {
+              mResultMessage.setTokensPerSecond(tps);
+              mMessageAdapter.notifyDataSetChanged();
+            });
+  }
 }
