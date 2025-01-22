@@ -75,6 +75,10 @@ dependencies {
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.18.1")
   implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.18.1")
   implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.1")
-  implementation("com.llama.llamastack:llama-stack-client-kotlin:0.0.58")
+//  implementation("com.llama.llamastack:llama-stack-client-kotlin:0.0.58")
+  implementation(fileTree(mapOf(
+    "dir" to "libs",
+    "include" to listOf("*.aar", "*.jar"),
+  )))
   implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.2.1")
 }

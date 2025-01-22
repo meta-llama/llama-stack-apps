@@ -58,6 +58,6 @@ public class ModelUtils {
     }
     seq_len += systemPrompt.length();
 
-    return seq_len + 64; // 64 is the buffer
+    return seq_len + 128; // 64 is the buffer
   }
 }
