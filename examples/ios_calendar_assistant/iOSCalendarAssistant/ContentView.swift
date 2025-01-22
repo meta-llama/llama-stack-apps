@@ -21,12 +21,10 @@ struct ContentView: View {
   private let runnerQueue = DispatchQueue(label: "org.llamastack.stacksummary")
 
   @State var eventStore = EKEventStore()
-  @State var presetEvent: EKEvent?
-
-  @State var isShowingEventModal = false
-
+  @State private var showAlert = false
+  @State private var alertMessage = ""
+  
   private let agent = RemoteAgents(url: URL(string: "http://54.189.109.3:8501")!)
-//  private let agent = RemoteAgents(url: URL(string: "https://llama-stack.together.ai")!)
   @State var agentId = ""
   @State var agenticSystemSessionId = ""
 
@@ -75,32 +73,36 @@ struct ContentView: View {
         }
         .padding([.leading, .trailing, .bottom], 10)
       }
-    }
-    .navigationViewStyle(StackNavigationViewStyle())
-    .sheet(isPresented:  Binding(
-      get: { self.presetEvent != nil },
-      set: { if !$0 { self.presetEvent = nil } }
-    )) {
-      if let event = presetEvent {
-        EventEditView(isPresented: $isShowingEventModal,
-                      eventStore: self.eventStore,
-                      event: event)
+      .alert(isPresented: $showAlert) {
+          Alert(title: Text("Calendar Event"), message: Text(alertMessage), dismissButton: .default(Text("OK")))
       }
     }
   }
 
   func triggerAddEventToCalendar(title: String, startDate: Date, endDate: Date) {
     eventStore.requestAccess(to: .event) { [self] granted, error in
-      if granted {
-        let event = EKEvent(eventStore: eventStore)
-        event.title = title
-        event.startDate = startDate
-        event.endDate = endDate
-        event.calendar = eventStore.defaultCalendarForNewEvents
-        event.notes = self.actionItems
-        self.presetEvent = event
-      } else {
-        print("Calendar access denied")
+      DispatchQueue.main.async {
+        if granted {
+          let event = EKEvent(eventStore: eventStore)
+          event.title = title
+          event.startDate = startDate
+          event.endDate = endDate
+          event.calendar = eventStore.defaultCalendarForNewEvents
+          event.notes = self.actionItems
+          
+          do {
+            try eventStore.save(event, span: .thisEvent, commit: true)
+            alertMessage = "Event \(title) from \(startDate) to \(endDate) saved successfully to calendar"
+            showAlert = true
+          } catch let error {
+            alertMessage = "Failed to save event: \(error.localizedDescription)"
+            showAlert = true
+          }
+        } else {
+          print("Calendar access denied")
+          alertMessage = "Calendar access denied"
+          showAlert = true
+        }
       }
     }
   }
@@ -119,13 +121,11 @@ struct ContentView: View {
 
       for try await chunk in try await self.agent.createTurn(agent_id: self.agentId, session_id: self.agenticSystemSessionId, request: request) {
         let payload = chunk.event.payload
-        print(">>>\(payload)")
         switch (payload) {
         case .AgentTurnResponseStepStartPayload(_):
           break
         case .AgentTurnResponseStepProgressPayload(let step):
           if (step.delta != nil) {
-            print("==> \(step.delta)")
             DispatchQueue.main.async {
               withAnimation {
                 var message = messages.removeLast()
@@ -202,76 +202,56 @@ struct ContentView: View {
 
   func callTools(prompt: String) async throws {
     
-//    try await self.agent.initAndCreateTurn(messages: [
-//      .UserMessage(Components.Schemas.UserMessage(
-//        content: .case1("Call functions as needed to handle any actions in the following text:\n\n" + prompt),
-//        role: .user
-//      ))
-//    ])
-    
-//    let request = Components.Schemas.CreateAgentTurnRequest(
-//      messages: [
-//        .UserMessage(Components.Schemas.UserMessage(
-//          content: .case1("Call functions as needed to handle any actions in the following text:\n\n" + prompt),
-//          role: .user
-//        ))
-//      ],
-//      stream: true
-//    )
+    let request = Components.Schemas.CreateAgentTurnRequest(
+      messages: [
+        .UserMessage(Components.Schemas.UserMessage(
+          content: .case1("Call functions as needed to handle any actions in the following text:\n\n" + prompt),
+          role: .user
+        ))
+      ],
+      stream: true
+    )
 
-//    for try await chunk in try await self.agent.createTurn(agent_id: self.agentId, session_id: self.agenticSystemSessionId, request: request) {
+    for try await chunk in try await self.agent.createTurn(agent_id: self.agentId, session_id: self.agenticSystemSessionId, request: request) {
       
-    for try await chunk in try await self.agent.initAndCreateTurn(messages: [
-      .UserMessage(Components.Schemas.UserMessage(
-        content: .case1("Call functions as needed to handle any actions in the following text:\n\n" + prompt),
-        role: .user
-      ))
-    ]) {
       let payload = chunk.event.payload
-      print("**** payload=\(payload)")
       switch (payload) {
       case .AgentTurnResponseStepStartPayload(_):
         break
         
       case .AgentTurnResponseStepProgressPayload(let step):
         if (step.delta != nil) {
-          print("!!! \(step.delta)")
           switch (step.delta) {
-//          case .case1(_):
-//            break
           case .ToolCallDelta(let call):
-            switch (call.content) {
-            case .ToolCall(let toolName):
-              print("***toolName = \(toolName)")
-              break
-            case .case1(let toolName):
-              print("!!!toolName = \(toolName)")
-              if (toolName == "create_event") {
-                var args: [String : String] = [:]
-//                for (arg_name, arg) in call.arguments.additionalProperties {
-//                  switch (arg) {
-//                  case .case1(let s): // type string
-//                    args[arg_name] = s
-//                  case .case2(_), .case3(_), .case4(_), .case5(_), .case6(_):
-//                    break
-//                  }
-//                }
-//
-//                let formatter = DateFormatter()
-//                formatter.dateFormat = "yyyy-MM-dd HH:mm"
-//                formatter.timeZone = TimeZone.current
-//                formatter.locale = Locale.current
-//                self.triggerAddEventToCalendar(
-//                  title: args["event_name"]!,
-//                  startDate: formatter.date(from: args["start"]!) ?? Date(),
-//                  endDate: formatter.date(from: args["end"]!) ?? Date()
-//                )
+            if call.parse_status == .succeeded {
+              switch (call.content) {
+              case .ToolCall(let toolCall):
+                  var args: [String : String] = [:]
+                  for (arg_name, arg) in toolCall.arguments.additionalProperties {
+                    switch (arg) {
+                    case .case1(let s): // type string
+                      args[arg_name] = s
+                    case .case2(_), .case3(_), .case4(_), .case5(_), .case6(_):
+                      break
+                    }
+                  }
+  
+                  let formatter = DateFormatter()
+                  formatter.dateFormat = "yyyy-MM-dd HH:mm"
+                  formatter.timeZone = TimeZone.current
+                  formatter.locale = Locale.current
+                  self.triggerAddEventToCalendar(
+                    title: args["event_name"]!,
+                    startDate: formatter.date(from: args["start"]!) ?? Date(),
+                    endDate: formatter.date(from: args["end"]!) ?? Date()
+                  )
+              case .case1(_):
+                break
               }
             }
           case .TextDelta(_):
             if case .TextDelta(let textDelta) = step.delta {
                 let text = textDelta.text
-              print(">>>text=\(text)")
             }
 
             break
@@ -299,7 +279,6 @@ struct ContentView: View {
     prompt = ""
     hideKeyboard()
 
-    //runnerQueue.async {
     let workItem = DispatchWorkItem {
       defer {
         DispatchQueue.main.async {
@@ -336,7 +315,8 @@ struct ContentView: View {
           messages.append(Message(type: .actionItems))
           try await actionItems(prompt: text)
 
-          //try await callTools(prompt: text)
+          try await callTools(prompt: text)
+          
         } catch {
           print("Error: \(error)")
         }
