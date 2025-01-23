@@ -14,12 +14,8 @@ from typing import Any, Dict, List, Optional
 from dotenv import load_dotenv
 
 from llama_stack_client import LlamaStackClient
-from llama_stack_client.types import Attachment, UserMessage
+from llama_stack_client.types import Attachment, Document, QueryConfig, UserMessage
 from llama_stack_client.types.agent_create_params import AgentConfig
-from llama_stack_client.types.tool_runtime import (
-    DocumentParam as Document,
-    QueryConfigParam,
-)
 
 from termcolor import colored
 
@@ -102,7 +98,7 @@ class AgentStore:
                 {
                     "name": "builtin::rag",
                     "args": {
-                        "query_config": QueryConfigParam(
+                        "query_config": QueryConfig(
                             max_chunks=5,
                             max_tokens_in_context=2048,
                         ),
@@ -141,7 +137,7 @@ class AgentStore:
                     "name": "builtin::rag",
                     "args": {
                         "vector_db_ids": vector_db_ids,
-                        "query_config": QueryConfigParam(
+                        "query_config": QueryConfig(
                             max_chunks=5,
                             max_tokens_in_context=2048,
                         ),

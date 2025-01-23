@@ -19,8 +19,8 @@ from examples.interior_design_assistant.utils import (
 )
 
 from llama_stack_client import LlamaStackClient
+from llama_stack_client.types import QueryConfig
 from llama_stack_client.types.agent_create_params import AgentConfig
-from llama_stack_client.types.tool_runtime import QueryConfigParam
 
 from termcolor import cprint
 
@@ -201,7 +201,7 @@ class InterioAgent:
                     "name": "builtin::rag",
                     "args": {
                         "vector_db_ids": [self.bank_id],
-                        "query_config": QueryConfigParam(
+                        "query_config": QueryConfig(
                             max_chunks=5,
                             max_tokens_in_context=4096,
                             query_generator_config={
