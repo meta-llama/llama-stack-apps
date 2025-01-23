@@ -82,7 +82,7 @@ def run_main(host: str, port: int, disable_safety: bool = False):
         },
         toolgroups=[
             {
-                "name": "builtin::memory",
+                "name": "builtin::rag",
                 "args": {"vector_db_ids": [vector_db_id]},
             }
         ],

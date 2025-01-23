@@ -100,7 +100,7 @@ class AgentStore:
             toolgroups = [
                 "builtin::websearch",
                 {
-                    "name": "builtin::memory",
+                    "name": "builtin::rag",
                     "args": {
                         "query_config": QueryConfigParam(
                             max_chunks=5,
@@ -138,7 +138,7 @@ class AgentStore:
             vector_db_ids = agent_params.get("vector_db_ids", [])
             toolgroups = [
                 {
-                    "name": "builtin::memory",
+                    "name": "builtin::rag",
                     "args": {
                         "vector_db_ids": vector_db_ids,
                         "query_config": QueryConfigParam(

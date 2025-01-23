@@ -56,7 +56,7 @@ def run_main(host: str, port: int, disable_safety: bool = False):
         sampling_params={
             "strategy": {"type": "top_p", "temperature": 1.0, "top_p": 0.9},
         },
-        toolgroups=["builtin::memory"],
+        toolgroups=["builtin::rag"],
         tool_choice="auto",
         tool_prompt_format="json",
         input_shields=available_shields if available_shields else [],

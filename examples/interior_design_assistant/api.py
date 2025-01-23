@@ -198,7 +198,7 @@ class InterioAgent:
             toolgroups=[
                 # Enable memory as a tool for RAG
                 {
-                    "name": "builtin::memory",
+                    "name": "builtin::rag",
                     "args": {
                         "vector_db_ids": [self.bank_id],
                         "query_config": QueryConfigParam(
