@@ -195,7 +195,7 @@ class InterioAgent:
             model=MODEL,
             instructions="",
             sampling_params={"strategy": {"type": "greedy"}},
-            tools=[
+            toolgroups=[
                 # Enable memory as a tool for RAG
                 {
                     "name": "builtin::memory",

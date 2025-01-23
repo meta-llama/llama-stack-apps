@@ -14,15 +14,13 @@ from typing import Any, Dict, List, Optional
 from dotenv import load_dotenv
 
 from llama_stack_client import LlamaStackClient
-from llama_stack_client.types import (
-    Attachment,
-    MemoryToolDefinition,
-    SamplingParams,
-    SearchToolDefinition,
-    UserMessage,
-)
+from llama_stack_client.types import Attachment, UserMessage
 from llama_stack_client.types.agent_create_params import AgentConfig
-from llama_stack_client.types.memory_insert_params import Document
+from llama_stack_client.types.tool_runtime import (
+    DocumentParam as Document,
+    QueryConfigParam,
+)
+
 from termcolor import colored
 
 from .utils import data_url_from_file
@@ -55,7 +53,7 @@ class AgentStore:
         self.first_turn = {}
         self.system_message = {}
 
-    async def initialize_agents(self, bank_ids: List[str]) -> None:
+    async def initialize_agents(self, vector_db_ids: List[str]) -> None:
         self.agents[AgentChoice.WebSearch] = await self.get_agent(
             agent_type=AgentChoice.WebSearch
         )
@@ -63,25 +61,20 @@ class AgentStore:
         # Create a live bank that holds live context
         self.live_bank = self.create_live_bank()
 
-        self.bank_ids = bank_ids
+        self.vector_db_ids = vector_db_ids
         self.agents[AgentChoice.Memory] = await self.get_agent(
             agent_type=AgentChoice.Memory,
-            agent_params={"bank_ids": self.bank_ids + [self.live_bank]},
+            agent_params={"vector_db_ids": self.vector_db_ids + [self.live_bank]},
         )
         self.create_session(AgentChoice.Memory)
 
     def create_live_bank(self):
         self.live_bank = "live_bank"
-        providers = self.client.providers.list()
-        self.client.memory_banks.register(
-            memory_bank_id=self.live_bank,
-            params={
-                "memory_bank_type": "vector",
-                "embedding_model": "all-MiniLM-L6-v2",
-                "chunk_size_in_tokens": 512,
-                "overlap_size_in_tokens": 64,
-            },
-            provider_id=providers["memory"][0].provider_id,
+        self.client.vector_dbs.register(
+            vector_db_id=self.live_bank,
+            embedding_model="all-MiniLM-L6-v2",
+            embedding_dimension=384,
+            provider_id="faiss",
         )
         # FIXME: To avoid empty banks
         self.append_to_live_memory_bank(
@@ -104,22 +97,17 @@ class AgentStore:
                 )
                 sys.exit(1)
 
-            tools = [
-                SearchToolDefinition(
-                    type="brave_search",
-                    engine="brave",
-                    api_key=os.getenv("BRAVE_SEARCH_API_KEY"),
-                ),
-                MemoryToolDefinition(
-                    type="memory",
-                    max_chunks=5,
-                    max_tokens_in_context=2048,
-                    memory_bank_configs=[],
-                    query_generator_config={
-                        "type": "default",
-                        "sep": " ",
+            toolgroups = [
+                "builtin::websearch",
+                {
+                    "name": "builtin::memory",
+                    "args": {
+                        "query_config": QueryConfigParam(
+                            max_chunks=5,
+                            max_tokens_in_context=2048,
+                        ),
                     },
-                ),
+                },
             ]
             user_instructions = textwrap.dedent(
                 """
@@ -142,40 +130,30 @@ class AgentStore:
             agent_config = AgentConfig(
                 model=self.model,
                 instructions="",
-                sampling_params=SamplingParams(
-                    strategy="greedy", temperature=0.0, top_p=0.95
-                ),
-                tools=tools,
+                sampling_params={"strategy": {"type": "greedy"}},
+                toolgroups=toolgroups,
                 enable_session_persistence=True,
             )
         elif agent_type == AgentChoice.Memory:
-            bank_ids = agent_params.get("bank_ids", [])
-            tools = [
-                MemoryToolDefinition(
-                    type="memory",
-                    max_chunks=5,
-                    max_tokens_in_context=2048,
-                    memory_bank_configs=[
-                        {
-                            "type": "vector",
-                            "bank_id": bank_id,
-                        }
-                        for bank_id in bank_ids
-                    ],
-                    query_generator_config={
-                        "type": "default",
-                        "sep": " ",
+            vector_db_ids = agent_params.get("vector_db_ids", [])
+            toolgroups = [
+                {
+                    "name": "builtin::memory",
+                    "args": {
+                        "vector_db_ids": vector_db_ids,
+                        "query_config": QueryConfigParam(
+                            max_chunks=5,
+                            max_tokens_in_context=2048,
+                        ),
                     },
-                ),
+                },
             ]
             user_instructions = ""
             agent_config = AgentConfig(
                 model=self.model,
                 instructions="",
-                sampling_params=SamplingParams(
-                    strategy="greedy", temperature=0.0, top_p=0.95
-                ),
-                tools=tools,
+                sampling_params={"strategy": {"type": "greedy"}},
+                toolgroups=toolgroups,
                 enable_session_persistence=True,
             )
 
@@ -203,22 +181,14 @@ class AgentStore:
         return self.sessions[agent_choice]
 
     async def build_index(self, file_dir: str) -> str:
-        """Build a memory bank from a directory of pdf files."""
+        """Build a vector index from a directory of pdf files."""
 
-        # 1. create memory bank
-        providers = self.client.providers.list()
-        # create a memory bank
-        self.client.memory_banks.register(
-            memory_bank_id="memory_bank",
-            params={
-                "memory_bank_type": "vector",
-                "embedding_model": "all-MiniLM-L6-v2",
-                "chunk_size_in_tokens": 512,
-                "overlap_size_in_tokens": 64,
-            },
-            provider_id=providers["memory"][0].provider_id,
+        # 1. create vector index
+        self.client.vector_dbs.register(
+            vector_db_id="vector_db",
+            embedding_model="all-MiniLM-L6-v2",
+            embedding_dimension=384,
         )
-        # cprint(f"Created bank: {json.dumps(bank, indent=4)}", color="green")
 
         # 2. load pdfs from directory as raw text
         paths = []
@@ -268,7 +238,7 @@ class AgentStore:
         messages.append(UserMessage(role="user", content=message))
         generator = self.client.agents.turn.create(
             agent_id=self.agents[agent_choice],
-            session_id=self.sessions[agent_choice],
+            session_id=session_id,
             messages=messages,
             attachments=atts,
             stream=True,
@@ -295,7 +265,9 @@ class AgentStore:
             document_id=uuid.uuid4().hex,
             content=text,
         )
-        self.client.memory.insert(bank_id=self.live_bank, documents=[document])
+        self.client.tool_runtime.rag_tool.insert(
+            vector_db_id=self.live_bank, documents=[document]
+        )
 
     async def clear_live_bank(self) -> None:
         # FIXME: This is a hack, ideally we should
@@ -303,6 +275,6 @@ class AgentStore:
         self.live_bank = self.create_live_bank()
         self.agents[AgentChoice.Memory] = await self.get_agent(
             agent_type=AgentChoice.Memory,
-            agent_params={"bank_ids": self.bank_ids + [self.live_bank]},
+            agent_params={"vector_db_ids": self.vector_db_ids + [self.live_bank]},
         )
         self.create_session(AgentChoice.Memory)
