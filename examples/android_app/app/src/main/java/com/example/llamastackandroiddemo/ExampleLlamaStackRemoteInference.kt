@@ -335,10 +335,10 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
         //If no System prompt configured by the user, use default tool call system prompt
         if (instruction == "") {
             instruction = """
-                            You are a helpful assistant that can also compose functions.
-                            When user is asking a question that requires your reasoning or general chat, you should NOT generate functions.
+                            You are a helpful assistant that can reason and answer questions.
+                            When user is asking a question that requires your reasoning or general chat, you should NOT generate functions but answer the questions based on your knowledge insteaded.
                             
-                            Today Date: $formattedZdt
+                            For your reference, Today Date is $formattedZdt
                             
                             - Only function call if user's intention matches the function that you have access to.
                             - When looking for real time information use relevant functions if available.
@@ -348,10 +348,8 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
                             You SHOULD NOT include any other text in the response.
                     
                             Reminder:                          
-                            - Function calls MUST follow the specified format
                             - Required parameters MUST be specified
                             - Only call one function at a time
-                            - Put the entire function call reply on one line
                             - When returning a function call, don't add anything else to your response
                             - When scheduling the events, make sure you set the date and time right. Use step by step reasoning for date such as next Tuesday
                          """
