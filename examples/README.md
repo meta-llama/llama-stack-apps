@@ -18,23 +18,22 @@ pip install -r requirements.txt
 
 Run client script via connecting to your Llama Stack server
 ```
-python -m examples.agents.hello localhost 5000
+python -m examples.agents.hello localhost 8321
 ```
 
 ## Demo Scripts
 ```
-python -m examples.agents.hello localhost 5000
-python -m examples.agents.inflation localhost 5000
-python -m examples.agents.podcast_transcript localhost 5000
-python -m examples.agents.rag_as_attachments localhost 5000
-python -m examples.agents.rag_with_memory_bank localhost 5000
-python -m examples.agents.vacation localhost 5000
+python -m examples.agents.hello localhost 8321
+python -m examples.agents.inflation localhost 8321
+python -m examples.agents.podcast_transcript localhost 8321
+python -m examples.agents.rag_as_attachments localhost 8321
+python -m examples.agents.rag_with_vector_db localhost 8321
 ```
 
 # Demo Apps
 ### `agent_store`
 ```
-python -m examples.agent_store.app localhost 5000
+python -m examples.agent_store.app localhost 8321
 ```
 
 ### `interior_design_assistant`

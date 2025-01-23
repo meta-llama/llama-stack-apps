@@ -4,7 +4,6 @@
 # This source code is licensed under the terms described in the LICENSE file in
 # the root directory of this source tree.
 
-import asyncio
 import os
 
 import fire
@@ -16,7 +15,7 @@ from llama_stack_client.types.agents.turn_create_params import Document
 from termcolor import colored
 
 
-async def run_main(host: str, port: int, disable_safety: bool = False):
+def run_main(host: str, port: int, disable_safety: bool = False):
     if "BRAVE_SEARCH_API_KEY" not in os.environ:
         print(
             colored(
@@ -50,7 +49,7 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
             "strategy": {"type": "top_p", "temperature": 1.0, "top_p": 0.9},
         },
         instructions="You are a helpful assistant",
-        tools=(
+        toolgroups=(
             (
                 ["builtin::websearch"]
                 if os.getenv("BRAVE_SEARCH_API_KEY")
@@ -105,7 +104,7 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
 
 
 def main(host: str, port: int):
-    asyncio.run(run_main(host, port))
+    run_main(host, port)
 
 
 if __name__ == "__main__":

@@ -4,8 +4,6 @@
 # This source code is licensed under the terms described in the LICENSE file in
 # the root directory of this source tree.
 
-import asyncio
-
 import fire
 from llama_stack_client import LlamaStackClient
 from llama_stack_client.lib.agents.agent import Agent
@@ -15,7 +13,7 @@ from llama_stack_client.types.agents.turn_create_params import Document
 from termcolor import colored
 
 
-async def run_main(host: str, port: int, disable_safety: bool = False):
+def run_main(host: str, port: int, disable_safety: bool = False):
     urls = [
         "memory_optimizations.rst",
         "chat.rst",
@@ -58,7 +56,7 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
         sampling_params={
             "strategy": {"type": "top_p", "temperature": 1.0, "top_p": 0.9},
         },
-        tools=["builtin::memory"],
+        toolgroups=["builtin::memory"],
         tool_choice="auto",
         tool_prompt_format="json",
         input_shields=available_shields if available_shields else [],
@@ -110,7 +108,7 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
 
 
 def main(host: str, port: int):
-    asyncio.run(run_main(host, port))
+    run_main(host, port)
 
 
 if __name__ == "__main__":

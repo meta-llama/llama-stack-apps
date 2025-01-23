@@ -48,7 +48,7 @@ def main(host: str, port: int):
         sampling_params={
             "strategy": {"type": "top_p", "temperature": 1.0, "top_p": 0.9},
         },
-        tools=(
+        toolgroups=(
             [
                 {
                     "type": "brave_search",
