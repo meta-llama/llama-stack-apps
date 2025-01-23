@@ -92,7 +92,7 @@ struct ContentView: View {
           
           do {
             try eventStore.save(event, span: .thisEvent, commit: true)
-            alertMessage = "Event \(title) from \(startDate) to \(endDate) saved successfully to calendar"
+            alertMessage = "Event \(title) saved successfully to calendar"
             showAlert = true
           } catch let error {
             alertMessage = "Failed to save event: \(error.localizedDescription)"
@@ -224,12 +224,12 @@ struct ContentView: View {
           switch (step.delta) {
           case .ToolCallDelta(let call):
             if call.parse_status == .succeeded {
-              switch (call.content) {
+              switch (call.tool_call) {
               case .ToolCall(let toolCall):
                   var args: [String : String] = [:]
                   for (arg_name, arg) in toolCall.arguments.additionalProperties {
                     switch (arg) {
-                    case .case1(let s): // type string
+                    case .case1(let s):
                       args[arg_name] = s
                     case .case2(_), .case3(_), .case4(_), .case5(_), .case6(_):
                       break
