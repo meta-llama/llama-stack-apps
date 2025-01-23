@@ -14,10 +14,10 @@ from termcolor import colored
 
 
 def main(host: str, port: int):
-    if "BRAVE_SEARCH_API_KEY" not in os.environ:
+    if "TAVILY_SEARCH_API_KEY" not in os.environ:
         print(
             colored(
-                "Warning: BRAVE_SEARCH_API_KEY is not set; will not use Search tool.",
+                "Warning: TAVILY_SEARCH_API_KEY is not set; will not use websearch tool.",
                 "yellow",
             )
         )
@@ -50,13 +50,9 @@ def main(host: str, port: int):
         },
         toolgroups=(
             [
-                {
-                    "type": "brave_search",
-                    "engine": "brave",
-                    "api_key": os.getenv("BRAVE_SEARCH_API_KEY"),
-                }
+                "builtin::websearch",
             ]
-            if os.getenv("BRAVE_SEARCH_API_KEY")
+            if os.getenv("TAVILY_SEARCH_API_KEY")
             else []
         ),
         tool_choice="auto",
