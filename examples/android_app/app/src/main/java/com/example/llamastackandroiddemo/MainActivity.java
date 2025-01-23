@@ -604,21 +604,20 @@ public class MainActivity extends AppCompatActivity implements Runnable, Inferen
     String systemPrompt = mCurrentSettingsFields.getSystemPrompt();
     String modelName = mCurrentSettingsFields.getRemoteModel();
     double temperature = mCurrentSettingsFields.getTemperature();
+
     if (exampleLlamaStackRemoteInference.getClient() == null) {
       AppLogging.getInstance().log("client is null for remote agent");
       mResultMessage.appendText("[ERROR] client is null for remote agent");
       return;
     }
 
-    //Hard-coded to use agents in the example. Should controlled by UI buttons.
-    boolean useAgent = true;
+
     String result = "";
 
+    //Hard-coded to use agents in the example. Can be controlled by UI buttons.
+    boolean useAgent = true;
     if(useAgent) {
-      Log.d("Chester", "Agent inference start with prompt:" + rawPrompt);
-
       result = exampleLlamaStackRemoteInference.inferenceStartWithAgent(agentId, sessionId, turnService, mMessageAdapter.getRecentSavedTextMessages(AppUtils.CONVERSATION_HISTORY_MESSAGE_LOOKBACK), this);
-
     }
     else {
       result = exampleLlamaStackRemoteInference.inferenceStartWithoutAgent(

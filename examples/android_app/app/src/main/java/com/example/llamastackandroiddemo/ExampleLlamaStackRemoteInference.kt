@@ -29,9 +29,7 @@ interface InferenceStreamingCallback {
 
 class ExampleLlamaStackRemoteInference(remoteURL: String) {
 
-    public var client: LlamaStackClientClient? = null
-
-    private var agentConfig: AgentConfig? = null
+    var client: LlamaStackClientClient? = null
 
     init {
         try {
@@ -246,8 +244,6 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
         val agentCreateResponse = agentService.create(
             AgentCreateParams.builder()
                 .agentConfig(agentConfig)
-//                .xLlamaStackClientVersion("X-LlamaStack-Client-Version")
-//                .xLlamaStackProviderData("X-LlamaStack-ProviderData")
                 .build(),
         )
 
@@ -257,8 +253,6 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
             AgentSessionCreateParams.builder()
                 .agentId(agentId)
                 .sessionName("test-session")
-//                .xLlamaStackClientVersion("X-LlamaStack-Client-Version")
-//                .xLlamaStackProviderData("X-LlamaStack-ProviderData")
                 .build()
         )
 
@@ -288,9 +282,6 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
 //                                .build()
 //                        )
 //                    )
-//                    .toolgroups(listOf(AgentTurnCreateParams.Toolgroup.ofString("string")))
-//                    .xLlamaStackClientVersion("X-LlamaStack-Client-Version")
-//                    .xLlamaStackProviderData("X-LlamaStack-Provider-Data")
                     .build()
             )
         val callback = ctx as InferenceStreamingCallback
@@ -299,39 +290,31 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
                 val agentResponsePayload = it.agentTurnResponseStreamChunk()?.event()?.payload()
                 if (agentResponsePayload != null) {
                     when {
-                        agentResponsePayload.isAgentTurnResponseTurnStartPayload() -> {
+                        agentResponsePayload.isTurnStart() -> {
                             // Handle Turn Start Payload
                         }
 
-                        agentResponsePayload.isAgentTurnResponseStepStartPayload() -> {
+                        agentResponsePayload.isStepStart() -> {
                             // Handle Step Start Payload
+                        }
 
-                            //Need-To-Fix: AgentTurnResponseStepStartPayload type mismatch bug.
-                            val result = agentResponsePayload.agentTurnResponseStepStartPayload()?._additionalProperties()?.get("delta")?.asObject()?.get("text")
-                            //We shouldn't need to do this if the payload is been correctly setup on the server side as StepProgressPayload
-                            val toolcallJson = agentResponsePayload.agentTurnResponseStepStartPayload()?._additionalProperties()?.get("delta")?.asObject()?.get("content")
-                            if (toolcallJson != null) {
-                                val call_id = toolcallJson.asObject()?.get("call_id")
-                                val tool_name = toolcallJson.asObject()?.get("tool_name")
-                                val arguments = toolcallJson.asObject()?.get("arguments")
-                                Log.d("Chester", "call_id: $call_id, tool_name: $tool_name, arguments: $arguments")
-
-                            }
+                        agentResponsePayload.isStepProgress() -> {
+                            // Handle Step Progress Payload
+                            val result = agentResponsePayload.stepProgress()?.delta()?.textDelta()?.text()
                             if (result != null) {
                                 callback.onStreamReceived(result.toString())
                             }
                         }
 
-                        agentResponsePayload.isAgentTurnResponseStepProgressPayload() -> {
-                            // Handle Step Progress Payload
-            //                        val result = agentResponsePayload.agentTurnResponseStepProgressPayload()?.delta().toolCallDelta()?.content().toolCall()
-                        }
-
-                        agentResponsePayload.isAgentTurnResponseStepCompletePayload() -> {
+                        agentResponsePayload.isStepComplete() -> {
                             // Handle Step Complete Payload
+                            val toolCalls = agentResponsePayload.stepComplete()?.stepDetails()?.asInferenceStep()?.modelResponse()?.toolCalls()
+                            if (!toolCalls.isNullOrEmpty()) {
+                                callback.onStreamReceived(functionDispatch(toolCalls, ctx))
+                            }
                         }
 
-                        agentResponsePayload.isAgentTurnResponseTurnCompletePayload() -> {
+                        agentResponsePayload.isTurnComplete() -> {
                             // Handle Turn Complete Payload
                         }
                     }
