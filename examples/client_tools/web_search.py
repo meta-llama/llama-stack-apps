@@ -10,7 +10,7 @@ from typing import Dict
 import requests
 from llama_stack_client.types.tool_def_param import Parameter
 
-from .single_message import SingleMessageCustomTool
+from .single_message import SingleMessageClientTool
 
 
 class BraveSearch:
@@ -126,7 +126,7 @@ class BraveSearch:
         return {"query": query, "top_k": clean_response}
 
 
-class WebSearchTool(SingleMessageCustomTool):
+class WebSearchTool(SingleMessageClientTool):
     """Tool to search web for queries"""
 
     def __init__(self, api_key: str):

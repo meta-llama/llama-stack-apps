@@ -12,7 +12,7 @@ from llama_stack_client.types.shared.completion_message import CompletionMessage
 from llama_stack_client.types.shared.tool_response_message import ToolResponseMessage
 
 
-class SingleMessageCustomTool(ClientTool):
+class SingleMessageClientTool(ClientTool):
     """
     Helper class to handle custom tools that take a single message
     Extending this class and implementing the `run_impl` method will

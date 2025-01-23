@@ -12,8 +12,8 @@ from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.lib.agents.event_logger import EventLogger
 from llama_stack_client.types.agent_create_params import AgentConfig
 
-from examples.custom_tools.ticker_data import TickerDataTool
-from examples.custom_tools.web_search import WebSearchTool
+from examples.client_tools.ticker_data import TickerDataTool
+from examples.client_tools.web_search import WebSearchTool
 
 
 async def run_main(host: str, port: int, disable_safety: bool = False):

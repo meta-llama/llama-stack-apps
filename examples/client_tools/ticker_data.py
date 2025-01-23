@@ -8,10 +8,10 @@ from typing import Dict
 import yfinance as yf
 from llama_stack_client.types.tool_def_param import Parameter
 
-from .single_message import SingleMessageCustomTool
+from .single_message import SingleMessageClientTool
 
 
-class TickerDataTool(SingleMessageCustomTool):
+class TickerDataTool(SingleMessageClientTool):
     """Tool to get finance data using yfinance apis"""
 
     def get_name(self) -> str:
