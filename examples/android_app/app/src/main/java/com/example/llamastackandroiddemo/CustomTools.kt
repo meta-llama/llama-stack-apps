@@ -1,6 +1,5 @@
 package com.example.llamastackandroiddemo
 
-import com.llama.llamastack.core.JsonValue
 import com.llama.llamastack.models.ToolDef
 
 class CustomTools {
