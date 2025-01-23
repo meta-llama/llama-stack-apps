@@ -141,7 +141,7 @@ class ExampleLlamaStackLocalInference(
                 result.asSequence().forEach {
                     val delta = it.asChatCompletionResponseStreamChunk().event().delta()
                     if(delta.isToolCallDelta()) {
-                        val toolCall = delta.toolCallDelta()?.content()?.toolCall()
+                        val toolCall = delta.toolCallDelta()?.toolCall()
                         if (toolCall != null) {
                             callback.onStreamReceived("\n" + functionDispatch(listOf(toolCall), ctx))
                         } else {
@@ -187,11 +187,11 @@ class ExampleLlamaStackLocalInference(
     private fun constructLSMessagesFromConversationHistoryAndSystemPrompt(
         conversationHistory: ArrayList<Message>,
         systemPrompt: String
-    ):List<InferenceChatCompletionParams.Message> {
-        val messageList = ArrayList<InferenceChatCompletionParams.Message>();
+    ):List<com.llama.llamastack.models.Message> {
+        val messageList = ArrayList<com.llama.llamastack.models.Message>();
         // System prompt
         messageList.add(
-            InferenceChatCompletionParams.Message.ofSystemMessage(
+            com.llama.llamastack.models.Message.ofSystemMessage(
                 SystemMessage.builder()
                     .content(InterleavedContent.ofString(systemPrompt))
                     .role(SystemMessage.Role.SYSTEM)
@@ -200,10 +200,10 @@ class ExampleLlamaStackLocalInference(
         )
         // User and assistant messages
         for (chat in conversationHistory) {
-            var inferenceMessage: InferenceChatCompletionParams.Message
+            var inferenceMessage: com.llama.llamastack.models.Message
             if (chat.isSent) {
                 // User message
-                inferenceMessage = InferenceChatCompletionParams.Message.ofUserMessage(
+                inferenceMessage = com.llama.llamastack.models.Message.ofUserMessage(
                     UserMessage.builder()
                         .content(InterleavedContent.ofString(chat.text))
                         .role(UserMessage.Role.USER)
@@ -211,12 +211,12 @@ class ExampleLlamaStackLocalInference(
                 )
             } else {
                 // Assistant message (aka previous prompt response)
-                inferenceMessage = InferenceChatCompletionParams.Message.ofCompletionMessage(
-                    InferenceChatCompletionParams.Message.CompletionMessage.builder()
+                inferenceMessage = com.llama.llamastack.models.Message.ofCompletionMessage(
+                    com.llama.llamastack.models.CompletionMessage.builder()
                         .content(InterleavedContent.ofString(chat.text))
-                        .stopReason(InferenceChatCompletionParams.Message.CompletionMessage.StopReason.END_OF_MESSAGE)
+                        .stopReason(com.llama.llamastack.models.CompletionMessage.StopReason.END_OF_MESSAGE)
                         .toolCalls(emptyList())
-                        .role(InferenceChatCompletionParams.Message.CompletionMessage.Role.ASSISTANT)
+                        .role(com.llama.llamastack.models.CompletionMessage.Role.ASSISTANT)
                         .build()
                 )
             }
