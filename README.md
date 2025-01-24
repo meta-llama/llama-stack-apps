@@ -133,7 +133,7 @@ cd <path-to-llama-stack-apps-repo>
 conda activate $ENV
 llama stack run <name> # If not already started
 
-python -m examples.agents.rag_with_memory_bank localhost 5000
+python -m examples.agents.rag_with_vector_db localhost 5000
 ```
 
 You should see outputs to stdout of the form --
@@ -142,7 +142,7 @@ Available shields found: ['meta-llama/Llama-Guard-3-8B']
 Using model: meta-llama/Llama-3.1-405B-Instruct
 Created session_id=cdb8a978-0085-4f3d-a976-939ba2b19de9 for Agent(0cfe05a8-cb97-430f-bec6-b1c7d42c712a)
 shield_call> No Violation
-memory_retrieval> Retrieved context from banks: ['test_bank'].
+memory_retrieval> Retrieved context from vector dbs: ['test_vector_db'].
 ====
 Here are the retrieved documents for relevant context:
 === START-RETRIEVED-CONTEXT ===

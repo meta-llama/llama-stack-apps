@@ -4,19 +4,16 @@
 # This source code is licensed under the terms described in the LICENSE file in
 # the root directory of this source tree.
 
-import asyncio
-
 import fire
-
 from llama_stack_client import LlamaStackClient
 from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.lib.agents.event_logger import EventLogger
-from llama_stack_client.types import Attachment
 from llama_stack_client.types.agent_create_params import AgentConfig
+from llama_stack_client.types.agents.turn_create_params import Document
 from termcolor import colored
 
 
-async def run_main(host: str, port: int, disable_safety: bool = False):
+def run_main(host: str, port: int, disable_safety: bool = False):
     urls = [
         "memory_optimizations.rst",
         "chat.rst",
@@ -27,7 +24,7 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
     ]
 
     attachments = [
-        Attachment(
+        Document(
             content=f"https://raw.githubusercontent.com/pytorch/torchtune/main/docs/source/tutorials/{url}",
             mime_type="text/plain",
         )
@@ -57,19 +54,9 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
         model=selected_model,
         instructions="You are a helpful assistant",
         sampling_params={
-            "strategy": "greedy",
-            "temperature": 1.0,
-            "top_p": 0.9,
+            "strategy": {"type": "top_p", "temperature": 1.0, "top_p": 0.9},
         },
-        tools=[
-            {
-                "type": "memory",
-                "memory_bank_configs": [],
-                "query_generator_config": {"type": "default", "sep": " "},
-                "max_tokens_in_context": 4096,
-                "max_chunks": 10,
-            },
-        ],
+        toolgroups=["builtin::rag"],
         tool_choice="auto",
         tool_prompt_format="json",
         input_shields=available_shields if available_shields else [],
@@ -112,7 +99,7 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
                     "content": prompt[0],
                 }
             ],
-            attachments=prompt[1],
+            documents=prompt[1],
             session_id=session_id,
         )
 
@@ -121,7 +108,7 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
 
 
 def main(host: str, port: int):
-    asyncio.run(run_main(host, port))
+    run_main(host, port)
 
 
 if __name__ == "__main__":

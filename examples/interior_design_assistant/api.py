@@ -19,8 +19,9 @@ from examples.interior_design_assistant.utils import (
 )
 
 from llama_stack_client import LlamaStackClient
-from llama_stack_client.types import MemoryToolDefinition, SamplingParams
+from llama_stack_client.types import QueryConfig
 from llama_stack_client.types.agent_create_params import AgentConfig
+
 from termcolor import cprint
 
 MODEL = "meta-llama/Llama-3.2-11B-Vision-Instruct"
@@ -36,13 +37,13 @@ class InterioAgent:
         # setup agent for inference
         self.agent_id = await self._get_agent()
         # setup memory bank for RAG
-        self.bank_id = await self.build_memory_bank(self.document_dir)
+        self.bank_id = await self.build_vector_db(self.document_dir)
 
     async def _get_agent(self):
         agent_config = AgentConfig(
             model=MODEL,
             instructions="",
-            sampling_params=SamplingParams(strategy="greedy", temperature=0.0),
+            sampling_params={"strategy": {"type": "greedy"}},
             enable_session_persistence=True,
         )
         response = self.client.agents.create(
@@ -86,7 +87,7 @@ class InterioAgent:
         message = {
             "role": "user",
             "content": [
-                {"type": "image", "url": {"uri": data_url}},
+                {"type": "image", "image": {"url": {"uri": data_url}}},
                 {"type": "text", "text": text},
             ],
         }
@@ -153,7 +154,7 @@ class InterioAgent:
         message = {
             "role": "user",
             "content": [
-                {"type": "image", "url": {"uri": data_url}},
+                {"type": "image", "image": {"url": {"uri": data_url}}},
                 {
                     "type": "text",
                     "text": text,
@@ -193,38 +194,37 @@ class InterioAgent:
             enable_session_persistence=False,
             model=MODEL,
             instructions="",
-            sampling_params=SamplingParams(strategy="greedy", temperature=0.0),
-            tools=[
+            sampling_params={"strategy": {"type": "greedy"}},
+            toolgroups=[
                 # Enable memory as a tool for RAG
-                MemoryToolDefinition(
-                    type="memory",
-                    max_chunks=5,
-                    max_tokens_in_context=2048,
-                    memory_bank_configs=[
-                        {
-                            "type": "vector",
-                            "bank_id": self.bank_id,
-                        }
-                    ],
-                    query_generator_config={
-                        "type": "llm",
-                        "model": MODEL,
-                        "template": textwrap.dedent(
-                            """
-                            You are given a conversation between a user and their assistant.
-                            From this conversation, you need to extract a one sentence description that is being asked for by the user.
-                            This one sentence description will be used to query a memory bank to retrieve relevant images.
+                {
+                    "name": "builtin::rag",
+                    "args": {
+                        "vector_db_ids": [self.bank_id],
+                        "query_config": QueryConfig(
+                            max_chunks=5,
+                            max_tokens_in_context=4096,
+                            query_generator_config={
+                                "type": "llm",
+                                "model": MODEL,
+                                "template": textwrap.dedent(
+                                    """
+                                You are given a conversation between a user and their assistant.
+                                From this conversation, you need to extract a one sentence description that is being asked for by the user.
+                                This one sentence description will be used to query a memory bank to retrieve relevant images.
 
-                            Analyze the provided conversation and respond with one line description and no other text or explanation.
+                                Analyze the provided conversation and respond with one line description and no other text or explanation.
 
-                            Here is the conversation:
-                            {% for message in messages %}
-                            {{ message.role }}> {{ message.content }}
-                            {% endfor %}
-                            """
+                                Here is the conversation:
+                                {% for message in messages %}
+                                {{ message.role }}> {{ message.content }}
+                                {% endfor %}
+                                """
+                                ),
+                            },
                         ),
                     },
-                )
+                },
             ],
         )
 
@@ -266,21 +266,15 @@ class InterioAgent:
 
     # NOTE: If using a persistent memory bank, building on the fly is not needed
     # and LlamaStack apis can leverage existing banks
-    async def build_memory_bank(self, local_dir: str) -> str:
+    async def build_vector_db(self, local_dir: str) -> str:
         """
-        Build a memory bank that can be used to store and retrieve images.
+        Build a vector db that can be used to store and retrieve images.
         """
         self.live_bank = "interio_bank"
-        providers = self.client.providers.list()
-        self.client.memory_banks.register(
-            memory_bank_id=self.live_bank,
-            params={
-                "memory_bank_type": "vector",
-                "embedding_model": "all-MiniLM-L6-v2",
-                "chunk_size_in_tokens": 512,
-                "overlap_size_in_tokens": 64,
-            },
-            provider_id=providers["memory"][0].provider_id,
+        self.client.vector_dbs.register(
+            vector_db_id=self.live_bank,
+            embedding_model="all-MiniLM-L6-v2",
+            embedding_dimension=384,
         )
 
         local_dir = Path(local_dir)
@@ -299,9 +293,10 @@ class InterioAgent:
                     )
         # insert the documents into the memory bank
         assert len(documents) > 0, "No documents found in the provided directory"
-        self.client.memory.insert(
-            bank_id="interio_bank",
+        self.client.tool_runtime.rag_tool.insert(
+            vector_db_id=self.live_bank,
             documents=documents,
+            chunk_size_in_tokens=512,
         )
 
         return "interio_bank"
@@ -315,19 +310,38 @@ async def async_main(host: str, port: int, memory_path: str, image_dir: str):
     # query = (
     #     "A rustic, stone-faced fireplace with a wooden mantel and a cast-iron insert."
     # )
-    # res = interio.client.memory.query(
-    #     bank_id=interio.bank_id,
+    # res = interio.client.tool_runtime.rag_tool.query(
+    #     vector_db_id=interio.bank_id,
     #     query=query,
     # )
     # print(res)
 
-    path = input("Enter Image path >> ")
+    path = input(
+        "Enter Image path (relative to image_dir or memory_path is accepted) >> "
+    )
+    path = Path(path)
 
-    result = await interio.list_items(path)
+    options = [
+        path,
+        Path(image_dir) / path,
+        Path(memory_path) / path,
+    ]
+    chosen_path = None
+    for p in options:
+        if p.exists():
+            chosen_path = p
+            break
+
+    if not chosen_path:
+        cprint(f"No valid path found in {options}", color="red")
+        return
+
+    result = await interio.list_items(chosen_path)
+
     cprint(f"Here is the description: {result['description']}", color="yellow")
     cprint(f"Here are the identified items: {result['items']}", color="yellow")
     item = input("Which item do you want to change? >> ")
-    alternatives = await interio.suggest_alternatives(path, item)
+    alternatives = await interio.suggest_alternatives(chosen_path, item)
     alt_str = "\n- ".join(alternatives)
     cprint(f"Here are the suggested alternatives: \n- {alt_str}", color="yellow")
 

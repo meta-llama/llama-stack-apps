@@ -4,19 +4,16 @@
 # This source code is licensed under the terms described in the LICENSE file in
 # the root directory of this source tree.
 
-import asyncio
-
 import fire
-
 from llama_stack_client import LlamaStackClient
 from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.lib.agents.event_logger import EventLogger
+from llama_stack_client.types import Document
 from llama_stack_client.types.agent_create_params import AgentConfig
-from llama_stack_client.types.memory_insert_params import Document
 from termcolor import colored
 
 
-async def run_main(host: str, port: int, disable_safety: bool = False):
+def run_main(host: str, port: int, disable_safety: bool = False):
     urls = [
         "memory_optimizations.rst",
         "chat.rst",
@@ -36,31 +33,37 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
     ]
 
     client = LlamaStackClient(base_url=f"http://{host}:{port}")
-    providers = client.providers.list()
 
+    vector_providers = [
+        provider for provider in client.providers.list() if provider.api == "vector_io"
+    ]
+    if not vector_providers:
+        print(colored("No available vector_io providers. Exiting.", "red"))
+        return
+
+    selected_vector_provider = vector_providers[0]
     available_shields = [shield.identifier for shield in client.shields.list()]
     if not available_shields:
         print(colored("No available shields. Disabling safety.", "yellow"))
     else:
         print(f"Available shields found: {available_shields}")
 
-    # create a memory bank
-    client.memory_banks.register(
-        memory_bank_id="test_bank",
-        params={
-            "memory_bank_type": "vector",
-            "embedding_model": "all-MiniLM-L6-v2",
-            "chunk_size_in_tokens": 512,
-            "overlap_size_in_tokens": 64,
-        },
-        provider_id=providers["memory"][0].provider_id,
+    # Create a vector database instead of memory bank
+    vector_db_id = "test_vector_db"
+    client.vector_dbs.register(
+        vector_db_id=vector_db_id,
+        embedding_model="all-MiniLM-L6-v2",
+        embedding_dimension=384,
+        provider_id=selected_vector_provider.provider_id,
     )
 
-    # insert some documents
-    client.memory.insert(
-        bank_id="test_bank",
+    # Insert documents using the RAG tool
+    client.tool_runtime.rag_tool.insert(
         documents=documents,
+        vector_db_id=vector_db_id,
+        chunk_size_in_tokens=512,
     )
+
     available_models = [
         model.identifier for model in client.models.list() if model.model_type == "llm"
     ]
@@ -75,17 +78,12 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
         model=selected_model,
         instructions="You are a helpful assistant",
         sampling_params={
-            "strategy": "greedy",
-            "temperature": 1.0,
-            "top_p": 0.9,
+            "strategy": {"type": "top_p", "temperature": 1.0, "top_p": 0.9},
         },
-        tools=[
+        toolgroups=[
             {
-                "type": "memory",
-                "memory_bank_configs": [{"bank_id": "test_bank", "type": "vector"}],
-                "query_generator_config": {"type": "default", "sep": " "},
-                "max_tokens_in_context": 4096,
-                "max_chunks": 10,
+                "name": "builtin::rag",
+                "args": {"vector_db_ids": [vector_db_id]},
             }
         ],
         tool_choice="auto",
@@ -122,7 +120,7 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
 
 
 def main(host: str, port: int):
-    asyncio.run(run_main(host, port))
+    run_main(host, port)
 
 
 if __name__ == "__main__":

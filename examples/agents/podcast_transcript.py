@@ -4,24 +4,22 @@
 # This source code is licensed under the terms described in the LICENSE file in
 # the root directory of this source tree.
 
-import asyncio
 import os
 
 import fire
-
 from llama_stack_client import LlamaStackClient
 from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.lib.agents.event_logger import EventLogger
-from llama_stack_client.types import Attachment
 from llama_stack_client.types.agent_create_params import AgentConfig
+from llama_stack_client.types.agents.turn_create_params import Document
 from termcolor import colored
 
 
-async def run_main(host: str, port: int, disable_safety: bool = False):
-    if "BRAVE_SEARCH_API_KEY" not in os.environ:
+def run_main(host: str, port: int, disable_safety: bool = False):
+    if "TAVILY_SEARCH_API_KEY" not in os.environ:
         print(
             colored(
-                "You must set the BRAVE_SEARCH_API_KEY environment variable to use the Search tool which is required for this example.",
+                "You must set the TAVILY_SEARCH_API_KEY environment variable to use the Search tool which is required for this example.",
                 "red",
             )
         )
@@ -50,20 +48,12 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
         model=selected_model,
         instructions="You are a helpful assistant",
         sampling_params={
-            "strategy": "greedy",
-            "temperature": 1.0,
-            "top_p": 0.9,
+            "strategy": {"type": "top_p", "temperature": 1.0, "top_p": 0.9},
         },
-        tools=[
-            {
-                "type": "brave_search",
-                "engine": "brave",
-                "api_key": os.getenv("BRAVE_SEARCH_API_KEY"),
-            },
-            {
-                "type": "code_interpreter",
-            },
-        ],
+        toolgroups=(
+            (["builtin::websearch"] if os.getenv("TAVILY_SEARCH_API_KEY") else [])
+            + ["builtin::code_interpreter"]
+        ),
         tool_choice="required",
         tool_prompt_format="json",
         input_shields=available_shields if available_shields else [],
@@ -79,7 +69,7 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
         (
             "Heres is a podcast transcript as attachment, can you summarize it",
             [
-                Attachment(
+                Document(
                     content="https://raw.githubusercontent.com/meta-llama/llama-stack-apps/main/examples/resources/transcript_shorter.txt",
                     mime_type="text/plain",
                 )
@@ -112,7 +102,7 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
                     "content": prompt[0],
                 }
             ],
-            attachments=prompt[1],
+            documents=prompt[1],
             session_id=session_id,
         )
 
@@ -121,7 +111,7 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
 
 
 def main(host: str, port: int):
-    asyncio.run(run_main(host, port))
+    run_main(host, port)
 
 
 if __name__ == "__main__":

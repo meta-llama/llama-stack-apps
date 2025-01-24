@@ -6,7 +6,6 @@
 import os
 
 import fire
-
 from llama_stack_client import LlamaStackClient
 from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.lib.agents.event_logger import EventLogger
@@ -15,10 +14,10 @@ from termcolor import colored
 
 
 def main(host: str, port: int):
-    if "BRAVE_SEARCH_API_KEY" not in os.environ:
+    if "TAVILY_SEARCH_API_KEY" not in os.environ:
         print(
             colored(
-                "Warning: BRAVE_SEARCH_API_KEY is not set; will not use Search tool.",
+                "Warning: TAVILY_SEARCH_API_KEY is not set; will not use websearch tool.",
                 "yellow",
             )
         )
@@ -47,19 +46,13 @@ def main(host: str, port: int):
         model=selected_model,
         instructions="You are a helpful assistant",
         sampling_params={
-            "strategy": "greedy",
-            "temperature": 1.0,
-            "top_p": 0.9,
+            "strategy": {"type": "top_p", "temperature": 1.0, "top_p": 0.9},
         },
-        tools=(
+        toolgroups=(
             [
-                {
-                    "type": "brave_search",
-                    "engine": "brave",
-                    "api_key": os.getenv("BRAVE_SEARCH_API_KEY"),
-                }
+                "builtin::websearch",
             ]
-            if os.getenv("BRAVE_SEARCH_API_KEY")
+            if os.getenv("TAVILY_SEARCH_API_KEY")
             else []
         ),
         tool_choice="auto",

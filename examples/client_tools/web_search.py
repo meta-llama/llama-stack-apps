@@ -8,12 +8,9 @@ import json
 from typing import Dict
 
 import requests
+from llama_stack_client.types.tool_def_param import Parameter
 
-from llama_stack_client.types.tool_param_definition_param import (
-    ToolParamDefinitionParam,
-)
-
-from .single_message import SingleMessageCustomTool
+from .single_message import SingleMessageClientTool
 
 
 class BraveSearch:
@@ -129,7 +126,7 @@ class BraveSearch:
         return {"query": query, "top_k": clean_response}
 
 
-class WebSearchTool(SingleMessageCustomTool):
+class WebSearchTool(SingleMessageClientTool):
     """Tool to search web for queries"""
 
     def __init__(self, api_key: str):
@@ -142,10 +139,11 @@ class WebSearchTool(SingleMessageCustomTool):
     def get_description(self) -> str:
         return "Search the web for a given query"
 
-    def get_params_definition(self) -> Dict[str, ToolParamDefinitionParam]:
+    def get_params_definition(self) -> Dict[str, Parameter]:
         return {
-            "query": ToolParamDefinitionParam(
-                param_type="str",
+            "query": Parameter(
+                name="query",
+                parameter_type="str",
                 description="The query to search for",
                 required=True,
             )

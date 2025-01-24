@@ -7,11 +7,12 @@ import json
 from abc import abstractmethod
 from typing import List
 
-from llama_stack_client.lib.agents.custom_tool import CustomTool
-from llama_stack_client.types import CompletionMessage, ToolResponseMessage
+from llama_stack_client.lib.agents.client_tool import ClientTool
+from llama_stack_client.types.shared.completion_message import CompletionMessage
+from llama_stack_client.types.shared.tool_response_message import ToolResponseMessage
 
 
-class SingleMessageCustomTool(CustomTool):
+class SingleMessageClientTool(ClientTool):
     """
     Helper class to handle custom tools that take a single message
     Extending this class and implementing the `run_impl` method will
@@ -35,7 +36,7 @@ class SingleMessageCustomTool(CustomTool):
             call_id=tool_call.call_id,
             tool_name=tool_call.tool_name,
             content=response_str,
-            role="ipython",
+            role="tool",
         )
         return [message]
 
