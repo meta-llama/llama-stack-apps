@@ -192,15 +192,6 @@ public class MainActivity extends AppCompatActivity implements Runnable, Inferen
           }
           if (exampleLlamaStackRemoteInference != null) {
             message += "and remote (" + updatedSettingsFields.getRemoteURL() +") ";
-
-            new Thread(() -> {
-              try {
-                setupAgent();
-
-              } catch (Exception e) {
-                e.printStackTrace();
-              }
-            }).start();
           }
           message += " inference.";
           addSystemMessage(message);
@@ -295,6 +286,16 @@ public class MainActivity extends AppCompatActivity implements Runnable, Inferen
         if (mGenerationModeButton.getText() == AppUtils.LOCAL) {
           mGenerationModeButton.setText(AppUtils.REMOTE);
           addSystemMessage("Inference mode: Remote");
+          if (exampleLlamaStackRemoteInference != null) {
+            new Thread(() -> {
+              try {
+                setupAgent();
+                addSystemMessage("Remote Agent setup done");
+              } catch (Exception e) {
+                e.printStackTrace();
+              }
+            }).start();
+          }
         }
         else {
           mGenerationModeButton.setText(AppUtils.LOCAL);
@@ -588,12 +589,14 @@ public class MainActivity extends AppCompatActivity implements Runnable, Inferen
     AppLogging.getInstance().log("Setting up agent for remote inference");
     String systemPrompt = mCurrentSettingsFields.getSystemPrompt();
     String modelName = mCurrentSettingsFields.getRemoteModel();
+    Log.d("Chester", "My modelName is " + modelName);
+
     double temperature = mCurrentSettingsFields.getTemperature();
     if (exampleLlamaStackRemoteInference.getClient() == null) {
       AppLogging.getInstance().log("client is null for remote agent");
       return;
     }
-    Triple<String, String, TurnService> agentInfo = exampleLlamaStackRemoteInference.createRemoteAgent(modelName,temperature, systemPrompt, this);
+    Triple<String, String, TurnService> agentInfo = exampleLlamaStackRemoteInference.createRemoteAgent(modelName, temperature, systemPrompt, this);
     this.agentId = agentInfo.getFirst();
     this.sessionId = agentInfo.getSecond();
     this.turnService = agentInfo.getThird();
@@ -604,6 +607,7 @@ public class MainActivity extends AppCompatActivity implements Runnable, Inferen
     String systemPrompt = mCurrentSettingsFields.getSystemPrompt();
     String modelName = mCurrentSettingsFields.getRemoteModel();
     double temperature = mCurrentSettingsFields.getTemperature();
+
 
     if (exampleLlamaStackRemoteInference.getClient() == null) {
       AppLogging.getInstance().log("client is null for remote agent");

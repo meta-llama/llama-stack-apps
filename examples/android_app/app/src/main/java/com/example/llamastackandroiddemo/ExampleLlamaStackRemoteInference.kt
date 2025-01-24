@@ -1,6 +1,10 @@
 package com.example.llamastackandroiddemo
 
+import android.content.ContentResolver
 import android.content.Context
+import android.net.Uri
+import android.provider.MediaStore
+import android.util.Base64
 import android.util.Log
 import com.llama.llamastack.client.LlamaStackClientClient
 import com.llama.llamastack.client.okhttp.LlamaStackClientOkHttpClient
@@ -14,9 +18,12 @@ import com.llama.llamastack.models.InterleavedContent
 import com.llama.llamastack.models.SamplingParams
 import com.llama.llamastack.models.SystemMessage
 import com.llama.llamastack.models.ToolResponseMessage
+import com.llama.llamastack.models.Url
 import com.llama.llamastack.models.UserMessage
 import com.llama.llamastack.services.blocking.agents.TurnService
 import kotlinx.datetime.Clock
+import java.io.File
+import java.net.URLConnection
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -267,22 +274,15 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
     //Example of running inference with customize tool calls using agent workflow.
     //Note Agent inference only support streaming at the moment.
     private fun remoteAgentInference(agentId: String, sessionId: String, turnService: TurnService, conversationHistory: ArrayList<Message>, ctx: Context): String {
+        val imageUrl = Url.builder().uri("https://www.healthypawspetinsurance.com/Images/V3/DogAndPuppyInsurance/Dog_CTA_Desktop_HeroImage.jpg").build()
         val agentTurnCreateResponseStream =
             turnService.createStreaming(
                 AgentTurnCreateParams.builder()
                     .agentId(agentId)
                     .messages(
-                        constructMessagesForAgent(conversationHistory)
+                        constructMessagesForAgent(conversationHistory, ctx)
                     )
                     .sessionId(sessionId)
-//                    .documents(
-//                        listOf(
-//                            AgentTurnCreateParams.Document.builder()
-//                                .content(AgentTurnCreateParams.Document.Content.ofString("string"))
-//                                .mimeType("mime_type")
-//                                .build()
-//                        )
-//                    )
                     .build()
             )
         val callback = ctx as InferenceStreamingCallback
@@ -374,33 +374,80 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
                 )
                 .toolChoice(AgentConfig.ToolChoice.AUTO)
                 .toolPromptFormat(AgentConfig.ToolPromptFormat.PYTHON_LIST)
-                .clientTools(
-                    listOf(
-                        CustomTools.getCreateCalendarEventTool()
-                    )
-                )
+//                .clientTools(
+//                    listOf(
+//                        CustomTools.getCreateCalendarEventTool()
+//                    )
+//                )
                 .build()
 
         return agentConfig
     }
 
     private fun constructMessagesForAgent(
-        conversationHistory: ArrayList<Message>,
+        conversationHistory: ArrayList<Message>, ctx: Context
     ):List<AgentTurnCreateParams.Message> {
         val messageList = ArrayList<AgentTurnCreateParams.Message>();
-
+        var image : InterleavedContent.ImageContentItem.Image? = null
         // User and assistant messages
         for (chat in conversationHistory) {
+            Log.d("Chester", "message type is: ${chat.messageType}")
             var inferenceMessage: AgentTurnCreateParams.Message
+
             if (chat.isSent) {
-                // User message
-                inferenceMessage = AgentTurnCreateParams.Message.ofUserMessage(
-                    UserMessage.builder()
-                        .content(InterleavedContent.ofString(chat.text))
-                        .role(UserMessage.Role.USER)
-                        .build()
-                )
-            } else {
+                // First image in the chat. Image must pair with a prompt
+                if (chat.messageType == MessageType.IMAGE && image == null) {
+                    val imageUri = Uri.parse(chat.imagePath)
+                    val contentResolver = ctx.contentResolver
+                    val imageFilePath = getFilePathFromUri(contentResolver, imageUri)
+//                    val imageUrl = imageFilePath?.let { encodeImageToDataUrl(it) }
+                    val imageUrl = Url.builder().uri("https://www.healthypawspetinsurance.com/Images/V3/DogAndPuppyInsurance/Dog_CTA_Desktop_HeroImage.jpg").build()
+                    if (imageUrl != null) {
+                        Log.d("Chester", "imageUrl = $imageUrl")
+                        image = InterleavedContent.ImageContentItem.Image.builder().url(imageUrl).build()
+                        Log.d("Chester", "Image = $image")
+                    }
+
+                    continue
+                }
+                // Prompt right after the image
+                else if (chat.messageType == MessageType.TEXT && image != null) {
+                    Log.d("Chester", "Sending image reference")
+
+                    inferenceMessage = AgentTurnCreateParams.Message.ofUserMessage(
+                        UserMessage.builder()
+                            .content(InterleavedContent.ofString("what is in the image?"))
+                            .role(UserMessage.Role.USER)
+                            .build()
+                    )
+                    messageList.add(inferenceMessage)
+
+                    inferenceMessage = AgentTurnCreateParams.Message.ofUserMessage(
+                            UserMessage.builder()
+                                .content(InterleavedContent.ofImageContentItem(
+                                    InterleavedContent.ImageContentItem.builder()
+                                        .image(image)
+                                        .type(InterleavedContent.ImageContentItem.Type.IMAGE)
+                                        .build()
+                                ))
+                                .role(UserMessage.Role.USER)
+                                .build()
+                    )
+                    messageList.add(inferenceMessage)
+                    image = null
+                }
+                //Everything else. No multiple images support yet
+                else {
+                    // User message
+                    inferenceMessage = AgentTurnCreateParams.Message.ofUserMessage(
+                        UserMessage.builder()
+                            .content(InterleavedContent.ofString(chat.text))
+                            .role(UserMessage.Role.USER)
+                            .build()
+                    )
+                }
+            }
+            else {
                 // Assistant message (aka previous prompt response)
                 inferenceMessage = AgentTurnCreateParams.Message.ofToolResponseMessage(
                     ToolResponseMessage.builder()
@@ -415,5 +462,36 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
         }
         AppLogging.getInstance().log("conversation history length "  + messageList.size)
         return messageList
+    }
+
+    //Image reasoning processing
+    private fun encodeImageToDataUrl(filePath: String): String {
+        val mimeType = URLConnection.guessContentTypeFromName(filePath)
+            ?: throw RuntimeException("Could not determine MIME type of the file")
+        val imageFile = File(filePath)
+        val encodedString = Base64.encodeToString(imageFile.readBytes(), Base64.NO_WRAP)
+        return "data:$mimeType;base64,$encodedString"
+    }
+
+    fun getFilePathFromUri(contentResolver: ContentResolver, uri: Uri): String? {
+        val id = uri.lastPathSegment
+        val projection = arrayOf(MediaStore.Images.Media.DATA)
+        val selection = "${MediaStore.Images.Media._ID} = ?"
+        val selectionArgs = arrayOf(id)
+        val cursor = contentResolver.query(
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+            projection,
+            selection,
+            selectionArgs,
+            null
+        )
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                val columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
+                return cursor.getString(columnIndex)
+            }
+            cursor.close()
+        }
+        return null
     }
 }
