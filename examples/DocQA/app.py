@@ -12,8 +12,8 @@ from llama_stack.distribution.library_client import LlamaStackAsLibraryClient
 from llama_stack_client import LlamaStackClient
 from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.lib.agents.event_logger import EventLogger
+from llama_stack_client.types import Document
 from llama_stack_client.types.agent_create_params import AgentConfig
-from llama_stack_client.types.memory_insert_params import Document
 
 # Load environment variables
 load_dotenv()
@@ -72,70 +72,69 @@ class LlamaChatInterface:
         self.client = None
         self.agent = None
         self.session_id = None
-        self.memory_bank_id = "doc_bank"
+        self.vector_db_id = "doc_bank"
 
     def initialize_system(self, provider_name="ollama"):
-        """Initialize the entire system including memory bank and agent."""
+        """Initialize the entire system including vector db and agent."""
         # path_to_yaml = os.path.abspath(os.path.join(os.path.dirname(__file__), "llama_stack_run.yaml"))
         self.client = LlamaStackAsLibraryClient(provider_name)
-        #print(type(self.client.async_client.config), self.client.async_client.config)
+        print(type(self.client.async_client.config), self.client.async_client.config)
 
         # Disable scoring and eval by modifying the config
         self.client.async_client.config.apis = [
             "agents",
             "datasetio",
             "inference",
-            "memory",
+            "vector_io",
             "safety",
             "telemetry",
             "tool_runtime",
         ]
-        #self.client.async_client.config.tool_groups = []
+        # self.client.async_client.config.tool_groups = []
         del self.client.async_client.config.providers["scoring"]
         del self.client.async_client.config.providers["eval"]
 
-        # only enable memory_runtime
-        tool_runtime = [] 
-        for provider in self.client.async_client.config.providers["tool_runtime"]:
-            if provider.provider_id == 'memory-runtime':
-                tool_runtime.append(provider)
-        self.client.async_client.config.providers["tool_runtime"] = tool_runtime
-        # print(
-        #     111, type(self.client.async_client.config), self.client.async_client.config
-        # )
+        # only enable rag-runtime
+        tool_groups = []
+        for provider in self.client.async_client.config.tool_groups:
+            if provider.provider_id == "rag-runtime":
+                tool_groups.append(provider)
+        self.client.async_client.config.tool_groups = tool_groups
+        print(
+            111, type(self.client.async_client.config), self.client.async_client.config
+        )
 
         self.client.initialize()
         self.docs_dir = DOCS_DIR
-        self.setup_memory_bank()
+        self.setup_vector_dbs()
         self.initialize_agent()
 
-    def setup_memory_bank(self):
-        """Set up the memory bank if it doesn't exist."""
+    def setup_vector_dbs(self):
+        """Set up the vector db if it doesn't exist."""
         providers = self.client.providers.list()
-        memory_provider = [provider for provider in providers if provider.api == "memory"]
-        provider_id = memory_provider[0].provider_id
-        memory_banks = self.client.memory_banks.list()
-        print("Memory banks: ", memory_banks)
-        # Check if memory bank exists by identifier
-        if memory_banks and any(bank.identifier == self.memory_bank_id for bank in memory_banks):
-            print(f"Memory bank '{self.memory_bank_id}' exists.")
+        vector_io_provider = [
+            provider for provider in providers if provider.api == "vector_io"
+        ]
+        provider_id = vector_io_provider[0].provider_id
+        vector_dbs = self.client.vector_dbs.list()
+        print("vector_dbs: ", vector_dbs)
+        # Check if vector_dbs exists by identifier
+        if vector_dbs and any(
+            bank.identifier == self.vector_db_id for bank in vector_dbs
+        ):
+            print(f"vector_dbs '{self.vector_db_id}' exists.")
         else:
-            print(f"Memory bank '{self.memory_bank_id}' does not exist. Creating...")
-            self.client.memory_banks.register(
-                memory_bank_id=self.memory_bank_id,
-                params={
-                    "memory_bank_type": "vector",
-                    "embedding_model": "all-MiniLM-L6-v2",
-                    "chunk_size_in_tokens": 200,
-                    "overlap_size_in_tokens": 20,
-                },
-                provider_id=provider_id,
+            print(f"vector_dbs '{self.vector_db_id}' does not exist. Creating...")
+            self.client.vector_dbs.register(
+                vector_db_id=self.vector_db_id,
+                embedding_model="all-MiniLM-L6-v2",
+                embedding_dimension=384,
             )
             self.load_documents()
-            print(f"Memory bank registered.")
+            print(f"vector_dbs registered.")
 
     def load_documents(self):
-        """Load documents from the specified directory into memory bank."""
+        """Load documents from the specified directory into vector db."""
         documents = []
         for filename in os.listdir(self.docs_dir):
             if filename.endswith((".txt", ".md")):
@@ -151,9 +150,10 @@ class LlamaChatInterface:
                     documents.append(document)
 
         if documents:
-            self.client.memory.insert(
-                bank_id=self.memory_bank_id,
+            self.client.tool_runtime.rag_tool.insert(
                 documents=documents,
+                vector_db_id=self.vector_db_id,
+                chunk_size_in_tokens=256,
             )
             print(f"Loaded {len(documents)} documents from {self.docs_dir}")
 
@@ -163,10 +163,10 @@ class LlamaChatInterface:
         agent_config = AgentConfig(
             model=MODEL_NAME,
             instructions="You are a helpful assistant that can answer questions based on provided documents. Return your answer short and concise, less than 50 words.",
-            toolgroups = [
-            {
-                "name": "builtin::memory",
-                "args" : {"memory_bank_ids": [self.memory_bank_id]} 
+            toolgroups=[
+                {
+                    "name": "builtin::rag",
+                    "args": {"vector_db_ids": [self.vector_db_id]},
                 }
             ],
             enable_session_persistence=True,
@@ -202,8 +202,6 @@ class LlamaChatInterface:
 
                 history[-1][1] = current_response
                 yield history.copy()
-
-    
 
 
 def create_gradio_interface(
