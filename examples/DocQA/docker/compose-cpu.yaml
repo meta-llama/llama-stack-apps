@@ -15,7 +15,7 @@ services:
     restart: always
     entrypoint: ["bash", "/root/ollama_start.sh"]
   llamastack:
-    image: llamastack/distribution-ollama:0.0.63
+    image: llamastack/distribution-ollama:0.1.0
     env_file: "docqa_env"
     network_mode: "host"
     environment:
