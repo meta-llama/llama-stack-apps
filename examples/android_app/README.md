@@ -9,7 +9,7 @@
 We have updated the demo app to be compatible with Llama Stack Kotlin SDK v0.1.0 [TO-ADD Release Note Link] and Llama Stack version v0.1.0 [TO-ADD LS Release Note Link]. Bring in new demo features. 
 
 ### Remote
-* Agent workflow for tool calling inference - Now the demo app default to use agent in the chat. You can switch between simple inference workflow or agent workflow by setting `boolean useAgent`. We also added `CustomTools.kt` as an example to add client customized tools.
+* Agent workflow for tool calling inference - Now the demo app default to use agent in the chat. You can switch between simple inference workflow or agent workflow by setting `boolean useAgent`. We also added `CustomTools.kt` as an example to add client customized tools. When selecting `Remote` mode, the app will setup a new remote agent and create a new session for running turns. NOTE: In Agent workflow, the chat history including images are stored per Agent session on the server side. There is no need to look up for chat history in the app. Hence we have set `CONVERSATION_HISTORY_MESSAGE_LOOKBACK` default to 0. 
 
 #### Agents
 * Llama Stack agent is capable of running multi-turn inference using both customized and built-in tools (exclude 1B/3B Llama models). Here is an example creating the agent configuration
@@ -17,9 +17,9 @@ We have updated the demo app to be compatible with Llama Stack Kotlin SDK v0.1.0
         val agentConfig =
             AgentConfig.builder()
                 .enableSessionPersistence(false)
-                .instructions(instruction)
+                .instructions("You are a helpful assistant")
                 .maxInferIters(100)
-                .model(modelName)
+                .model("meta-llama/Llama-3.2-3B-Instruct")
                 .samplingParams(
                     SamplingParams.builder()
                         .strategy(
@@ -40,6 +40,12 @@ We have updated the demo app to be compatible with Llama Stack Kotlin SDK v0.1.0
                 )
                 .build()
 ```
+In this sample snippet:
+* We sent max inference interation to be 100
+* Supplied a model name that works on Llama Stack server distribution such as Fireworks
+* Set instructions AKA system prompt
+* Added a custom client tool that help you create a calendar event by the agent
+
 Once the `agentConfig` is built, create an agent along with session and turn service where client is your `LlamaStackClientOkHttpClient` created for remote inference
 
 ```
@@ -71,7 +77,7 @@ Then you can create a streaming event for this turn service for simple inference
                     listOf(
                         AgentTurnCreateParams.Message.ofUserMessage(
                             UserMessage.builder()
-                                .content(InterleavedContent.ofString(chat.text))
+                                .content(InterleavedContent.ofString("What is the capital of France?"))
                                 .role(UserMessage.Role.USER)
                                 .build()
                             )
@@ -80,12 +86,19 @@ Then you can create a streaming event for this turn service for simple inference
                 .build()
         )
 ```
-You can find more examples in `ExampleLlamaStackRemoteInference.kt`. Note that remote agent workflow only supports streaming response.
+You can find more examples in `ExampleLlamaStackRemoteInference.kt`. Note that remote agent workflow only supports streaming response currently.
+
+#### Image Reasoning
+We also built an example in the App that you can now send image via remote agent for reasoning. In order to do so, in the Settings page, select a vision model such as `meta-llama/Llama-3.2-11B-Vision-Instruct`. Add an image or take a photo from the camera roll by clicking the `+` sign on bottom left. On the background, we need to encode the image with Base64 before sending it to the model. You can also send HTTP web url of images for reasoning. Note that current model doesn't support multi-image inference. In fact, the agent session will cache this image on the server side so you can ask multiple follow up questions. Here is a demo video.
+
+
+https://github.com/user-attachments/assets/b4037778-0189-4e3e-b19e-4ca2c9efbdfd
+
+
+
 
 ### Local
 * Local model streaming during inference - Now you can stream the response to Android via local inference using ExecuTorch. Find examples in `ExampleLlamaStackLocalInference.kt`  
-
-
     
       
 ## [v0.0.58 - 12/13/2024]
@@ -199,6 +212,9 @@ Once the model is successfully loaded then enter any prompt and click the send (
 You can provide more follow-up questions as well. The current application stores 2 rounds of previous conversations as memory. This can be adjusted with the constant `CONVERSATION_HISTORY_MESSAGE_LOOKBACK`. Since it will append message history as part of the new prompt, this will affect your time-to-first-token. For local inference, the prefill rate is usually smaller than remote inference, which means the model takes longer to process the input prompt. We recommend 2 rounds of conversation history for local inference as a moving window approach.
 
 To understand more about how we are running the inference, check the sample code in `ExampleLlamaStackLocalInference.kt` or `ExampleLlamaStackRemoteInference.kt`
+
+
+
 
 
 
