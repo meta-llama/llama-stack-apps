@@ -140,8 +140,8 @@ class ExampleLlamaStackLocalInference(
             result.use {
                 result.asSequence().forEach {
                     val delta = it.asChatCompletionResponseStreamChunk().event().delta()
-                    if(delta.isToolCallDelta()) {
-                        val toolCall = delta.toolCallDelta()?.toolCall()
+                    if(delta.isToolCall()) {
+                        val toolCall = delta.toolCall()
                         if (toolCall != null) {
                             callback.onStreamReceived("\n" + functionDispatch(listOf(toolCall), ctx))
                         } else {
@@ -149,7 +149,8 @@ class ExampleLlamaStackLocalInference(
                         }
                     }
                     if (it.asChatCompletionResponseStreamChunk().event().stopReason().toString() != "end_of_turn") {
-                        callback.onStreamReceived(it.asChatCompletionResponseStreamChunk().event().delta().textDelta()?.text().toString())
+                        callback.onStreamReceived(
+                            it.asChatCompletionResponseStreamChunk().event().delta().text()?.text().toString())
                     } else {
                         // response is complete so stats like tps is available
                         tps = (it.asChatCompletionResponseStreamChunk()._additionalProperties()["tps"] as JsonNumber).value as Float

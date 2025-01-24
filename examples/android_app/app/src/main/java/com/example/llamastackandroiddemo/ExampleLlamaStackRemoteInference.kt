@@ -132,10 +132,10 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
                         .samplingParams(
                             SamplingParams.builder()
                                 .strategy(
-                                    SamplingParams.Strategy.ofGreedySamplingStrategy(
-                                        SamplingParams.Strategy.GreedySamplingStrategy.builder()
+                                    SamplingParams.Strategy.ofGreedy(
+                                        SamplingParams.Strategy.Greedy.builder()
                                             .type(
-                                                SamplingParams.Strategy.GreedySamplingStrategy.Type
+                                                SamplingParams.Strategy.Greedy.Type
                                                     .GREEDY
                                         ).build()
                                     )
@@ -150,8 +150,8 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
                 result.use {
                     result.asSequence().forEach {
                         val delta = it.asChatCompletionResponseStreamChunk().event().delta()
-                        if (delta.isToolCallDelta()) {
-                            val toolCall = delta.toolCallDelta()?.toolCall()
+                        if (delta.isToolCall()) {
+                            val toolCall = delta.toolCall()
                             if (toolCall != null) {
                                 callback.onStreamReceived("\n" + functionDispatch(listOf(toolCall), ctx))
                             } else {
@@ -160,7 +160,7 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
 
                         }
                         if (it.asChatCompletionResponseStreamChunk().event().stopReason().toString() != "end_of_turn") {
-                            callback.onStreamReceived(it.asChatCompletionResponseStreamChunk().event().delta().textDelta()?.text().toString())
+                            callback.onStreamReceived(it.asChatCompletionResponseStreamChunk().event().delta().text().toString())
                         }
                     }
                 }
@@ -171,10 +171,10 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
                         .samplingParams(
                             SamplingParams.builder()
                                 .strategy(
-                                    SamplingParams.Strategy.ofGreedySamplingStrategy(
-                                        SamplingParams.Strategy.GreedySamplingStrategy.builder()
+                                    SamplingParams.Strategy.ofGreedy(
+                                        SamplingParams.Strategy.Greedy.builder()
                                             .type(
-                                                SamplingParams.Strategy.GreedySamplingStrategy.Type
+                                                SamplingParams.Strategy.Greedy.Type
                                                     .GREEDY
                                             ).build()
                                     )
@@ -302,7 +302,7 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
 
                         agentResponsePayload.isStepProgress() -> {
                             // Handle Step Progress Payload
-                            val result = agentResponsePayload.stepProgress()?.delta()?.textDelta()?.text()
+                            val result = agentResponsePayload.stepProgress()?.delta()?.text()?.text()
                             if (result != null) {
                                 callback.onStreamReceived(result.toString())
                             }
@@ -370,9 +370,9 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
                 .samplingParams(
                     SamplingParams.builder()
                         .strategy(
-                            SamplingParams.Strategy.ofGreedySamplingStrategy(
-                                SamplingParams.Strategy.GreedySamplingStrategy.builder()
-                                    .type(SamplingParams.Strategy.GreedySamplingStrategy.Type.GREEDY)
+                            SamplingParams.Strategy.ofGreedy(
+                                SamplingParams.Strategy.Greedy.builder()
+                                    .type(SamplingParams.Strategy.Greedy.Type.GREEDY)
                                     .build()
                             )
                         )
