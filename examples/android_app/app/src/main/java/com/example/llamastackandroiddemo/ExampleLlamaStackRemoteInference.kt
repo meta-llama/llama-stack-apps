@@ -275,6 +275,7 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
     //Note Agent inference only support streaming at the moment.
     private fun remoteAgentInference(agentId: String, sessionId: String, turnService: TurnService, conversationHistory: ArrayList<Message>, ctx: Context): String {
         val imageUrl = Url.builder().uri("https://www.healthypawspetinsurance.com/Images/V3/DogAndPuppyInsurance/Dog_CTA_Desktop_HeroImage.jpg").build()
+
         val agentTurnCreateResponseStream =
             turnService.createStreaming(
                 AgentTurnCreateParams.builder()
@@ -355,6 +356,11 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
                          """
         }
 
+        var toolPromptFormat = AgentConfig.ToolPromptFormat.PYTHON_LIST
+        if (modelName == "meta-llama/Llama-3.2-11B-Vision-Instruct" || modelName == "meta-llama/Llama-3.2-90B-Vision-Instruct") {
+            toolPromptFormat = AgentConfig.ToolPromptFormat.JSON
+        }
+
         val agentConfig =
             AgentConfig.builder()
                 .enableSessionPersistence(false)
@@ -373,12 +379,12 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
                         .build()
                 )
                 .toolChoice(AgentConfig.ToolChoice.AUTO)
-                .toolPromptFormat(AgentConfig.ToolPromptFormat.PYTHON_LIST)
-//                .clientTools(
-//                    listOf(
-//                        CustomTools.getCreateCalendarEventTool()
-//                    )
-//                )
+                .toolPromptFormat(toolPromptFormat)
+                .clientTools(
+                    listOf(
+                        CustomTools.getCreateCalendarEventTool()
+                    )
+                )
                 .build()
 
         return agentConfig
@@ -391,7 +397,6 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
         var image : InterleavedContent.ImageContentItem.Image? = null
         // User and assistant messages
         for (chat in conversationHistory) {
-            Log.d("Chester", "message type is: ${chat.messageType}")
             var inferenceMessage: AgentTurnCreateParams.Message
 
             if (chat.isSent) {
@@ -400,23 +405,20 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
                     val imageUri = Uri.parse(chat.imagePath)
                     val contentResolver = ctx.contentResolver
                     val imageFilePath = getFilePathFromUri(contentResolver, imageUri)
-//                    val imageUrl = imageFilePath?.let { encodeImageToDataUrl(it) }
-                    val imageUrl = Url.builder().uri("https://www.healthypawspetinsurance.com/Images/V3/DogAndPuppyInsurance/Dog_CTA_Desktop_HeroImage.jpg").build()
+                    val imageDataUrl = imageFilePath?.let { encodeImageToDataUrl(it) }
+                    val imageUrl = imageDataUrl?.let { Url.builder().uri(it).build() }
                     if (imageUrl != null) {
-                        Log.d("Chester", "imageUrl = $imageUrl")
                         image = InterleavedContent.ImageContentItem.Image.builder().url(imageUrl).build()
-                        Log.d("Chester", "Image = $image")
                     }
 
                     continue
                 }
                 // Prompt right after the image
                 else if (chat.messageType == MessageType.TEXT && image != null) {
-                    Log.d("Chester", "Sending image reference")
 
                     inferenceMessage = AgentTurnCreateParams.Message.ofUserMessage(
                         UserMessage.builder()
-                            .content(InterleavedContent.ofString("what is in the image?"))
+                            .content(InterleavedContent.ofString(chat.text))
                             .role(UserMessage.Role.USER)
                             .build()
                     )
@@ -433,7 +435,6 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
                                 .role(UserMessage.Role.USER)
                                 .build()
                     )
-                    messageList.add(inferenceMessage)
                     image = null
                 }
                 //Everything else. No multiple images support yet
@@ -460,6 +461,7 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
             }
             messageList.add(inferenceMessage)
         }
+
         AppLogging.getInstance().log("conversation history length "  + messageList.size)
         return messageList
     }
@@ -473,7 +475,7 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
         return "data:$mimeType;base64,$encodedString"
     }
 
-    fun getFilePathFromUri(contentResolver: ContentResolver, uri: Uri): String? {
+    private fun getFilePathFromUri(contentResolver: ContentResolver, uri: Uri): String? {
         val id = uri.lastPathSegment
         val projection = arrayOf(MediaStore.Images.Media.DATA)
         val selection = "${MediaStore.Images.Media._ID} = ?"
