@@ -192,6 +192,16 @@ public class MainActivity extends AppCompatActivity implements Runnable, Inferen
           }
           if (exampleLlamaStackRemoteInference != null) {
             message += "and remote (" + updatedSettingsFields.getRemoteURL() +") ";
+            if (mGenerationModeButton.getText() == AppUtils.REMOTE) {
+                new Thread(() -> {
+                  try {
+                    setupAgent();
+                    addSystemMessage("Remote Agent setup done");
+                  } catch (Exception e) {
+                    e.printStackTrace();
+                  }
+                }).start();
+              }
           }
           message += " inference.";
           addSystemMessage(message);
@@ -589,7 +599,6 @@ public class MainActivity extends AppCompatActivity implements Runnable, Inferen
     AppLogging.getInstance().log("Setting up agent for remote inference");
     String systemPrompt = mCurrentSettingsFields.getSystemPrompt();
     String modelName = mCurrentSettingsFields.getRemoteModel();
-    Log.d("Chester", "My modelName is " + modelName);
 
     double temperature = mCurrentSettingsFields.getTemperature();
     if (exampleLlamaStackRemoteInference.getClient() == null) {
