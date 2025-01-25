@@ -82,7 +82,7 @@ public class MainActivity extends AppCompatActivity implements Runnable, Inferen
   private String agentId;
   private String sessionId;
   private TurnService turnService;
-
+  private Boolean useAgent = true;
 
   private void populateExistingMessages(String existingMsgJSON) {
     Gson gson = new Gson();
@@ -141,6 +141,8 @@ public class MainActivity extends AppCompatActivity implements Runnable, Inferen
     executor = Executors.newSingleThreadExecutor();
     onModelRunStopped();
     setupGenerationButton();
+    //Hard-coded to use agents in the example. Can be controlled by UI buttons.
+    useAgent = true;
   }
 
   @Override
@@ -192,7 +194,7 @@ public class MainActivity extends AppCompatActivity implements Runnable, Inferen
           }
           if (exampleLlamaStackRemoteInference != null) {
             message += "and remote (" + updatedSettingsFields.getRemoteURL() +") ";
-            if (mGenerationModeButton.getText() == AppUtils.REMOTE) {
+            if (mGenerationModeButton.getText() == AppUtils.REMOTE && useAgent) {
                 new Thread(() -> {
                   try {
                     setupAgent();
@@ -296,7 +298,7 @@ public class MainActivity extends AppCompatActivity implements Runnable, Inferen
         if (mGenerationModeButton.getText() == AppUtils.LOCAL) {
           mGenerationModeButton.setText(AppUtils.REMOTE);
           addSystemMessage("Inference mode: Remote");
-          if (exampleLlamaStackRemoteInference != null) {
+          if (exampleLlamaStackRemoteInference != null && useAgent) {
             new Thread(() -> {
               try {
                 setupAgent();
@@ -627,8 +629,7 @@ public class MainActivity extends AppCompatActivity implements Runnable, Inferen
 
     String result = "";
 
-    //Hard-coded to use agents in the example. Can be controlled by UI buttons.
-    boolean useAgent = true;
+
     if(useAgent) {
       result = exampleLlamaStackRemoteInference.inferenceStartWithAgent(agentId, sessionId, turnService, mMessageAdapter.getRecentSavedTextMessages(AppUtils.CONVERSATION_HISTORY_MESSAGE_LOOKBACK), this);
     }

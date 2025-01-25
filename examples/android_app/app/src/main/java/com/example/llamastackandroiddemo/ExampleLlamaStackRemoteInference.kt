@@ -88,7 +88,6 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
             AppLogging.getInstance().log("client is null for remote inference");
             return "[ERROR] client is null for remote inference"
         }
-
         //Get the current time in ISO format and pass it to the model in system prompt as a reference. This is useful for any scheduling and vague timing reference from user prompt.
         val zdt = ZonedDateTime.ofInstant(Instant.parse(Clock.System.now().toString()), ZoneId.systemDefault())
         val formattedZdt = zdt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
@@ -150,6 +149,7 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
                 result.use {
                     result.asSequence().forEach {
                         val delta = it.asChatCompletionResponseStreamChunk().event().delta()
+
                         if (delta.isToolCall()) {
                             val toolCall = delta.toolCall()
                             if (toolCall != null) {
@@ -160,7 +160,10 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
 
                         }
                         if (it.asChatCompletionResponseStreamChunk().event().stopReason().toString() != "end_of_turn") {
-                            callback.onStreamReceived(it.asChatCompletionResponseStreamChunk().event().delta().text().toString())
+                            callback.onStreamReceived(
+                                it.asChatCompletionResponseStreamChunk().event().delta().text()
+                                    ?.text()
+                                    .toString())
                         }
                     }
                 }
