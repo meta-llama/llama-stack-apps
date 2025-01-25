@@ -3,8 +3,8 @@ package com.example.llamastackandroiddemo
 import android.content.Context
 import com.llama.llamastack.client.LlamaStackClientClient
 import com.llama.llamastack.client.okhttp.LlamaStackClientOkHttpClient
-import com.llama.llamastack.models.CompletionMessage
 import com.llama.llamastack.models.InferenceChatCompletionParams
+import com.llama.llamastack.models.InterleavedContent
 import com.llama.llamastack.models.SamplingParams
 import com.llama.llamastack.models.SystemMessage
 import com.llama.llamastack.models.UserMessage
@@ -17,6 +17,7 @@ import java.util.concurrent.CompletableFuture
 
 interface InferenceStreamingCallback {
     fun onStreamReceived(message: String)
+    fun onStatStreamReceived(tps: Float)
 }
 
 class ExampleLlamaStackRemoteInference(remoteURL: String) {
@@ -98,6 +99,7 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
                         .samplingParams(
                             SamplingParams.builder()
                                 .temperature(temperature)
+                                .strategy(SamplingParams.Strategy.GREEDY)
                                 .build()
                         )
                         .messages(
@@ -130,6 +132,7 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
                         .samplingParams(
                             SamplingParams.builder()
                                 .temperature(temperature)
+                                .strategy(SamplingParams.Strategy.GREEDY)
                                 .build()
                         )
                         .messages(
@@ -165,7 +168,7 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
         messageList.add(
             InferenceChatCompletionParams.Message.ofSystemMessage(
                 SystemMessage.builder()
-                    .content(SystemMessage.Content.ofString(systemPrompt))
+                    .content(InterleavedContent.ofString(systemPrompt))
                     .role(SystemMessage.Role.SYSTEM)
                     .build()
             )
@@ -177,18 +180,18 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
                 // User message
                 inferenceMessage = InferenceChatCompletionParams.Message.ofUserMessage(
                     UserMessage.builder()
-                        .content(UserMessage.Content.ofString(chat.text))
+                        .content(InterleavedContent.ofString(chat.text))
                         .role(UserMessage.Role.USER)
                         .build()
                 )
             } else {
                 // Assistant message (aka previous prompt response)
                 inferenceMessage = InferenceChatCompletionParams.Message.ofCompletionMessage(
-                    CompletionMessage.builder()
-                        .content(CompletionMessage.Content.ofString(chat.text))
-                        .stopReason(CompletionMessage.StopReason.END_OF_MESSAGE)
+                    InferenceChatCompletionParams.Message.CompletionMessage.builder()
+                        .content(InterleavedContent.ofString(chat.text))
+                        .stopReason(InferenceChatCompletionParams.Message.CompletionMessage.StopReason.END_OF_MESSAGE)
                         .toolCalls(emptyList())
-                        .role(CompletionMessage.Role.ASSISTANT)
+                        .role(InferenceChatCompletionParams.Message.CompletionMessage.Role.ASSISTANT)
                         .build()
                 )
             }
