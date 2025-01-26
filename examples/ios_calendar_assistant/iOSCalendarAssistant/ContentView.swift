@@ -24,7 +24,7 @@ struct ContentView: View {
   @State private var showAlert = false
   @State private var alertMessage = ""
   
-  private let agent = RemoteAgents(url: URL(string: "http://54.189.109.3:8501")!)
+  private let agent = RemoteAgents(url: URL(string: "http://127.0.0.1:8321")!)
   @State var agentId = ""
   @State var agenticSystemSessionId = ""
 
@@ -109,7 +109,7 @@ struct ContentView: View {
 
   func summarizeConversation(prompt: String) async {
     do {
-      let request = Components.Schemas.CreateAgentTurnRequest(
+        let request = Components.Schemas.CreateAgentTurnRequest(
         messages: [
           .UserMessage(Components.Schemas.UserMessage(
             content: .case1("Summarize the following conversation in 1-2 sentences:\n\n \(prompt)"),
@@ -122,15 +122,13 @@ struct ContentView: View {
       for try await chunk in try await self.agent.createTurn(agent_id: self.agentId, session_id: self.agenticSystemSessionId, request: request) {
         let payload = chunk.event.payload
         switch (payload) {
-        case .AgentTurnResponseStepStartPayload(_):
+        case .step_start:
           break
-        case .AgentTurnResponseStepProgressPayload(let step):
-          if (step.delta != nil) {
-            DispatchQueue.main.async {
+        case .step_progress(let step):
+            DispatchQueue.main.async(execute: DispatchWorkItem {
               withAnimation {
                 var message = messages.removeLast()
-                if case .TextDelta(let textDelta) = step.delta {
-                    let text = textDelta.text
+                if case .text(let text) = step.delta {
                     message.text += "\(text)"
                 }
                 
@@ -139,13 +137,13 @@ struct ContentView: View {
                 messages.append(message)
                 print(message.text)
               }
-            }
-          }
-        case .AgentTurnResponseStepCompletePayload(_):
+            })
+            break
+        case .step_complete(_):
           break
-        case .AgentTurnResponseTurnStartPayload(_):
+        case .turn_start(_):
           break
-        case .AgentTurnResponseTurnCompletePayload(_):
+        case .turn_complete(_):
           break
 
         }
@@ -170,16 +168,14 @@ struct ContentView: View {
     for try await chunk in try await self.agent.createTurn(agent_id: self.agentId, session_id: self.agenticSystemSessionId, request: request) {
       let payload = chunk.event.payload
       switch (payload) {
-      case .AgentTurnResponseStepStartPayload(_):
+      case .step_start(_):
         break
-      case .AgentTurnResponseStepProgressPayload(let step):
-        if (step.delta != nil) {
-          DispatchQueue.main.async {
+      case .step_progress(let step):
+          DispatchQueue.main.async(execute: DispatchWorkItem {
             withAnimation {
               var message = messages.removeLast()
               
-              if case .TextDelta(let textDelta) = step.delta {
-                  let text = textDelta.text
+              if case .text(let text) = step.delta {
                   message.text += "\(text)"
               }
               message.tokenCount += 2
@@ -188,13 +184,12 @@ struct ContentView: View {
 
               self.actionItems += "\(step.delta)"
             }
-          }
-        }
-      case .AgentTurnResponseStepCompletePayload(_):
+          })
+      case .step_complete(_):
         break
-      case .AgentTurnResponseTurnStartPayload(_):
+      case .turn_start(_):
         break
-      case .AgentTurnResponseTurnCompletePayload(_):
+      case .turn_complete(_):
         break
       }
     }
@@ -216,13 +211,12 @@ struct ContentView: View {
       
       let payload = chunk.event.payload
       switch (payload) {
-      case .AgentTurnResponseStepStartPayload(_):
+      case .step_start(_):
         break
         
-      case .AgentTurnResponseStepProgressPayload(let step):
-        if (step.delta != nil) {
+      case .step_progress(let step):
           switch (step.delta) {
-          case .ToolCallDelta(let call):
+          case .tool_call(let call):
             if call.parse_status == .succeeded {
               switch (call.tool_call) {
               case .ToolCall(let toolCall):
@@ -249,22 +243,17 @@ struct ContentView: View {
                 break
               }
             }
-          case .TextDelta(_):
-            if case .TextDelta(let textDelta) = step.delta {
-                let text = textDelta.text
-            }
-
+          case .text(let text):
             break
-          case .ImageDelta(_):
+          case .image(_):
             break
           }
-        }
         break
-      case .AgentTurnResponseStepCompletePayload(_):
+      case .step_complete(_):
         break
-      case .AgentTurnResponseTurnStartPayload(_):
+      case .turn_start(_):
         break
-      case .AgentTurnResponseTurnCompletePayload(_):
+      case .turn_complete(_):
         break
       }
     }
@@ -310,7 +299,7 @@ struct ContentView: View {
           )
           self.agenticSystemSessionId = createSessionResponse.session_id
 
-          try await summarizeConversation(prompt: text)
+          await summarizeConversation(prompt: text)
 
           messages.append(Message(type: .actionItems))
           try await actionItems(prompt: text)
