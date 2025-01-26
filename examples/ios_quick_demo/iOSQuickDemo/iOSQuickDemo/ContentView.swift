@@ -62,32 +62,41 @@ struct ContentView: View {
     let workItem = DispatchWorkItem {
       defer {
         DispatchQueue.main.async {
-          
         }
       }
       
       Task {
         let inference = RemoteInference(url: URL(string: "http://54.189.109.3:8501")!)
+        
         do {
           for await chunk in try await inference.chatCompletion(
             request:
               Components.Schemas.ChatCompletionRequest(
                 messages: [
-                  .UserMessage(Components.Schemas.UserMessage(
-                    content: .case1(userInput),
-                    role: .user)
+                  .user(
+                    Components.Schemas.UserMessage(
+                      content:
+                          .InterleavedContentItem(
+                              .text(Components.Schemas.TextContentItem(
+                                  text: userInput,
+                                  _type: .text
+                              )
+                          )
+                      ),
+                      role: .user
                   )
-                ], model_id: "meta-llama/Llama-3.1-8B-Instruct",
-                stream: true)
+                )
+              ], model_id: "meta-llama/Llama-3.1-8B-Instruct",
+              stream: true)
           ) {
             switch (chunk.event.delta) {
-            case .TextDelta(let s):
+            case .text(let s):
               message += s.text
               break
-            case .ImageDelta(let s):
+            case .image(let s):
               print("> \(s)")
               break
-            case .ToolCallDelta(let s):
+            case .tool_call(let s):
               print("> \(s)")
               break
             }
