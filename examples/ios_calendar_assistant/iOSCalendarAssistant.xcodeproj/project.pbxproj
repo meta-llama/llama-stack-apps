@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 60;
+	objectVersion = 56;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -15,10 +15,10 @@
 		5C200C202CA3CC3C0026EA40 /* MessageListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C200C172CA3CC3C0026EA40 /* MessageListView.swift */; };
 		5C200C212CA3CC3C0026EA40 /* MessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C200C182CA3CC3C0026EA40 /* MessageView.swift */; };
 		5C200C222CA3CC3C0026EA40 /* iOSCalendarAssistantApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C200C192CA3CC3C0026EA40 /* iOSCalendarAssistantApp.swift */; };
-		CFF364142D45D2AF00D93284 /* LlamaStackClient in Frameworks */ = {isa = PBXBuildFile; productRef = CFF364132D45D2AF00D93284 /* LlamaStackClient */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		265029812D46B28700D06225 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		5C200C112CA3CC3C0026EA40 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		5C200C132CA3CC3C0026EA40 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		5C200C142CA3CC3C0026EA40 /* ContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -35,7 +35,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				CFF364142D45D2AF00D93284 /* LlamaStackClient in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -53,6 +52,7 @@
 		5C200C1A2CA3CC3C0026EA40 /* iOSCalendarAssistant */ = {
 			isa = PBXGroup;
 			children = (
+				265029812D46B28700D06225 /* Info.plist */,
 				5C200C122CA3CC3C0026EA40 /* Preview Content */,
 				5C200C132CA3CC3C0026EA40 /* Assets.xcassets */,
 				5C200C142CA3CC3C0026EA40 /* ContentView.swift */,
@@ -106,7 +106,6 @@
 			);
 			name = iOSCalendarAssistant;
 			packageProductDependencies = (
-				CFF364132D45D2AF00D93284 /* LlamaStackClient */,
 			);
 			productName = StackSummary;
 			productReference = 5CADB0012CA1345100942A87 /* iOSCalendarAssistant.app */;
@@ -137,7 +136,6 @@
 			);
 			mainGroup = 5CADAFF82CA1345100942A87;
 			packageReferences = (
-				CFF364112D45D03100D93284 /* XCLocalSwiftPackageReference "../../../jefftag-client-swift" */,
 			);
 			productRefGroup = 5CADB0022CA1345100942A87 /* Products */;
 			projectDirPath = "";
@@ -306,6 +304,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"iOSCalendarAssistant/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = iOSCalendarAssistant/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -334,6 +333,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"iOSCalendarAssistant/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = iOSCalendarAssistant/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -374,21 +374,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCLocalSwiftPackageReference section */
-		CFF364112D45D03100D93284 /* XCLocalSwiftPackageReference "../../../jefftag-client-swift" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = "../../../jefftag-client-swift";
-		};
-/* End XCLocalSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		CFF364132D45D2AF00D93284 /* LlamaStackClient */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = CFF364112D45D03100D93284 /* XCLocalSwiftPackageReference "../../../jefftag-client-swift" */;
-			productName = LlamaStackClient;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 5CADAFF92CA1345100942A87 /* Project object */;
 }

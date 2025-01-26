@@ -24,7 +24,8 @@ struct ContentView: View {
   @State private var showAlert = false
   @State private var alertMessage = ""
   
-  private let agent = RemoteAgents(url: URL(string: "http://127.0.0.1:8321")!)
+  //private let agent = RemoteAgents(url: URL(string: "http://127.0.0.1:8321")!)
+  private let agent = RemoteAgents(url: URL(string: "http://54.189.109.3:8501")!)
   @State var agentId = ""
   @State var agenticSystemSessionId = ""
 
@@ -128,8 +129,8 @@ struct ContentView: View {
             DispatchQueue.main.async(execute: DispatchWorkItem {
               withAnimation {
                 var message = messages.removeLast()
-                if case .text(let text) = step.delta {
-                    message.text += "\(text)"
+                if case .text(let delta) = step.delta {
+                  message.text += "\(delta.text)"
                 }
                 
                 message.tokenCount += 2
@@ -175,14 +176,13 @@ struct ContentView: View {
             withAnimation {
               var message = messages.removeLast()
               
-              if case .text(let text) = step.delta {
-                  message.text += "\(text)"
+              if case .text(let delta) = step.delta {
+                message.text += "\(delta.text)"
+                self.actionItems += "\(delta.text)"
               }
               message.tokenCount += 2
               message.dateUpdated = Date()
               messages.append(message)
-
-              self.actionItems += "\(step.delta)"
             }
           })
       case .step_complete(_):
