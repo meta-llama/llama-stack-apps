@@ -6,15 +6,6 @@
 	objectVersion = 77;
 	objects = {
 
-/* Begin PBXBuildFile section */
-		26AF95872D3D74A000168181 /* LlamaStackClient in Frameworks */ = {isa = PBXBuildFile; productRef = 26AF95862D3D74A000168181 /* LlamaStackClient */; };
-		26C2EA222D3D7FD4000FD42D /* LlamaStackClient in Frameworks */ = {isa = PBXBuildFile; productRef = 26C2EA212D3D7FD4000FD42D /* LlamaStackClient */; };
-		26DF73182D3D7F7300D52D27 /* LlamaStackClient in Frameworks */ = {isa = PBXBuildFile; productRef = 26DF73172D3D7F7300D52D27 /* LlamaStackClient */; };
-		26F9B8EF2D3D76A4009E42C7 /* LlamaStackClient in Frameworks */ = {isa = PBXBuildFile; productRef = 26F9B8EE2D3D76A4009E42C7 /* LlamaStackClient */; };
-		26F9B8F22D3D7718009E42C7 /* LlamaStackClient in Frameworks */ = {isa = PBXBuildFile; productRef = 26F9B8F12D3D7718009E42C7 /* LlamaStackClient */; };
-		26F9B8FE2D3D7879009E42C7 /* LlamaStackClient in Frameworks */ = {isa = PBXBuildFile; productRef = 26F9B8FD2D3D7879009E42C7 /* LlamaStackClient */; };
-/* End PBXBuildFile section */
-
 /* Begin PBXFileReference section */
 		26AF95742D3D743800168181 /* iOSQuickDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iOSQuickDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -45,12 +36,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				26F9B8FE2D3D7879009E42C7 /* LlamaStackClient in Frameworks */,
-				26DF73182D3D7F7300D52D27 /* LlamaStackClient in Frameworks */,
-				26F9B8EF2D3D76A4009E42C7 /* LlamaStackClient in Frameworks */,
-				26F9B8F22D3D7718009E42C7 /* LlamaStackClient in Frameworks */,
-				26C2EA222D3D7FD4000FD42D /* LlamaStackClient in Frameworks */,
-				26AF95872D3D74A000168181 /* LlamaStackClient in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -61,6 +46,7 @@
 			isa = PBXGroup;
 			children = (
 				26AF95762D3D743800168181 /* iOSQuickDemo */,
+				26F399242D42F0AB007FB9D6 /* Frameworks */,
 				26AF95752D3D743800168181 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -71,6 +57,13 @@
 				26AF95742D3D743800168181 /* iOSQuickDemo.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		26F399242D42F0AB007FB9D6 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -99,6 +92,9 @@
 				26F9B8FD2D3D7879009E42C7 /* LlamaStackClient */,
 				26DF73172D3D7F7300D52D27 /* LlamaStackClient */,
 				26C2EA212D3D7FD4000FD42D /* LlamaStackClient */,
+				26F399262D42F0E3007FB9D6 /* LlamaStackClient */,
+				265029162D4306A200D06225 /* LlamaStackClient */,
+				265029512D46A19A00D06225 /* LlamaStackClient */,
 			);
 			productName = iOSQuickDemo;
 			productReference = 26AF95742D3D743800168181 /* iOSQuickDemo.app */;
@@ -129,7 +125,6 @@
 			mainGroup = 26AF956B2D3D743800168181;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				26C2EA202D3D7FD4000FD42D /* XCLocalSwiftPackageReference "../../../../llama-stack-client-swift" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 26AF95752D3D743800168181 /* Products */;
@@ -362,14 +357,15 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCLocalSwiftPackageReference section */
-		26C2EA202D3D7FD4000FD42D /* XCLocalSwiftPackageReference "../../../../llama-stack-client-swift" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = "../../../../llama-stack-client-swift";
-		};
-/* End XCLocalSwiftPackageReference section */
-
 /* Begin XCSwiftPackageProductDependency section */
+		265029162D4306A200D06225 /* LlamaStackClient */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = LlamaStackClient;
+		};
+		265029512D46A19A00D06225 /* LlamaStackClient */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = LlamaStackClient;
+		};
 		26AF95862D3D74A000168181 /* LlamaStackClient */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = LlamaStackClient;
@@ -379,6 +375,10 @@
 			productName = LlamaStackClient;
 		};
 		26DF73172D3D7F7300D52D27 /* LlamaStackClient */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = LlamaStackClient;
+		};
+		26F399262D42F0E3007FB9D6 /* LlamaStackClient */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = LlamaStackClient;
 		};
