@@ -24,8 +24,7 @@ struct ContentView: View {
   @State private var showAlert = false
   @State private var alertMessage = ""
   
-  //private let agent = RemoteAgents(url: URL(string: "http://127.0.0.1:8321")!)
-  private let agent = RemoteAgents(url: URL(string: "http://54.189.109.3:8501")!)
+  private let agent = RemoteAgents(url: URL(string: "http://127.0.0.1:8321")!)
   @State var agentId = ""
   @State var agenticSystemSessionId = ""
 

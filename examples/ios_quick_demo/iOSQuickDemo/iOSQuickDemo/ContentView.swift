@@ -66,8 +66,8 @@ struct ContentView: View {
       }
       
       Task {
-        let inference = RemoteInference(url: URL(string: "http://54.189.109.3:8501")!)
-        
+        let inference = RemoteInference(url: URL(string: "http://127.0.0.1:8321"")!)
+
         do {
           for await chunk in try await inference.chatCompletion(
             request:
