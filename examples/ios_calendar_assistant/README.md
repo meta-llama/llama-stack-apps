@@ -1,6 +1,6 @@
 # iOSCalendarAssistant
 
-iOSCalendarAssistant is a demo app ([video](https://drive.google.com/file/d/1xjdYVm3zDnlxZGi40X_D4IgvmASfG5QZ/view?usp=sharing) that takes a meeting transcript, summarizes it, extracts action items, and calls tools to book any followup meetings.
+iOSCalendarAssistant is a demo app ([video](https://drive.google.com/file/d/1xjdYVm3zDnlxZGi40X_D4IgvmASfG5QZ/view?usp=sharing)) that takes a meeting transcript, summarizes it, extracts action items, and calls tools to book any followup meetings.
 
 You can also test the create calendar event with a direct ask instead of a detailed meeting note.
 
