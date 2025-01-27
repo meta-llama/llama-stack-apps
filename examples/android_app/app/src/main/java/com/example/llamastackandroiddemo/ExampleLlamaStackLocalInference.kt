@@ -143,7 +143,7 @@ class ExampleLlamaStackLocalInference(
                     if(delta.isToolCall()) {
                         val toolCall = delta.toolCall()
                         if (toolCall != null) {
-                            callback.onStreamReceived("\n" + functionDispatch(listOf(toolCall), ctx))
+                            callback.onStreamReceived("\n" + functionDispatchNotWorking(listOf(toolCall), ctx))
                         } else {
                             callback.onStreamReceived("\n" + "Empty tool call. File a bug")
                         }
@@ -192,10 +192,9 @@ class ExampleLlamaStackLocalInference(
         val messageList = ArrayList<com.llama.llamastack.models.Message>();
         // System prompt
         messageList.add(
-            com.llama.llamastack.models.Message.ofSystemMessage(
+            com.llama.llamastack.models.Message.ofSystem(
                 SystemMessage.builder()
                     .content(InterleavedContent.ofString(systemPrompt))
-                    .role(SystemMessage.Role.SYSTEM)
                     .build()
             )
         )
@@ -204,20 +203,18 @@ class ExampleLlamaStackLocalInference(
             var inferenceMessage: com.llama.llamastack.models.Message
             if (chat.isSent) {
                 // User message
-                inferenceMessage = com.llama.llamastack.models.Message.ofUserMessage(
+                inferenceMessage = com.llama.llamastack.models.Message.ofUser(
                     UserMessage.builder()
                         .content(InterleavedContent.ofString(chat.text))
-                        .role(UserMessage.Role.USER)
                         .build()
                 )
             } else {
                 // Assistant message (aka previous prompt response)
-                inferenceMessage = com.llama.llamastack.models.Message.ofCompletionMessage(
+                inferenceMessage = com.llama.llamastack.models.Message.ofCompletion(
                     com.llama.llamastack.models.CompletionMessage.builder()
                         .content(InterleavedContent.ofString(chat.text))
                         .stopReason(com.llama.llamastack.models.CompletionMessage.StopReason.END_OF_MESSAGE)
                         .toolCalls(emptyList())
-                        .role(com.llama.llamastack.models.CompletionMessage.Role.ASSISTANT)
                         .build()
                 )
             }

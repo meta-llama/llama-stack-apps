@@ -132,13 +132,7 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
                         .samplingParams(
                             SamplingParams.builder()
                                 .strategy(
-                                    SamplingParams.Strategy.ofGreedy(
-                                        SamplingParams.Strategy.Greedy.builder()
-                                            .type(
-                                                SamplingParams.Strategy.Greedy.Type
-                                                    .GREEDY
-                                        ).build()
-                                    )
+                                    SamplingParams.Strategy.ofGreedySampling()
                                 ).build()
                         )
                         .messages(
@@ -154,7 +148,7 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
                         if (delta.isToolCall()) {
                             val toolCall = delta.toolCall()
                             if (toolCall != null) {
-                                callback.onStreamReceived("\n" + functionDispatch(listOf(toolCall), ctx))
+                                callback.onStreamReceived("\n" + functionDispatchNotWorking(listOf(toolCall), ctx))
                             } else {
                                 callback.onStreamReceived("\n" + "Empty tool call. File a bug")
                             }
@@ -175,13 +169,7 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
                         .samplingParams(
                             SamplingParams.builder()
                                 .strategy(
-                                    SamplingParams.Strategy.ofGreedy(
-                                        SamplingParams.Strategy.Greedy.builder()
-                                            .type(
-                                                SamplingParams.Strategy.Greedy.Type
-                                                    .GREEDY
-                                            ).build()
-                                    )
+                                    SamplingParams.Strategy.ofGreedySampling()
                                 ).build()
                         )
                         .messages(
@@ -214,10 +202,9 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
         val messageList = ArrayList<com.llama.llamastack.models.Message>();
         // System prompt
         messageList.add(
-            com.llama.llamastack.models.Message.ofSystemMessage(
+            com.llama.llamastack.models.Message.ofSystem(
                 SystemMessage.builder()
                     .content(InterleavedContent.ofString(systemPrompt))
-                    .role(SystemMessage.Role.SYSTEM)
                     .build()
             )
         )
@@ -226,20 +213,18 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
             var inferenceMessage: com.llama.llamastack.models.Message
             if (chat.isSent) {
                 // User message
-                inferenceMessage = com.llama.llamastack.models.Message.ofUserMessage(
+                inferenceMessage = com.llama.llamastack.models.Message.ofUser(
                     UserMessage.builder()
                         .content(InterleavedContent.ofString(chat.text))
-                        .role(UserMessage.Role.USER)
                         .build()
                 )
             } else {
                 // Assistant message (aka previous prompt response)
-                inferenceMessage = com.llama.llamastack.models.Message.ofCompletionMessage(
+                inferenceMessage = com.llama.llamastack.models.Message.ofCompletion(
                     CompletionMessage.builder()
                         .content(InterleavedContent.ofString(chat.text))
                         .stopReason(CompletionMessage.StopReason.END_OF_MESSAGE)
                         .toolCalls(emptyList())
-                        .role(CompletionMessage.Role.ASSISTANT)
                         .build()
                 )
             }
@@ -291,39 +276,39 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
         val callback = ctx as InferenceStreamingCallback
         agentTurnCreateResponseStream.use {
             agentTurnCreateResponseStream.asSequence().forEach {
-                val agentResponsePayload = it.agentTurnResponseStreamChunk()?.event()?.payload()
+                val agentResponsePayload = it.responseStreamChunk()?.event()?.payload()
                 if (agentResponsePayload != null) {
                     when {
-                        agentResponsePayload.isTurnStart() -> {
+                        agentResponsePayload.isAgentTurnResponseTurnStart() -> {
                             // Handle Turn Start Payload
                         }
 
-                        agentResponsePayload.isStepStart() -> {
+                        agentResponsePayload.isAgentTurnResponseStepStart() -> {
                             // Handle Step Start Payload
                         }
 
-                        agentResponsePayload.isStepProgress() -> {
+                        agentResponsePayload.isAgentTurnResponseStepProgress() -> {
                             // Handle Step Progress Payload
-                            val result = agentResponsePayload.stepProgress()?.delta()?.text()?.text()
+                            val result = agentResponsePayload.agentTurnResponseStepProgress()?.delta()?.text()?.text()
                             if (result != null) {
                                 callback.onStreamReceived(result.toString())
                             }
                         }
 
-                        agentResponsePayload.isStepComplete() -> {
+                        agentResponsePayload.isAgentTurnResponseStepComplete() -> {
                             // Handle Step Complete Payload
-                            val toolCalls = agentResponsePayload.stepComplete()?.stepDetails()?.asInferenceStep()?.modelResponse()?.toolCalls()
+                            val toolCalls = agentResponsePayload.agentTurnResponseStepComplete()?.stepDetails()?.asInferenceStep()?.modelResponse()?.toolCalls()
                             if (!toolCalls.isNullOrEmpty()) {
                                 callback.onStreamReceived(functionDispatch(toolCalls, ctx))
                             }
                         }
 
-                        agentResponsePayload.isTurnComplete() -> {
+                        agentResponsePayload.isAgentTurnResponseTurnComplete() -> {
                             // Handle Turn Complete Payload
                         }
                     }
                 }
-                Log.d("Chester", "Streaming Agent responses: ${it.agentTurnResponseStreamChunk()?.event()}")
+                Log.d("Chester", "Streaming Agent responses: ${it.responseStreamChunk()?.event()}")
             }
         }
         return ""
@@ -375,11 +360,7 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
                 .samplingParams(
                     SamplingParams.builder()
                         .strategy(
-                            SamplingParams.Strategy.ofGreedy(
-                                SamplingParams.Strategy.Greedy.builder()
-                                    .type(SamplingParams.Strategy.Greedy.Type.GREEDY)
-                                    .build()
-                            )
+                            SamplingParams.Strategy.ofGreedySampling()
                         )
                         .build()
                 )
@@ -419,23 +400,22 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
                 // Prompt right after the image
                 else if (chat.messageType == MessageType.TEXT && image != null) {
 
-                    inferenceMessage = AgentTurnCreateParams.Message.ofUserMessage(
+                    inferenceMessage = AgentTurnCreateParams.Message.ofUser(
                         UserMessage.builder()
                             .content(InterleavedContent.ofString(chat.text))
-                            .role(UserMessage.Role.USER)
                             .build()
                     )
                     messageList.add(inferenceMessage)
 
-                    inferenceMessage = AgentTurnCreateParams.Message.ofUserMessage(
+                    inferenceMessage = AgentTurnCreateParams.Message.ofUser(
                             UserMessage.builder()
                                 .content(InterleavedContent.ofImageContentItem(
                                     InterleavedContent.ImageContentItem.builder()
                                         .image(image)
-                                        .type(InterleavedContent.ImageContentItem.Type.IMAGE)
+                                        // NOTE : Need to fix this
+//                                        .type(InterleavedContent.ImageContentItem.Image.Type.IMAGE)
                                         .build()
                                 ))
-                                .role(UserMessage.Role.USER)
                                 .build()
                     )
                     image = null
@@ -443,21 +423,19 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
                 //Everything else. No multiple images support yet
                 else {
                     // User message
-                    inferenceMessage = AgentTurnCreateParams.Message.ofUserMessage(
+                    inferenceMessage = AgentTurnCreateParams.Message.ofUser(
                         UserMessage.builder()
                             .content(InterleavedContent.ofString(chat.text))
-                            .role(UserMessage.Role.USER)
                             .build()
                     )
                 }
             }
             else {
                 // Assistant message (aka previous prompt response)
-                inferenceMessage = AgentTurnCreateParams.Message.ofToolResponseMessage(
+                inferenceMessage = AgentTurnCreateParams.Message.ofToolResponse(
                     ToolResponseMessage.builder()
                         .callId("")
                         .content(InterleavedContent.ofString(chat.text))
-                        .role(ToolResponseMessage.Role.TOOL)
                         .toolName("")
                         .build()
                 )
