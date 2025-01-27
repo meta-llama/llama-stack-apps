@@ -147,9 +147,9 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
                         val delta = it.asChatCompletionResponseStreamChunk().event().delta()
 
                         if (delta.isToolCall()) {
-                            val toolCall = delta.toolCall()
+                            val toolCall = delta.toolCall()?.toolCall()
                             if (toolCall != null) {
-                                callback.onStreamReceived("\n" + functionDispatchNotWorking(listOf(toolCall), ctx))
+                                callback.onStreamReceived("\n" + functionDispatchWithoutAgent(listOf(toolCall), ctx))
                             } else {
                                 callback.onStreamReceived("\n" + "Empty tool call. File a bug")
                             }
@@ -256,8 +256,6 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
 
         val sessionId = agentSessionCreateResponse.sessionId()
         val turnService = agentService.turn()
-
-        Log.d("Chester", "Agent created. Id = $agentId with Session = $sessionId")
         return Triple(agentId, sessionId, turnService)
     }
 
@@ -278,6 +276,10 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
         agentTurnCreateResponseStream.use {
             agentTurnCreateResponseStream.asSequence().forEach {
                 val agentResponsePayload = it.responseStreamChunk()?.event()?.payload()
+                Log.d("Chester", "Streaming  responses: ${
+                    it.responseStreamChunk()
+                        ?.event()
+                }")
                 if (agentResponsePayload != null) {
                     when {
                         agentResponsePayload.isAgentTurnResponseTurnStart() -> {
@@ -309,7 +311,6 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
                         }
                     }
                 }
-                Log.d("Chester", "Streaming Agent responses: ${it.responseStreamChunk()?.event()}")
             }
         }
         return ""
@@ -317,7 +318,8 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
 
     private fun createRemoteAgentConfig(modelName: String, temperature: Double, userProvidedSystemPrompt: String): AgentConfig {
         //Get the current time in ISO format and pass it to the model in system prompt as a reference. This is useful for any scheduling and vague timing reference from user prompt.
-        val zdt = ZonedDateTime.ofInstant(Instant.parse(Clock.System.now().toString()), ZoneId.systemDefault())
+        Log.d("Chester", "Model Name: $modelName")
+            val zdt = ZonedDateTime.ofInstant(Instant.parse(Clock.System.now().toString()), ZoneId.systemDefault())
         //This should be replaced with Agent getting date and time with search tool
         val formattedZdt = zdt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
         val clientTools = mutableListOf<ToolDef>()
@@ -348,7 +350,7 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
 
         //Llama 1B/3B text model only support PYTHON_LIST at the moment. Whereas Vision instruction models only support JSON format.
         var toolPromptFormat = AgentConfig.ToolPromptFormat.PYTHON_LIST
-        if (modelName == "meta-llama/Llama-3.2-11B-Vision-Instruct" || modelName == "meta-llama/Llama-3.2-90B-Vision-Instruct") {
+        if (modelName == "meta-llama/Llama-3.1-8B-Instruct" || modelName == "meta-llama/Llama-3.2-11B-Vision-Instruct" || modelName == "meta-llama/Llama-3.2-90B-Vision-Instruct") {
             toolPromptFormat = AgentConfig.ToolPromptFormat.JSON
         }
 

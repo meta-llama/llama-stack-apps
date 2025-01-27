@@ -141,9 +141,9 @@ class ExampleLlamaStackLocalInference(
                 result.asSequence().forEach {
                     val delta = it.asChatCompletionResponseStreamChunk().event().delta()
                     if(delta.isToolCall()) {
-                        val toolCall = delta.toolCall()
+                        val toolCall = delta.toolCall()?.toolCall()
                         if (toolCall != null) {
-                            callback.onStreamReceived("\n" + functionDispatchNotWorking(listOf(toolCall), ctx))
+                            callback.onStreamReceived("\n" + functionDispatchWithoutAgent(listOf(toolCall), ctx))
                         } else {
                             callback.onStreamReceived("\n" + "Empty tool call. File a bug")
                         }

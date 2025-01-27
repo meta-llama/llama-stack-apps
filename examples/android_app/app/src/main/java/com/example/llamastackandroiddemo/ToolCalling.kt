@@ -19,38 +19,35 @@ import java.util.TimeZone
 
 //Tool calling helper functions
 
-fun functionDispatchNotWorking(toolCalls:List<ContentDelta.ToolCallDelta>, ctx: Context): String {
-    return "0"
-//    var response = ""
-//
-//
-//    for (toolCall in toolCalls) {
-//        val toolName = toolCall.toolName().toString()
-//        val properties = toolCall.arguments()._additionalProperties()
-//        response += when (toolName) {
-//            "createCalendarEvent" -> createCalendarEvent(
-//                properties["title"].toString(),
-//                properties["description"].toString(),
-//                properties["startDate"].toString(),
-//                properties["endDate"].toString(),
-//                properties["startTime"].toString(),
-//                properties["endTime"].toString(),
-//                ctx
-//            )
-//            else -> "Function in registry but execution is not implemented. Add your function in the AvailableFunctions.kt"
-//        } + "\n"
-//    }
-//    return if(response.isEmpty()){
-//        "Function is not registered and cannot be recognized. Please Add your function in the AvailableFunctions.kt and provide implementation"
-//    } else{
-//        // remove hanging "\n"
-//        response.removeSuffix("\n")
-//    }
+fun functionDispatchWithoutAgent(toolCalls:List<ContentDelta.ToolCallDelta.ToolCall>, ctx: Context): String {
+    var response = ""
+    
+    for (toolCall in toolCalls) {
+        val toolName = toolCall.toolCall()?.toolName().toString()
+        val properties = toolCall.toolCall()?.arguments()?._additionalProperties()!!
+        response += when (toolName) {
+            "createCalendarEvent" -> createCalendarEvent(
+                properties["title"].toString(),
+                properties["description"].toString(),
+                properties["startDate"].toString(),
+                properties["endDate"].toString(),
+                properties["startTime"].toString(),
+                properties["endTime"].toString(),
+                ctx
+            )
+            else -> "Function in registry but execution is not implemented. Add your function in the AvailableFunctions.kt"
+        } + "\n"
+    }
+    return if(response.isEmpty()){
+        "Function is not registered and cannot be recognized. Please Add your function in the AvailableFunctions.kt and provide implementation"
+    } else{
+        // remove hanging "\n"
+        response.removeSuffix("\n")
+    }
 }
 
 fun functionDispatch(toolCalls:List<CompletionMessage.ToolCall>, ctx: Context): String {
     var response = ""
-
 
     for (toolCall in toolCalls) {
         val toolName = toolCall.toolName().toString()
