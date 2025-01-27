@@ -37,7 +37,7 @@ Register an account in [TogetherAI](https://www.together.ai/) or [FireworksAI](h
 
 ![Chat](./data/assets/MacQA_chat.png)
 
-6. Use `Activity Monitor` to quit the `MacQA.app`. Please do not run multiple `MacQA.app` processes at the same time, as it will cause port conflict.
+6. Click `exit` button to quit the `MacQA.app`. Please do not run multiple `MacQA.app` processes at the same time, as it will cause port conflict.
 
 ### How to build the MacQA app:
 

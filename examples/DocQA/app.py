@@ -78,7 +78,7 @@ class LlamaChatInterface:
         """Initialize the entire system including vector db and agent."""
         # path_to_yaml = os.path.abspath(os.path.join(os.path.dirname(__file__), "llama_stack_run.yaml"))
         self.client = LlamaStackAsLibraryClient(provider_name)
-        print(type(self.client.async_client.config), self.client.async_client.config)
+        #print(type(self.client.async_client.config), self.client.async_client.config)
 
         # Disable scoring and eval by modifying the config
         self.client.async_client.config.apis = [
@@ -100,9 +100,9 @@ class LlamaChatInterface:
             if provider.provider_id == "rag-runtime":
                 tool_groups.append(provider)
         self.client.async_client.config.tool_groups = tool_groups
-        print(
-            111, type(self.client.async_client.config), self.client.async_client.config
-        )
+        # print(
+        #     111, type(self.client.async_client.config), self.client.async_client.config
+        # )
 
         self.client.initialize()
         self.docs_dir = DOCS_DIR
@@ -227,6 +227,7 @@ def create_gradio_interface(
         with gr.Row():
             submit = gr.Button("Send", variant="primary")
             clear = gr.Button("Clear")
+            exit_button = gr.Button("Exit")
 
         gr.Examples(
             examples=[
@@ -261,7 +262,7 @@ def create_gradio_interface(
         )
 
         clear.click(clear_chat, outputs=[chatbot, msg], queue=False)
-
+        exit_button.click(fn=lambda: os._exit(0), queue=False)
         msg.submit(lambda: None, None, None, api_name=False)
 
     # Combine both interfaces
@@ -310,6 +311,10 @@ def create_gradio_interface(
                         global DOCS_DIR
                         DOCS_DIR = folder_path
                         MODEL_NAME = model_name
+                        if not os.path.exists(folder_path):
+                            raise gr.exceptions.Error(
+                                f"Folder {folder_path} does not exist. Please check the path and try again."
+                            )
                         if provider_name == "ollama":
                             ollama_name_dict = {
                                 "meta-llama/Llama-3.2-1B-Instruct": "llama3.2:1b-instruct-fp16",
