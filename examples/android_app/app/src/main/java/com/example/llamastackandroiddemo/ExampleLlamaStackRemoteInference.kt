@@ -17,6 +17,7 @@ import com.llama.llamastack.models.InferenceChatCompletionParams
 import com.llama.llamastack.models.InterleavedContent
 import com.llama.llamastack.models.SamplingParams
 import com.llama.llamastack.models.SystemMessage
+import com.llama.llamastack.models.ToolDef
 import com.llama.llamastack.models.ToolResponseMessage
 import com.llama.llamastack.models.Url
 import com.llama.llamastack.models.UserMessage
@@ -52,11 +53,11 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
         }
     }
 
-    fun inferenceStartWithoutAgent(modelName: String, temperature: Double, prompt: ArrayList<Message>, systemPrompt:String, ctx: Context): String {
+    fun inferenceStartWithoutAgent(modelName: String, temperature: Double, prompt: ArrayList<Message>, userProvidedSystemPrompt:String, ctx: Context): String {
         val future = CompletableFuture<String>()
         val thread = Thread {
             try {
-                val response = inferenceCallWithoutAgent(modelName, temperature, prompt, systemPrompt, ctx, true);
+                val response = inferenceCallWithoutAgent(modelName, temperature, prompt, userProvidedSystemPrompt, ctx, true);
                 future.complete(response)
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -83,7 +84,7 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
 
 
     //Example running simple inference + tool calls without using agent's workflow
-    private fun inferenceCallWithoutAgent(modelName: String, temperature: Double, conversationHistory: ArrayList<Message>, systemPrompt: String, ctx: Context, streaming: Boolean): String {
+    private fun inferenceCallWithoutAgent(modelName: String, temperature: Double, conversationHistory: ArrayList<Message>, userProvidedSystemPrompt: String, ctx: Context, streaming: Boolean): String {
         if (client == null) {
             AppLogging.getInstance().log("client is null for remote inference");
             return "[ERROR] client is null for remote inference"
@@ -93,7 +94,7 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
         val formattedZdt = zdt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
         val availableFunctions = AvailableFunctions.getInstance()
         val functionDefinitions = availableFunctions.values()
-        var instruction = systemPrompt
+        var instruction = userProvidedSystemPrompt
         //If no System prompt configured by the user, use default tool call system prompt
         if (instruction == "") {
             instruction = """
@@ -249,8 +250,8 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
     }
 
 
-    fun createRemoteAgent(modelName: String, temperature: Double, systemPrompt: String, ctx: Context): Triple<String, String, TurnService> {
-        val agentConfig = createRemoteAgentConfig(modelName, temperature, systemPrompt)
+    fun createRemoteAgent(modelName: String, temperature: Double, userProvidedSystemPrompt: String, ctx: Context): Triple<String, String, TurnService> {
+        val agentConfig = createRemoteAgentConfig(modelName, temperature, userProvidedSystemPrompt)
         val agentService = client!!.agents()
         val agentCreateResponse = agentService.create(
             AgentCreateParams.builder()
@@ -277,8 +278,6 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
     //Example of running inference with customize tool calls using agent workflow.
     //Note Agent inference only support streaming at the moment.
     private fun remoteAgentInference(agentId: String, sessionId: String, turnService: TurnService, conversationHistory: ArrayList<Message>, ctx: Context): String {
-        val imageUrl = Url.builder().uri("https://www.healthypawspetinsurance.com/Images/V3/DogAndPuppyInsurance/Dog_CTA_Desktop_HeroImage.jpg").build()
-
         val agentTurnCreateResponseStream =
             turnService.createStreaming(
                 AgentTurnCreateParams.builder()
@@ -330,14 +329,16 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
         return ""
     }
 
-    private fun createRemoteAgentConfig(modelName: String, temperature: Double, systemPrompt: String): AgentConfig {
+    private fun createRemoteAgentConfig(modelName: String, temperature: Double, userProvidedSystemPrompt: String): AgentConfig {
         //Get the current time in ISO format and pass it to the model in system prompt as a reference. This is useful for any scheduling and vague timing reference from user prompt.
         val zdt = ZonedDateTime.ofInstant(Instant.parse(Clock.System.now().toString()), ZoneId.systemDefault())
         //This should be replaced with Agent getting date and time with search tool
         val formattedZdt = zdt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
-        var instruction = systemPrompt
+        val clientTools = mutableListOf<ToolDef>()
+        var instruction = userProvidedSystemPrompt
         //If no System prompt configured by the user, use default tool call system prompt
         if (instruction == "") {
+            clientTools.add(CustomTools.getCreateCalendarEventTool())
             instruction = """
                             You are a helpful assistant that can reason and answer questions.
                             When user is asking a question that requires your reasoning or general chat, you should NOT generate functions but answer the questions based on your knowledge insteaded.
@@ -359,6 +360,7 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
                          """
         }
 
+        //Llama 1B/3B text model only support PYTHON_LIST at the moment. Whereas Vision instruction models only support JSON format.
         var toolPromptFormat = AgentConfig.ToolPromptFormat.PYTHON_LIST
         if (modelName == "meta-llama/Llama-3.2-11B-Vision-Instruct" || modelName == "meta-llama/Llama-3.2-90B-Vision-Instruct") {
             toolPromptFormat = AgentConfig.ToolPromptFormat.JSON
@@ -384,9 +386,7 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
                 .toolChoice(AgentConfig.ToolChoice.AUTO)
                 .toolPromptFormat(toolPromptFormat)
                 .clientTools(
-                    listOf(
-                        CustomTools.getCreateCalendarEventTool()
-                    )
+                    clientTools
                 )
                 .build()
 
