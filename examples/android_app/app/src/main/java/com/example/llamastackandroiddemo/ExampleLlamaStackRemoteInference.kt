@@ -8,6 +8,7 @@ import android.util.Base64
 import android.util.Log
 import com.llama.llamastack.client.LlamaStackClientClient
 import com.llama.llamastack.client.okhttp.LlamaStackClientOkHttpClient
+import com.llama.llamastack.core.JsonValue
 import com.llama.llamastack.models.AgentConfig
 import com.llama.llamastack.models.AgentCreateParams
 import com.llama.llamastack.models.AgentSessionCreateParams
@@ -412,8 +413,7 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
                                 .content(InterleavedContent.ofImageContentItem(
                                     InterleavedContent.ImageContentItem.builder()
                                         .image(image)
-                                        // NOTE : Need to fix this
-//                                        .type(InterleavedContent.ImageContentItem.Image.Type.IMAGE)
+                                        .type(JsonValue.from("image"))
                                         .build()
                                 ))
                                 .build()
