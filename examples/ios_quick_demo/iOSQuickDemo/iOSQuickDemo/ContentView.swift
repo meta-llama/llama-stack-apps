@@ -66,7 +66,7 @@ struct ContentView: View {
       }
       
       Task {
-        let inference = RemoteInference(url: URL(string: "http://127.0.0.1:8321"")!)
+        let inference = RemoteInference(url: URL(string: "http://127.0.0.1:5000")!)
 
         do {
           for await chunk in try await inference.chatCompletion(
@@ -86,7 +86,8 @@ struct ContentView: View {
                       role: .user
                   )
                 )
-              ], model_id: "meta-llama/Llama-3.1-8B-Instruct",
+              ],
+              model_id: "meta-llama/Llama-3.1-8B-Instruct",
               stream: true)
           ) {
             switch (chunk.event.delta) {
