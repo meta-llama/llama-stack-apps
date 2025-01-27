@@ -38,11 +38,13 @@ The default port is 5000 for `llama stack run` and you can specify a different p
 ![](quick1.png)
 ![](quick2.png)
 
-3. Replace the `RemoteInference` url string below with the host IP and port of the remote Llama Stack distro started in Prerequisite:
+3. Replace the `RemoteInference` url string in `ContentView.swift` below with the host IP and port of the remote Llama Stack distro started in Prerequisite:
 
 ```
 let inference = RemoteInference(url: URL(string: "http://127.0.0.1:5000")!)
 ```
+
+**Note:** In order for the app to access the remote URL, the app's `Info.plist` needs to have the entry `App Transport Security Settings` with `Allow Arbitrary Loads` set to YES.
 
 4. Build the run the app on an iOS simulator or your device. Then click the Inference button, optionally after entering your own Question, to see the Llama answer. See the demo video [here](https://drive.google.com/file/d/1HnME3VmsYlyeFgsIOMlxZy5c8S2xP4r4/view?usp=sharing).
 
