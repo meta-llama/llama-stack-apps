@@ -276,20 +276,14 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
         agentTurnCreateResponseStream.use {
             agentTurnCreateResponseStream.asSequence().forEach {
                 val agentResponsePayload = it.responseStreamChunk()?.event()?.payload()
-                Log.d("Chester", "Streaming  responses: ${
-                    it.responseStreamChunk()
-                        ?.event()
-                }")
                 if (agentResponsePayload != null) {
                     when {
                         agentResponsePayload.isAgentTurnResponseTurnStart() -> {
                             // Handle Turn Start Payload
                         }
-
                         agentResponsePayload.isAgentTurnResponseStepStart() -> {
                             // Handle Step Start Payload
                         }
-
                         agentResponsePayload.isAgentTurnResponseStepProgress() -> {
                             // Handle Step Progress Payload
                             val result = agentResponsePayload.agentTurnResponseStepProgress()?.delta()?.text()?.text()
@@ -297,7 +291,6 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
                                 callback.onStreamReceived(result.toString())
                             }
                         }
-
                         agentResponsePayload.isAgentTurnResponseStepComplete() -> {
                             // Handle Step Complete Payload
                             val toolCalls = agentResponsePayload.agentTurnResponseStepComplete()?.stepDetails()?.asInferenceStep()?.modelResponse()?.toolCalls()
@@ -305,7 +298,6 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
                                 callback.onStreamReceived(functionDispatch(toolCalls, ctx))
                             }
                         }
-
                         agentResponsePayload.isAgentTurnResponseTurnComplete() -> {
                             // Handle Turn Complete Payload
                         }
@@ -318,8 +310,7 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
 
     private fun createRemoteAgentConfig(modelName: String, temperature: Double, userProvidedSystemPrompt: String): AgentConfig {
         //Get the current time in ISO format and pass it to the model in system prompt as a reference. This is useful for any scheduling and vague timing reference from user prompt.
-        Log.d("Chester", "Model Name: $modelName")
-            val zdt = ZonedDateTime.ofInstant(Instant.parse(Clock.System.now().toString()), ZoneId.systemDefault())
+        val zdt = ZonedDateTime.ofInstant(Instant.parse(Clock.System.now().toString()), ZoneId.systemDefault())
         //This should be replaced with Agent getting date and time with search tool
         val formattedZdt = zdt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
         val clientTools = mutableListOf<ToolDef>()
@@ -327,27 +318,8 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
         //If no System prompt configured by the user, use default tool call system prompt
         if (instruction == "") {
             clientTools.add(CustomTools.getCreateCalendarEventTool())
-            instruction = """
-                            You are a helpful assistant that can reason and answer questions.
-                            When user is asking a question that requires your reasoning or general chat, you should NOT generate functions but answer the questions based on your knowledge insteaded.
-                            
-                            For your reference, Today Date is $formattedZdt
-                            
-                            - Only function call if user's intention matches the function that you have access to.
-                            - When looking for real time information use relevant functions if available.
-                            - Ignore previous conversation history if you are making a tool call.
-                                                                              
-                            If you decide to invoke any of the function(s), you MUST put it in the format of [func_name1(params_name1=params_value1, params_name2=params_value2...), func_name2(params)]\n
-                            You SHOULD NOT include any other text in the response.
-                    
-                            Reminder:                          
-                            - Required parameters MUST be specified
-                            - Only call one function at a time
-                            - When returning a function call, don't add anything else to your response
-                            - When scheduling the events, make sure you set the date and time right. Use step by step reasoning for date such as next Tuesday
-                         """
+            instruction = "You are a helpful assistant. For your reference, Today Date is $formattedZdt"
         }
-
         //Llama 1B/3B text model only support PYTHON_LIST at the moment. Whereas Vision instruction models only support JSON format.
         var toolPromptFormat = AgentConfig.ToolPromptFormat.PYTHON_LIST
         if (modelName == "meta-llama/Llama-3.1-8B-Instruct" || modelName == "meta-llama/Llama-3.2-11B-Vision-Instruct" || modelName == "meta-llama/Llama-3.2-90B-Vision-Instruct") {
