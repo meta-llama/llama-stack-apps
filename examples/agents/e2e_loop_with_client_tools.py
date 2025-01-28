@@ -66,7 +66,7 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
     print(f"Created session_id={session_id} for Agent({agent.agent_id})")
 
     user_prompts = [
-        "What was the closing price of ticker 'GOOG' for 2023 ?",
+        "What was the closing price of Google stock (ticker symbol GOOG) for 2023 ?",
         "Who was the 42nd president of the United States?",
     ]
     for prompt in user_prompts:
