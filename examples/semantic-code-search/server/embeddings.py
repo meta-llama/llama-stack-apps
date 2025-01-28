@@ -10,6 +10,8 @@ from transformers import AutoModel, AutoTokenizer
 import logging
 import time
 from functools import wraps
+import json
+import traceback
 
 # Set up logging
 logging.basicConfig(
@@ -90,7 +92,7 @@ class CodeEmbeddings:
                 raise
             
             # Initialize Together client
-            self.together_client = Together(api_key="4cf7a223bdb6c857677ce31559591cf19cfa59a2460dcc876de54e9bcc5b68c2")
+            self.together_client = Together(api_key=os.environ['TOGETHER_API_KEY'])
             logger.info("Together client initialized")
             
         except Exception as e:
@@ -172,32 +174,71 @@ class CodeEmbeddings:
         """Search for similar code snippets using the query."""
         try:
             logger.info(f"Searching for code similar to query: {query[:50]}...")
+            logger.debug(f"Full query: {query}")
+            logger.debug(f"Requested number of results: {n_results}")
+            
+            # Log collection status
+            collection_count = len(self.collection.get()['ids']) if self.collection.get() else 0
+            logger.debug(f"Current collection size: {collection_count} items")
             
             # Generate query embeddings
+            logger.debug("Generating query embeddings...")
+            start_time = time.time()
             query_embedding = self.embed_code(query)
+            embedding_time = time.time() - start_time
+            logger.debug(f"Query embedding generated in {embedding_time:.2f} seconds")
+            logger.debug(f"Embedding dimension: {len(query_embedding)}")
             
             # Search in ChromaDB
+            logger.debug("Executing ChromaDB search...")
+            search_start = time.time()
             results = self.collection.query(
                 query_embeddings=[query_embedding],
-                n_results=n_results
+                n_results=n_results,
+                include=['metadatas', 'documents', 'distances']
             )
+            search_time = time.time() - search_start
+            logger.debug(f"ChromaDB search completed in {search_time:.2f} seconds")
             
-            # Format results
+            # Log raw results
+            logger.debug(f"Raw search results: {json.dumps(results, indent=2)}")
+            
+            # Process and format results
             formatted_results = []
             for i in range(len(results['ids'][0])):
                 result = {
                     'id': results['ids'][0][i],
                     'code': results['documents'][0][i],
                     'metadata': results['metadatas'][0][i],
-                    'distance': results['distances'][0][i]
+                    'similarity': 1 - results['distances'][0][i]  # Convert distance to similarity score
                 }
                 formatted_results.append(result)
-                
+            
+            # Log detailed results
             logger.info(f"Found {len(formatted_results)} similar code snippets")
+            logger.info("Top search results:")
+            for i, result in enumerate(formatted_results):
+                similarity_percentage = result['similarity'] * 100
+                full_path = result['metadata'].get('file_path', 'unknown')
+                # Extract the path after 'repositories/'
+                relative_path = full_path.split('repositories/')[-1] if 'repositories/' in full_path else full_path
+                
+                logger.info(f"\nResult {i+1}:")
+                logger.info(f"File: {relative_path}")
+                logger.info(f"Similarity: {similarity_percentage:.1f}%")
+                logger.info(f"Code snippet preview: {result['code']}...")
+            
+            # Log timing breakdown
+            total_time = embedding_time + search_time
+            logger.info(f"Total search operation completed in {total_time:.2f} seconds")
+            logger.info(f"  - Embedding generation: {embedding_time:.2f}s ({embedding_time/total_time*100:.1f}%)")
+            logger.info(f"  - Vector search: {search_time:.2f}s ({search_time/total_time*100:.1f}%)")
+            
             return formatted_results
             
         except Exception as e:
-            logger.error(f"Error searching for similar code: {str(e)}")
+            logger.error(f"Search failed: {str(e)}")
+            logger.error(f"Stack trace: {traceback.format_exc()}")
             raise
 
     @log_execution_time
