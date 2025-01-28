@@ -21,11 +21,10 @@ struct ContentView: View {
   private let runnerQueue = DispatchQueue(label: "org.llamastack.stacksummary")
 
   @State var eventStore = EKEventStore()
-  @State var presetEvent: EKEvent?
-
-  @State var isShowingEventModal = false
-
-  private let agents = RemoteAgents(url: URL(string: "http://0.0.0.0:5000")!)
+  @State private var showAlert = false
+  @State private var alertMessage = ""
+  
+  private let agent = RemoteAgents(url: URL(string: "http://127.0.0.1:5000")!)
   @State var agentId = ""
   @State var agenticSystemSessionId = ""
 
@@ -74,72 +73,77 @@ struct ContentView: View {
         }
         .padding([.leading, .trailing, .bottom], 10)
       }
-    }
-    .navigationViewStyle(StackNavigationViewStyle())
-    .sheet(isPresented:  Binding(
-      get: { self.presetEvent != nil },
-      set: { if !$0 { self.presetEvent = nil } }
-    )) {
-      if let event = presetEvent {
-        EventEditView(isPresented: $isShowingEventModal,
-                      eventStore: self.eventStore,
-                      event: event)
+      .alert(isPresented: $showAlert) {
+          Alert(title: Text("Calendar Event"), message: Text(alertMessage), dismissButton: .default(Text("OK")))
       }
     }
   }
 
   func triggerAddEventToCalendar(title: String, startDate: Date, endDate: Date) {
     eventStore.requestAccess(to: .event) { [self] granted, error in
-      if granted {
-        let event = EKEvent(eventStore: eventStore)
-        event.title = title
-        event.startDate = startDate
-        event.endDate = endDate
-        event.calendar = eventStore.defaultCalendarForNewEvents
-        event.notes = self.actionItems
-        self.presetEvent = event
-      } else {
-        print("Calendar access denied")
+      DispatchQueue.main.async {
+        if granted {
+          let event = EKEvent(eventStore: eventStore)
+          event.title = title
+          event.startDate = startDate
+          event.endDate = endDate
+          event.calendar = eventStore.defaultCalendarForNewEvents
+          event.notes = self.actionItems
+          
+          do {
+            try eventStore.save(event, span: .thisEvent, commit: true)
+            alertMessage = "Event \(title) saved successfully to calendar"
+            showAlert = true
+          } catch let error {
+            alertMessage = "Failed to save event: \(error.localizedDescription)"
+            showAlert = true
+          }
+        } else {
+          print("Calendar access denied")
+          alertMessage = "Calendar access denied"
+          showAlert = true
+        }
       }
     }
   }
 
   func summarizeConversation(prompt: String) async {
     do {
-      let request = Components.Schemas.CreateAgentTurnRequest(
-        agent_id: self.agentId,
+        let request = Components.Schemas.CreateAgentTurnRequest(
         messages: [
           .UserMessage(Components.Schemas.UserMessage(
             content: .case1("Summarize the following conversation in 1-2 sentences:\n\n \(prompt)"),
             role: .user
           ))
         ],
-        session_id: self.agenticSystemSessionId,
         stream: true
       )
 
-      for try await chunk in try await self.agents.createTurn(request: request) {
+      for try await chunk in try await self.agent.createTurn(agent_id: self.agentId, session_id: self.agenticSystemSessionId, request: request) {
         let payload = chunk.event.payload
         switch (payload) {
-        case .AgentTurnResponseStepStartPayload(_):
+        case .step_start:
           break
-        case .AgentTurnResponseStepProgressPayload(let step):
-          if (step.model_response_text_delta != nil) {
-            DispatchQueue.main.async {
+        case .step_progress(let step):
+            DispatchQueue.main.async(execute: DispatchWorkItem {
               withAnimation {
                 var message = messages.removeLast()
-                message.text += step.model_response_text_delta!
+                if case .text(let delta) = step.delta {
+                  message.text += "\(delta.text)"
+                }
+                
                 message.tokenCount += 2
                 message.dateUpdated = Date()
                 messages.append(message)
+                print(message.text)
               }
-            }
-          }
-        case .AgentTurnResponseStepCompletePayload(_):
+            })
+            break
+        case .step_complete(_):
           break
-        case .AgentTurnResponseTurnStartPayload(_):
+        case .turn_start(_):
           break
-        case .AgentTurnResponseTurnCompletePayload(_):
+        case .turn_complete(_):
           break
 
         }
@@ -152,103 +156,103 @@ struct ContentView: View {
 
   func actionItems(prompt: String) async throws {
     let request = Components.Schemas.CreateAgentTurnRequest(
-      agent_id: self.agentId,
       messages: [
         .UserMessage(Components.Schemas.UserMessage(
           content: .case1("List out any action items based on this text:\n\n \(prompt)"),
           role: .user
         ))
       ],
-      session_id: self.agenticSystemSessionId,
       stream: true
     )
 
-    for try await chunk in try await self.agents.createTurn(request: request) {
+    for try await chunk in try await self.agent.createTurn(agent_id: self.agentId, session_id: self.agenticSystemSessionId, request: request) {
       let payload = chunk.event.payload
       switch (payload) {
-      case .AgentTurnResponseStepStartPayload(_):
+      case .step_start(_):
         break
-      case .AgentTurnResponseStepProgressPayload(let step):
-        if (step.model_response_text_delta != nil) {
-          DispatchQueue.main.async {
+      case .step_progress(let step):
+          DispatchQueue.main.async(execute: DispatchWorkItem {
             withAnimation {
               var message = messages.removeLast()
-              message.text += step.model_response_text_delta!
+              
+              if case .text(let delta) = step.delta {
+                message.text += "\(delta.text)"
+                self.actionItems += "\(delta.text)"
+              }
               message.tokenCount += 2
               message.dateUpdated = Date()
               messages.append(message)
-
-              self.actionItems += step.model_response_text_delta!
             }
-          }
-        }
-      case .AgentTurnResponseStepCompletePayload(_):
+          })
+      case .step_complete(_):
         break
-      case .AgentTurnResponseTurnStartPayload(_):
+      case .turn_start(_):
         break
-      case .AgentTurnResponseTurnCompletePayload(_):
+      case .turn_complete(_):
         break
       }
     }
   }
 
   func callTools(prompt: String) async throws {
+    
     let request = Components.Schemas.CreateAgentTurnRequest(
-      agent_id: self.agentId,
       messages: [
         .UserMessage(Components.Schemas.UserMessage(
           content: .case1("Call functions as needed to handle any actions in the following text:\n\n" + prompt),
           role: .user
         ))
       ],
-      session_id: self.agenticSystemSessionId,
       stream: true
     )
 
-    for try await chunk in try await self.agents.createTurn(request: request) {
+    for try await chunk in try await self.agent.createTurn(agent_id: self.agentId, session_id: self.agenticSystemSessionId, request: request) {
+      
       let payload = chunk.event.payload
       switch (payload) {
-      case .AgentTurnResponseStepStartPayload(_):
+      case .step_start(_):
         break
-      case .AgentTurnResponseStepProgressPayload(let step):
-        if (step.tool_call_delta != nil) {
-          switch (step.tool_call_delta!.content) {
-          case .case1(_):
-            break
-          case .ToolCall(let call):
-            switch (call.tool_name) {
-            case .BuiltinTool(_):
-              break
-            case .case2(let toolName):
-              if (toolName == "create_event") {
-                var args: [String : String] = [:]
-                for (arg_name, arg) in call.arguments.additionalProperties {
-                  switch (arg) {
-                  case .case1(let s): // type string
-                    args[arg_name] = s
-                  case .case2(_), .case3(_), .case4(_), .case5(_), .case6(_):
-                    break
+        
+      case .step_progress(let step):
+          switch (step.delta) {
+          case .tool_call(let call):
+            if call.parse_status == .succeeded {
+              switch (call.tool_call) {
+              case .ToolCall(let toolCall):
+                  var args: [String : String] = [:]
+                  for (arg_name, arg) in toolCall.arguments.additionalProperties {
+                    switch (arg) {
+                    case .case1(let s):
+                      args[arg_name] = s
+                    case .case2(_), .case3(_), .case4(_), .case5(_), .case6(_):
+                      break
+                    }
                   }
-                }
-
-                let formatter = DateFormatter()
-                formatter.dateFormat = "yyyy-MM-dd HH:mm"
-                formatter.timeZone = TimeZone.current
-                formatter.locale = Locale.current
-                self.triggerAddEventToCalendar(
-                  title: args["event_name"]!,
-                  startDate: formatter.date(from: args["start"]!) ?? Date(),
-                  endDate: formatter.date(from: args["end"]!) ?? Date()
-                )
+  
+                  let formatter = DateFormatter()
+                  formatter.dateFormat = "yyyy-MM-dd HH:mm"
+                  formatter.timeZone = TimeZone.current
+                  formatter.locale = Locale.current
+                  self.triggerAddEventToCalendar(
+                    title: args["event_name"]!,
+                    startDate: formatter.date(from: args["start"]!) ?? Date(),
+                    endDate: formatter.date(from: args["end"]!) ?? Date()
+                  )
+              case .case1(_):
+                break
               }
             }
+          case .text(let text):
+            break
+          case .image(_):
+            break
           }
-        }
-      case .AgentTurnResponseStepCompletePayload(_):
         break
-      case .AgentTurnResponseTurnStartPayload(_):
+      case .step_complete(_):
         break
-      case .AgentTurnResponseTurnCompletePayload(_):
+      case .turn_start(_):
+        break
+      case .turn_complete(_):
         break
       }
     }
@@ -258,11 +262,12 @@ struct ContentView: View {
     guard !prompt.isEmpty else { return }
     isGenerating = true
 
+    
     let text = prompt
     prompt = ""
     hideKeyboard()
 
-    runnerQueue.async {
+    let workItem = DispatchWorkItem {
       defer {
         DispatchQueue.main.async {
           isGenerating = false
@@ -274,39 +279,39 @@ struct ContentView: View {
         messages.append(Message(type: .summary))
 
         do {
-          let createSystemResponse = try await self.agents.create(
+          let createSystemResponse = try await self.agent.create(
             request: Components.Schemas.CreateAgentRequest(
               agent_config: Components.Schemas.AgentConfig(
+                client_tools: [ CustomTools.getCreateEventToolForAgent() ],
                 enable_session_persistence: false,
                 instructions: "You are a helpful assistant",
                 max_infer_iters: 1,
-                model: "Meta-Llama3.1-8B-Instruct",
-                tools: [
-                  Components.Schemas.AgentConfig.toolsPayloadPayload.FunctionCallToolDefinition(
-                    CustomTools.getCreateEventTool()
-                  )
-                ]
+                model: "meta-llama/Llama-3.1-8B-Instruct"
+                //toolgroups: ["builtin::websearch"],
               )
             )
           )
           self.agentId = createSystemResponse.agent_id
 
-          let createSessionResponse = try await self.agents.createSession(
-            request: Components.Schemas.CreateAgentSessionRequest(agent_id: self.agentId, session_name: "llama-assistant")
+          let createSessionResponse = try await self.agent.createSession(agent_id: self.agentId,
+            request: Components.Schemas.CreateAgentSessionRequest(session_name: "llama-assistant")
           )
           self.agenticSystemSessionId = createSessionResponse.session_id
 
-          try await summarizeConversation(prompt: text)
+          await summarizeConversation(prompt: text)
 
           messages.append(Message(type: .actionItems))
           try await actionItems(prompt: text)
 
           try await callTools(prompt: text)
+          
         } catch {
           print("Error: \(error)")
         }
       }
     }
+    
+    runnerQueue.async(execute: workItem)
   }
 }
 
