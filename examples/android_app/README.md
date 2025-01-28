@@ -4,12 +4,12 @@
 
 
 
-## [Latest Update - 01/23/2025]
+## [Latest Update - 01/27/2025]
 
-We have updated the demo app to be compatible with Llama Stack Kotlin SDK v0.1.0 [TO-ADD Release Note Link] and Llama Stack version v0.1.0 [TO-ADD LS Release Note Link]. Bring in new demo features. 
+We have updated the demo app to be compatible with Llama Stack Kotlin SDK [v0.1.0](https://github.com/meta-llama/llama-stack-client-kotlin/releases/tag/v0.1.0) and Llama Stack version [v0.1.0](https://github.com/meta-llama/llama-stack/releases/tag/v0.1.0). Also added new demo features. 
 
 ### Remote
-* Agent workflow for tool calling inference - Now the demo app default to use agent in the chat. You can switch between simple inference workflow or agent workflow by setting `boolean useAgent`. We also added `CustomTools.kt` as an example to add client customized tools. When selecting `Remote` mode, the app will setup a new remote agent and create a new session for running turns. NOTE: In Agent workflow, the chat history including images are stored per Agent session on the server side. There is no need to look up for chat history in the app. Hence we have set `CONVERSATION_HISTORY_MESSAGE_LOOKBACK` default to 0. 
+* Agent workflow for tool calling inference - Now the demo app default to use agent in the chat. You can switch between simple inference workflow or agent workflow by setting `boolean useAgent`. We also added `CustomTools.kt` as an example to add client customized tools. When selecting `Remote` mode, the app will setup a new remote agent and create a new session for running turns. NOTE: In Agent workflow, the chat history including images are stored per Agent session on the server side. There is no need to look up for chat history in the app unless you are running image reasoning.
 
 #### Agents
 * Llama Stack agent is capable of running multi-turn inference using both customized and built-in tools (exclude 1B/3B Llama models). Here is an example creating the agent configuration
@@ -19,20 +19,16 @@ We have updated the demo app to be compatible with Llama Stack Kotlin SDK v0.1.0
                 .enableSessionPersistence(false)
                 .instructions("You are a helpful assistant")
                 .maxInferIters(100)
-                .model("meta-llama/Llama-3.2-3B-Instruct")
+                .model("meta-llama/Llama-3.1-8B-Instruct")
                 .samplingParams(
                     SamplingParams.builder()
                         .strategy(
-                            SamplingParams.Strategy.ofGreedySamplingStrategy(
-                                SamplingParams.Strategy.GreedySamplingStrategy.builder()
-                                    .type(SamplingParams.Strategy.GreedySamplingStrategy.Type.GREEDY)
-                                    .build()
-                            )
+                                SamplingParams.Strategy.ofGreedySampling()
                         )
                         .build()
                 )
                 .toolChoice(AgentConfig.ToolChoice.AUTO)
-                .toolPromptFormat(AgentConfig.ToolPromptFormat.PYTHON_LIST)
+                .toolPromptFormat(AgentConfig.ToolPromptFormat.JSON)
                 .clientTools(
                     listOf(
                         CustomTools.getCreateCalendarEventTool()
@@ -75,10 +71,9 @@ Then you can create a streaming event for this turn service for simple inference
                 .agentId(agentId)
                 .messages(
                     listOf(
-                        AgentTurnCreateParams.Message.ofUserMessage(
+                        AgentTurnCreateParams.Message.ofUser(
                             UserMessage.builder()
                                 .content(InterleavedContent.ofString("What is the capital of France?"))
-                                .role(UserMessage.Role.USER)
                                 .build()
                             )
                     )
