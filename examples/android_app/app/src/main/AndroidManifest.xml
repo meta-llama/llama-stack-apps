@@ -29,6 +29,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar"
         tools:targetApi="34">
+        <profileable android:shell="true" />
         <activity
             android:name=".LogsActivity"
             android:exported="false" />

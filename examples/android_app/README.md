@@ -1,14 +1,108 @@
 # Llama Stack Android Demo App
 
-[![Maven Central Version](https://img.shields.io/badge/maven%20central-v0.0.58-8A2BE2)](https://central.sonatype.com/artifact/com.llama.llamastack/llama-stack-client-kotlin/0.0.58)
+[![Maven Central Version](https://img.shields.io/badge/maven%20central-v0.1.0-8A2BE2)](https://central.sonatype.com/artifact/com.llama.llamastack/llama-stack-client-kotlin/0.1.0)
+
+
+
+## [Latest Update - 01/27/2025]
+
+We have updated the demo app to be compatible with Llama Stack Kotlin SDK [v0.1.0](https://github.com/meta-llama/llama-stack-client-kotlin/releases/tag/v0.1.0) and Llama Stack version [v0.1.0](https://github.com/meta-llama/llama-stack/releases/tag/v0.1.0). Also added new demo features. 
+
+### Remote
+* Agent workflow for tool calling inference - Now the demo app default to use agent in the chat. You can switch between simple inference workflow or agent workflow by setting `boolean useAgent`. We also added `CustomTools.kt` as an example to add client customized tools. When selecting `Remote` mode, the app will setup a new remote agent and create a new session for running turns. NOTE: In Agent workflow, the chat history including images are stored per Agent session on the server side. There is no need to look up for chat history in the app unless you are running image reasoning.
+
+#### Agents
+* Llama Stack agent is capable of running multi-turn inference using both customized and built-in tools (exclude 1B/3B Llama models). Here is an example creating the agent configuration
+```
+        val agentConfig =
+            AgentConfig.builder()
+                .enableSessionPersistence(false)
+                .instructions("You are a helpful assistant")
+                .maxInferIters(100)
+                .model("meta-llama/Llama-3.1-8B-Instruct")
+                .samplingParams(
+                    SamplingParams.builder()
+                        .strategy(
+                                SamplingParams.Strategy.ofGreedySampling()
+                        )
+                        .build()
+                )
+                .toolChoice(AgentConfig.ToolChoice.AUTO)
+                .toolPromptFormat(AgentConfig.ToolPromptFormat.JSON)
+                .clientTools(
+                    listOf(
+                        CustomTools.getCreateCalendarEventTool()
+                    )
+                )
+                .build()
+```
+In this sample snippet:
+* We sent max inference interation to be 100
+* Supplied a model name that works on Llama Stack server distribution such as Fireworks
+* Set instructions AKA system prompt
+* Added a custom client tool that help you create a calendar event by the agent
+
+Once the `agentConfig` is built, create an agent along with session and turn service where client is your `LlamaStackClientOkHttpClient` created for remote inference
+
+```
+        val agentService = client!!.agents()
+        val agentCreateResponse = agentService.create(
+            AgentCreateParams.builder()
+                .agentConfig(agentConfig)
+                .build(),
+        )
+
+        val agentId = agentCreateResponse.agentId()
+        val sessionService = agentService.session()
+        val agentSessionCreateResponse = sessionService.create(
+            AgentSessionCreateParams.builder()
+                .agentId(agentId)
+                .sessionName("test-session")
+                .build()
+        )
+
+        val sessionId = agentSessionCreateResponse.sessionId()
+        val turnService = agentService.turn()
+```
+Then you can create a streaming event for this turn service for simple inference
+```
+        turnService.createStreaming(
+            AgentTurnCreateParams.builder()
+                .agentId(agentId)
+                .messages(
+                    listOf(
+                        AgentTurnCreateParams.Message.ofUser(
+                            UserMessage.builder()
+                                .content(InterleavedContent.ofString("What is the capital of France?"))
+                                .build()
+                            )
+                    )
+                .sessionId(sessionId)
+                .build()
+        )
+```
+You can find more examples in `ExampleLlamaStackRemoteInference.kt`. Note that remote agent workflow only supports streaming response currently.
+
+#### Image Reasoning
+We also built an example in the App that you can now send image via remote agent for reasoning. In order to do so, in the Settings page, select a vision model such as `meta-llama/Llama-3.2-11B-Vision-Instruct`. Add an image or take a photo from the camera roll by clicking the `+` sign on bottom left. On the background, we need to encode the image with Base64 before sending it to the model. You can also send HTTP web url of images for reasoning. Note that current model doesn't support multi-image inference. In fact, the agent session will cache this image on the server side so you can ask multiple follow up questions. Here is a demo video.
+
+
+https://github.com/user-attachments/assets/b4037778-0189-4e3e-b19e-4ca2c9efbdfd
+
+
+
+
+### Local
+* Local model streaming during inference - Now you can stream the response to Android via local inference using ExecuTorch. Find examples in `ExampleLlamaStackLocalInference.kt`  
+    
+      
+## [v0.0.58 - 12/13/2024]
 
 We’re excited to share this Android demo app using both remote and local Llama Stack features! The primary goal of this app is to showcase how to easily build Android apps with Llama models using Llama Stack SDKs in a chat app setup.
 
 This app serves as a valuable resource to inspire your creativity and provide foundational code that you can customize and adapt for your particular use case.
 
 Please dive in and start exploring our demo app today! We look forward to any feedback and are excited to see your innovative ideas to build agentic apps with Llama models. The current demo app is built using both Java and Kotlin. The majority of the activities are built with Java but the interfacing with Llama Stack APIs are in Kotlin. 
-
-NOTE: The current app release is intended to work with Llama Stack Kotlin SDK v0.0.58 and Llama Stack v0.0.58. We haven’t tested other versions or combinations. 
 
 
 ## Key Concepts
@@ -116,6 +210,9 @@ To understand more about how we are running the inference, check the sample code
 
 
 
+
+
+
 ### Tool Calling
 In this demo app, we also showcase a tool calling example to ask the model to help schedule calendar events with the default Android Calendar app. This is done by supplying a “special” system prompt to have the model detect the user's intention and match it to customized tools or functions provided. In our example, we defined a function called `createCalendarEvent` and the criteria to invoke it. You can learn more and define your own function in `AvailableFunction.kt`. Tool calling currently works with remote inference only. We are adding the capability to local inference.
 
@@ -139,9 +236,6 @@ val toolCalls = result.asChatCompletionResponse().completionMessage().toolCalls(
 This feature works on devices that don’t require a Google account login to use the device. There is a known issue where if you test on a device that requires a Google account (like the Pixel 8 Pro) then the event will not be created.
 
 For feather Llama models such as 1B and 3B Instruct, they only support customized tools. For bigger Llama models, you can also use built-in tools such as Brave Search. More detail about tool calling can be found on Llama official website [here](https://www.llama.com/docs/model-cards-and-prompt-formats/llama3_2)
-
-### Agents
-Llama Stack Kotlin SDK also offers agentic components such as MemoryBank for building your agentic app. You can also integrate the tool calling feature with Agents. However, there is a known issue about streaming with remote inference we are fixing. Once fixed, we will build more Agent examples.
 
 
 ## Reporting Issues

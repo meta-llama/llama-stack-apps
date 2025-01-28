@@ -116,6 +116,9 @@ public class MessageAdapter extends ArrayAdapter<Message> {
             if (messageToAdd.getMessageType() == MessageType.TEXT && !messageToAdd.getText().isEmpty()) {
               recentMessages.add(messageToAdd);
             }
+            if (messageToAdd.getMessageType() == MessageType.IMAGE && !messageToAdd.getImagePath().isEmpty()) {
+              recentMessages.add(messageToAdd);
+            }
           } else {
             break;
           }

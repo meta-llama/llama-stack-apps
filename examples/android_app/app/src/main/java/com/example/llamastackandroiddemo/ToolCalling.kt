@@ -10,7 +10,8 @@ import android.content.pm.PackageManager
 import android.provider.CalendarContract
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.llama.llamastack.models.ToolCall
+import com.llama.llamastack.models.CompletionMessage
+import com.llama.llamastack.models.ContentDelta
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -18,31 +19,51 @@ import java.util.TimeZone
 
 //Tool calling helper functions
 
-fun functionDispatch(toolCalls:List<ToolCall>, ctx: Context): String {
+fun functionDispatchWithoutAgent(toolCalls:List<ContentDelta.ToolCallDelta.ToolCall>, ctx: Context): String {
     var response = ""
-    // Dispatch the function call based on model responses
-    val availableFunctions = AvailableFunctions.getInstance()
-    val functionNames = availableFunctions.keys()
+    
+    for (toolCall in toolCalls) {
+        val toolName = toolCall.toolCall()?.toolName().toString()
+        val properties = toolCall.toolCall()?.arguments()?._additionalProperties()!!
+        response += when (toolName) {
+            "createCalendarEvent" -> createCalendarEvent(
+                properties["title"].toString(),
+                properties["description"].toString(),
+                properties["startDate"].toString(),
+                properties["endDate"].toString(),
+                properties["startTime"].toString(),
+                properties["endTime"].toString(),
+                ctx
+            )
+            else -> "Function in registry but execution is not implemented. Add your function in the AvailableFunctions.kt"
+        } + "\n"
+    }
+    return if(response.isEmpty()){
+        "Function is not registered and cannot be recognized. Please Add your function in the AvailableFunctions.kt and provide implementation"
+    } else{
+        // remove hanging "\n"
+        response.removeSuffix("\n")
+    }
+}
+
+fun functionDispatch(toolCalls:List<CompletionMessage.ToolCall>, ctx: Context): String {
+    var response = ""
 
     for (toolCall in toolCalls) {
         val toolName = toolCall.toolName().toString()
         val properties = toolCall.arguments()._additionalProperties()
-        for (name in functionNames) {
-            if (toolName == name) {
-                response += when (name) {
-                    "createCalendarEvent" -> createCalendarEvent(
-                        properties["title"].toString(),
-                        properties["description"].toString(),
-                        properties["startDate"].toString(),
-                        properties["endDate"].toString(),
-                        properties["startTime"].toString(),
-                        properties["endTime"].toString(),
-                        ctx
-                    )
-                    else -> "Function in registry but execution is not implemented. Add your function in the AvailableFunctions.kt"
-                } + "\n"
-            }
-        }
+            response += when (toolName) {
+                "createCalendarEvent" -> createCalendarEvent(
+                    properties["title"].toString(),
+                    properties["description"].toString(),
+                    properties["startDate"].toString(),
+                    properties["endDate"].toString(),
+                    properties["startTime"].toString(),
+                    properties["endTime"].toString(),
+                    ctx
+                )
+                else -> "Function in registry but execution is not implemented. Add your function in the AvailableFunctions.kt"
+            } + "\n"
     }
     return if(response.isEmpty()){
         "Function is not registered and cannot be recognized. Please Add your function in the AvailableFunctions.kt and provide implementation"

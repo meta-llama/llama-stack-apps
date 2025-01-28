@@ -42,6 +42,8 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.llama.llamastack.services.blocking.agents.TurnService;
+import kotlin.Triple;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -77,7 +79,10 @@ public class MainActivity extends AppCompatActivity implements Runnable, Inferen
   private Executor executor;
   private ExampleLlamaStackRemoteInference exampleLlamaStackRemoteInference;
   private ExampleLlamaStackLocalInference exampleLlamaStackLocalInference;
-
+  private String agentId;
+  private String sessionId;
+  private TurnService turnService;
+  private Boolean useAgent = true;
 
   private void populateExistingMessages(String existingMsgJSON) {
     Gson gson = new Gson();
@@ -136,6 +141,8 @@ public class MainActivity extends AppCompatActivity implements Runnable, Inferen
     executor = Executors.newSingleThreadExecutor();
     onModelRunStopped();
     setupGenerationButton();
+    //Hard-coded to use agents in the example. Can be controlled by UI buttons.
+    useAgent = true;
   }
 
   @Override
@@ -187,6 +194,16 @@ public class MainActivity extends AppCompatActivity implements Runnable, Inferen
           }
           if (exampleLlamaStackRemoteInference != null) {
             message += "and remote (" + updatedSettingsFields.getRemoteURL() +") ";
+            if (mGenerationModeButton.getText() == AppUtils.REMOTE && useAgent) {
+                new Thread(() -> {
+                  try {
+                    setupAgent();
+                    addSystemMessage("Remote Agent setup done");
+                  } catch (Exception e) {
+                    e.printStackTrace();
+                  }
+                }).start();
+              }
           }
           message += " inference.";
           addSystemMessage(message);
@@ -281,6 +298,16 @@ public class MainActivity extends AppCompatActivity implements Runnable, Inferen
         if (mGenerationModeButton.getText() == AppUtils.LOCAL) {
           mGenerationModeButton.setText(AppUtils.REMOTE);
           addSystemMessage("Inference mode: Remote");
+          if (exampleLlamaStackRemoteInference != null && useAgent) {
+            new Thread(() -> {
+              try {
+                setupAgent();
+                addSystemMessage("Remote Agent setup done");
+              } catch (Exception e) {
+                e.printStackTrace();
+              }
+            }).start();
+          }
         }
         else {
           mGenerationModeButton.setText(AppUtils.LOCAL);
@@ -570,18 +597,51 @@ public class MainActivity extends AppCompatActivity implements Runnable, Inferen
     mMessageAdapter.notifyDataSetChanged();
   }
 
+  private void setupAgent() {
+    AppLogging.getInstance().log("Setting up agent for remote inference");
+    String systemPrompt = mCurrentSettingsFields.getSystemPrompt();
+    String modelName = mCurrentSettingsFields.getRemoteModel();
+
+    double temperature = mCurrentSettingsFields.getTemperature();
+    if (exampleLlamaStackRemoteInference.getClient() == null) {
+      AppLogging.getInstance().log("client is null for remote agent");
+      return;
+    }
+    Triple<String, String, TurnService> agentInfo = exampleLlamaStackRemoteInference.createRemoteAgent(modelName, temperature, systemPrompt, this);
+    this.agentId = agentInfo.getFirst();
+    this.sessionId = agentInfo.getSecond();
+    this.turnService = agentInfo.getThird();
+  }
+
   public void remoteLlamaStackModeGeneration(String rawPrompt) {
     AppLogging.getInstance().log("Running inference remotely ("+ mCurrentSettingsFields.getRemoteModel() +").. raw prompt=" + rawPrompt);
     String systemPrompt = mCurrentSettingsFields.getSystemPrompt();
     String modelName = mCurrentSettingsFields.getRemoteModel();
     double temperature = mCurrentSettingsFields.getTemperature();
-    String result = exampleLlamaStackRemoteInference.inferenceStart(
-            modelName,
-            temperature,
-            mMessageAdapter.getRecentSavedTextMessages(AppUtils.CONVERSATION_HISTORY_MESSAGE_LOOKBACK),
-            systemPrompt,
-            this
-    );
+
+
+    if (exampleLlamaStackRemoteInference.getClient() == null) {
+      AppLogging.getInstance().log("client is null for remote agent");
+      mResultMessage.appendText("[ERROR] client is null for remote agent");
+      return;
+    }
+
+
+    String result = "";
+
+
+    if(useAgent) {
+      result = exampleLlamaStackRemoteInference.inferenceStartWithAgent(agentId, sessionId, turnService, mMessageAdapter.getRecentSavedTextMessages(AppUtils.CONVERSATION_HISTORY_MESSAGE_LOOKBACK), this);
+    }
+    else {
+      result = exampleLlamaStackRemoteInference.inferenceStartWithoutAgent(
+              modelName,
+              temperature,
+              mMessageAdapter.getRecentSavedTextMessages(AppUtils.CONVERSATION_HISTORY_MESSAGE_LOOKBACK),
+              systemPrompt,
+              this
+      );
+    }
     mResultMessage.appendText(result);
   }
 
@@ -642,4 +702,13 @@ public class MainActivity extends AppCompatActivity implements Runnable, Inferen
             });
   }
 
+  @Override
+  public void onStatStreamReceived(float tps) {
+    AppLogging.getInstance().log("this is stats received: " + tps);
+    runOnUiThread(
+            () -> {
+              mResultMessage.setTokensPerSecond(tps);
+              mMessageAdapter.notifyDataSetChanged();
+            });
+  }
 }
