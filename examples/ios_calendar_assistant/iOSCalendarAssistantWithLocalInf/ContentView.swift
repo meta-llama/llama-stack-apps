@@ -39,7 +39,7 @@ struct ContentView: View {
   public init () {
     self.inference = LocalInference(queue: runnerQueue)
     self.localAgents = LocalAgents(inference: self.inference)
-    self.remoteAgents = RemoteAgents(url: URL(string: "http://localhost:5000")!)
+    self.remoteAgents = RemoteAgents(url: URL(string: "https://llama-stack.together.ai")!)
   }
 
   var agents: Agents {
@@ -309,7 +309,7 @@ struct ContentView: View {
                 enable_session_persistence: false,
                 instructions: "You are a helpful assistant",
                 max_infer_iters: 1,
-                model: "Llama3.1-8B-Instruct"
+                model: "meta-llama/Llama-3.1-8B-Instruct"
               )
             )
           )
