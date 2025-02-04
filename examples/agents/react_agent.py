@@ -4,17 +4,22 @@
 # This source code is licensed under the terms described in the LICENSE file in
 # the root directory of this source tree.
 # import os
+import json
+import re
 import uuid
-from typing import Dict, List, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import fire
 
 from llama_stack_client import LlamaStackClient
 from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.lib.agents.client_tool import ClientTool
+from llama_stack_client.lib.agents.output_parser import OutputParser
 
 # from llama_stack_client.lib.agents.event_logger import EventLogger
 from llama_stack_client.types.agent_create_params import AgentConfig
+from llama_stack_client.types.agents.turn import CompletionMessage
+from llama_stack_client.types.shared.tool_call import ToolCall
 from llama_stack_client.types.shared.tool_response_message import ToolResponseMessage
 from llama_stack_client.types.shared.user_message import UserMessage
 from llama_stack_client.types.tool_def_param import Parameter
@@ -152,6 +157,63 @@ Now Begin! If you solve the task correctly, you will receive a reward of $1,000,
 """
 
 
+class ReActOutputParser(OutputParser):
+    def maybe_extract_action(self, text: str) -> Optional[Tuple[str, Dict[str, Any]]]:
+        """
+        Extract action name and parameters from the text format:
+
+        Thought: <some_text>
+
+        Action:
+        {
+        "action": <action_name>,
+        "action_input": <action_params>
+        }<end_action>
+
+        Args:
+            text (str): Input text containing the action block
+
+        Returns:
+            Tuple[str, Dict[str, Any]]: Tuple of (action_name, action_parameters)
+
+        Raises:
+            ValueError: If the action block cannot be parsed or is missing required fields
+        """
+        try:
+            # Find the action block using regex
+            action_pattern = r'Action:\s*{\s*"action":\s*"([^"]+)",\s*"action_input":\s*({[^}]+})\s*}<end_action>'
+            match = re.search(action_pattern, text, re.DOTALL)
+
+            if not match:
+                raise ValueError("Could not find valid action block in text")
+
+            action_name = match.group(1)
+            action_params = json.loads(match.group(2))
+
+            return action_name, action_params
+        except (ValueError, json.JSONDecodeError) as e:
+            print(f"Error parsing action: {e}")
+            return None
+
+    def parse(self, output_message: CompletionMessage) -> CompletionMessage:
+        action = self._maybe_extract_action(output_message.content)
+        if action is None:
+            return output_message
+
+        action_name, action_params = action
+        call_id = str(uuid.uuid4())
+        return CompletionMessage(
+            content=output_message.content,
+            tool_calls=[
+                ToolCall(
+                    call_id=call_id,
+                    tool_name=action_name,
+                    arguments=action_params,
+                )
+            ],
+        )
+
+
 class MetaExternalSearchTool(ClientTool):
 
     def get_name(self) -> str:
@@ -175,7 +237,7 @@ class MetaExternalSearchTool(ClientTool):
     def run(
         self, messages: List[Union[UserMessage, ToolResponseMessage]]
     ) -> List[Union[UserMessage, ToolResponseMessage]]:
-        print("run_impl for MetaExternalSearchTool called")
+        print("run for MetaExternalSearchTool called")
         dummy_response = """
             torchtune is a PyTorch library for easily authoring, finetuning and experimenting with LLMs.
 
@@ -231,7 +293,7 @@ def main():
         output_shields=[],
         enable_session_persistence=False,
     )
-    agent = Agent(client, agent_config, client_tools)
+    agent = Agent(client, agent_config, client_tools, output_parser=ReActOutputParser())
 
     session_id = agent.create_session(f"ttest-session-{uuid.uuid4().hex}")
 
