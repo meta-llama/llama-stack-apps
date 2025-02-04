@@ -158,7 +158,7 @@ Now Begin! If you solve the task correctly, you will receive a reward of $1,000,
 
 
 class ReActOutputParser(OutputParser):
-    def maybe_extract_action(self, text: str) -> Optional[Tuple[str, Dict[str, Any]]]:
+    def _maybe_extract_action(self, text: str) -> Optional[Tuple[str, Dict[str, Any]]]:
         """
         Extract action name and parameters from the text format:
 
@@ -196,22 +196,21 @@ class ReActOutputParser(OutputParser):
             return None
 
     def parse(self, output_message: CompletionMessage) -> CompletionMessage:
-        action = self._maybe_extract_action(output_message.content)
-        if action is None:
+        text = str(output_message.content)
+        action = self._maybe_extract_action(text)
+        if action is None or action[0] == "final_answer":
             return output_message
 
         action_name, action_params = action
         call_id = str(uuid.uuid4())
-        return CompletionMessage(
-            content=output_message.content,
-            tool_calls=[
-                ToolCall(
-                    call_id=call_id,
-                    tool_name=action_name,
-                    arguments=action_params,
-                )
-            ],
-        )
+        output_message.tool_calls = [
+            ToolCall(
+                call_id=call_id,
+                tool_name=action_name,
+                arguments=action_params,
+            )
+        ]
+        return output_message
 
 
 class MetaExternalSearchTool(ClientTool):
@@ -305,9 +304,6 @@ def main():
         stream=False,
     )
     pprint(response)
-
-    # for chunk in response:
-    #     pprint(chunk)
 
 
 if __name__ == "__main__":
