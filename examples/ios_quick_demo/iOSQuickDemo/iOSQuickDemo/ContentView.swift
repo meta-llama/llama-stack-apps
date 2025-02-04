@@ -12,9 +12,9 @@ import LlamaStackClient
 struct ContentView: View {
   @State private var message: String = ""
   @State private var userInput: String = "Best quotes in Godfather"
-  
+
   private let runnerQueue = DispatchQueue(label: "org.llamastack.iosquickdemo")
-  
+
   var body: some View {
     VStack(spacing: 20) {
       Text(message.isEmpty ? "Click Inference to see Llama's answer" : message)
@@ -24,11 +24,11 @@ struct ContentView: View {
           .frame(maxWidth: .infinity)
           .background(Color.gray.opacity(0.2))
           .cornerRadius(8)
-    
+
       VStack(alignment: .leading, spacing: 10) {
         Text("Question")
             .font(.headline)
-        
+
         TextField("Enter your question here", text: $userInput)
             .textFieldStyle(RoundedBorderTextFieldStyle())
             .padding()
@@ -56,17 +56,19 @@ struct ContentView: View {
       message = "Please enter a question before clicking 'Inference'."
       return
     }
-    
+
     message = ""
-    
+
     let workItem = DispatchWorkItem {
       defer {
         DispatchQueue.main.async {
         }
       }
-      
+
       Task {
-        let inference = RemoteInference(url: URL(string: "http://127.0.0.1:5000")!)
+
+        // replace the URL string if you build and run your own Llama Stack distro as shown in https://github.com/meta-llama/llama-stack-apps/tree/main/examples/ios_quick_demo#optional-build-and-run-own-llama-stack-distro
+        let inference = RemoteInference(url: URL(string: "https://llama-stack.together.ai")!)
 
         do {
           for await chunk in try await inference.chatCompletion(
@@ -108,7 +110,7 @@ struct ContentView: View {
         }
       }
     }
-    
+
     runnerQueue.async(execute: workItem)
   }
 }

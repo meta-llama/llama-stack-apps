@@ -39,6 +39,8 @@ struct ContentView: View {
   public init () {
     self.inference = LocalInference(queue: runnerQueue)
     self.localAgents = LocalAgents(inference: self.inference)
+    
+    // replace the URL string if you build and run your own Llama Stack distro as shown in https://github.com/meta-llama/llama-stack-apps/tree/main/examples/ios_calendar_assistant#optional-build-and-run-own-llama-stack-distro
     self.remoteAgents = RemoteAgents(url: URL(string: "https://llama-stack.together.ai")!)
   }
 
