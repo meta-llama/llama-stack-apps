@@ -174,6 +174,9 @@ On the bottom of the view we feature:
 Within the Settings page, you can configure local model usage and remote host endpoint.
 
 For local or on-device inference:
+
+* The executorch.aar downloaded from [`download-prebuilt-et-lib.sh`](https://github.com/meta-llama/llama-stack-client-kotlin/blob/release/0.0.58/llama-stack-client-kotlin-client-local/download-prebuilt-et-lib.sh) is tested to be compatible with ExecuTorch v0.5. Please make sure you check out the correct [release 0.5 branch](https://github.com/pytorch/executorch/tree/release/0.5) instead of the default main branch before running the pte model export script
+
 * First, assuming you have the model and tokenizer ready in ExecuTorch format. You can get more detail [here](https://github.com/pytorch/executorch/blob/main/examples/demo-apps/android/LlamaDemo/docs/delegates/xnnpack_README.md#prepare-models) on how to prepare them. Once you have the model and tokenizer ready, you can push them to the device by:
 ```
 adb shell mkdir -p /data/local/tmp/llama
