@@ -2,9 +2,11 @@
 
 iOSQuickDemo is a demo app ([video](https://drive.google.com/file/d/1HnME3VmsYlyeFgsIOMlxZy5c8S2xP4r4/view?usp=sharing)) that shows how to use the Llama Stack Swift SDK ([repo](https://github.com/meta-llama/llama-stack-client-swift)) and its `ChatCompletionRequest` API with a remote Llama Stack server to perform remote inference with Llama 3.1.
 
-# Installation
+## Installation
 
-## Prerequisite
+The quickest way to try out the demo for remote inference is using Together.ai's Llama Stack distro at https://llama-stack.together.ai - you can skip the next section and go to the Build and Run the iOS demo section directly.
+
+## (Optional) Build and Run Own Llama Stack Distro
 
 You need to set up a remote Llama Stack distributions to run this demo. Assuming you have a [Fireworks](https://fireworks.ai/account/api-keys) or [Together](https://api.together.ai/) API key, which you can get easily by clicking the link above:
 
@@ -38,7 +40,7 @@ The default port is 5000 for `llama stack run` and you can specify a different p
 ![](quick1.png)
 ![](quick2.png)
 
-3. Replace the `RemoteInference` url string in `ContentView.swift` below with the host IP and port of the remote Llama Stack distro started in Prerequisite:
+3. (Optional) Replace the `RemoteInference` url string in `ContentView.swift` below with the host IP and port of the remote Llama Stack distro in Build and Run Own Llama Stack Distro:
 
 ```
 let inference = RemoteInference(url: URL(string: "http://127.0.0.1:5000")!)

@@ -4,11 +4,13 @@ iOSCalendarAssistant is a demo app ([video](https://drive.google.com/file/d/1xjd
 
 You can also test the create calendar event with a direct ask instead of a detailed meeting note.
 
-# Installation
+## Installation
 
 We recommend you try the [iOS Quick Demo](../ios_quick_demo) first to confirm the prerequisite and installation - both demos have the same prerequisite and the first two installation steps.
 
-## Prerequisite
+The quickest way to try out the demo for remote inference is using Together.ai's Llama Stack distro at https://llama-stack.together.ai - you can skip the next section and go to the Build and Run the iOS demo section directly.
+
+## (Optional) Build and Run Own Llama Stack Distro
 
 You need to set up a remote Llama Stack distributions to run this demo. Assuming you have a [Fireworks](https://fireworks.ai/account/api-keys) or [Together](https://api.together.ai/) API key, which you can get easily by clicking the link above:
 
@@ -39,11 +41,12 @@ The default port is 5000 for `llama stack run` and you can specify a different p
 
 2. Under the iOSCalendarAssistant project - Package Dependencies, click the + sign, then add `https://github.com/meta-llama/llama-stack-client-swift` at the top right and 0.1.0 in the Dependency Rule, then click Add Package.
 
-3. Replace the `RemoteInference` url string in `ContentView.swift` below with the host IP and port of the remote Llama Stack distro started in Prerequisite:
+3. (Optional) Replace the `RemoteInference` url string in `ContentView.swift` below with the host IP and port of the remote Llama Stack distro  in Build and Run Own Llama Stack Distro:
 
 ```
-private let agent = RemoteAgents(url: URL(string: "http://127.0.0.1:5000")!)
+private let agent = RemoteAgents(url: URL(string: "https://llama-stack.together.ai")!)
 ```
+
 **Note:** In order for the app to access the remote URL, the app's `Info.plist` needs to have the entry `App Transport Security Settings` with `Allow Arbitrary Loads` set to YES.
 
 Also, to allow the app to add event to the Calendar app, the `Info.plist` needs to have an entry `Privacy - Calendars Usage Description` and when running the app for the first time, you need to accept the Calendar access request.
@@ -51,12 +54,12 @@ Also, to allow the app to add event to the Calendar app, the `Info.plist` needs 
 4. Build the run the app on an iOS simulator or your device. First you may try a simple request:
 
 ```
-Create a calendar event with a meeting title as Llama Stack update for 2-3pm January 27, 2025.
+Create a calendar event with a meeting title as Llama Stack update for 2-3pm February 3, 2025.
 ```
 
 Then, a detailed meeting note:
 ```
-Date: January 20, 2025
+Date: February 4, 2025
 Time: 10:00 AM - 11:00 AM
 Location: Zoom
 Attendees:
@@ -80,7 +83,7 @@ Sarah: Good. Jane, any updates from operations?
 Jane: Yes, logistics are sorted, and we’ve confirmed the warehouse availability. The only pending item is training customer support for the new product.
 Sarah: Let’s coordinate with the training team to expedite that. Anything else?
 Mike: Quick note—can we get feedback on the beta version by Friday?
-Sarah: Yes, let’s make that a priority. Anything else? No? Great. Thanks, everyone. Let’s meet again next week from 4-5pm on January 27, 2025 to review progress.
+Sarah: Yes, let’s make that a priority. Anything else? No? Great. Thanks, everyone. Let’s meet again next week from 4-5pm on February 11, 2025 to review progress.
 ```
 
 You'll see a summary, action items and a Calendar event created, made possible by Llama Stack's custom tool calling API support and Llama 3.1's tool calling capability.
