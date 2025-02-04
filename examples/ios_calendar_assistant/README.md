@@ -103,8 +103,8 @@ git submodule update --init --recursive
 2. Go back to your work folder, run commands:
 
 ```
-git clone https://github.com/meta-llama/llama-stack;
-cd llama-stack-apps
+git clone https://github.com/meta-llama/llama-stack
+cd llama-stack
 git submodule update --init --recursive
 ```
 
