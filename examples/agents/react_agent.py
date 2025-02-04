@@ -159,8 +159,8 @@ class MetaExternalSearchTool(ClientTool):
 
     def get_description(self) -> str:
         return """
-Search the web for the given query about Meta. Get information Meta available on the public internet
-"""
+        Search the web for the given query about Meta. Get information Meta available on the public internet
+        """
 
     def get_params_definition(self) -> Dict[str, Parameter]:
         return {
