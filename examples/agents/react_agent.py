@@ -24,8 +24,6 @@ from llama_stack_client.types.tool_def_param import Parameter
 
 from pydantic import BaseModel
 
-from rich.pretty import pprint
-
 
 class Action(BaseModel):
     tool_name: str
@@ -38,14 +36,14 @@ class ReActOutput(BaseModel):
     answer: Optional[str] = None
 
 
-class SearchTool(ClientTool):
+class TorchtuneTool(ClientTool):
 
     def get_name(self) -> str:
-        return "search"
+        return "torchtune"
 
     def get_description(self) -> str:
         return """
-        Search the web for the given query.
+        Answer information about torchtune.
         """
 
     def get_params_definition(self) -> Dict[str, Parameter]:
@@ -90,16 +88,12 @@ def main():
     model = "meta-llama/Llama-3.1-8B-Instruct"
 
     client_tools = [
-        SearchTool(),
+        TorchtuneTool(),
     ]
 
     builtin_toolgroups = [
         "builtin::websearch",
     ]
-
-    pprint(client.toolgroups.list())
-
-    pprint(client.tools.list(toolgroup_id="builtin::websearch"))
 
     # BUILTIN TOOLS
     def get_tool_definition(tool):
@@ -109,45 +103,32 @@ def main():
             "parameters": tool.parameters,
         }
 
-    tool_names = ", ".join(
-        [
-            tool.identifier
-            for tool in client.tools.list(toolgroup_id="builtin::websearch")
-        ]
-    )
-    tool_descriptions = "\n".join(
-        [
-            f"- {tool.identifier}: {get_tool_definition(tool)}"
-            for tool in client.tools.list(toolgroup_id="builtin::websearch")
-        ]
-    )
-
-    print(tool_names)
-    print(tool_descriptions)
-
-    # pprint(
-    #     client.tool_runtime.invoke_tool(
-    #         tool_name="web_search",
-    #         kwargs={"query": "Current time in New York"},
-    #     )
-    # )
-    # exit(1)
-    # instruction = DEFAULT_REACT_AGENT_SYSTEM_PROMPT_TEMPLATE.replace(
-    #     "<<tool_names>>", tool_names
-    # ).replace("<<tool_descriptions>>", tool_descriptions)
+    tool_names = ""
+    tool_descriptions = ""
+    for x in builtin_toolgroups:
+        tool_names += ", ".join(
+            [tool.identifier for tool in client.tools.list(toolgroup_id=x)]
+        )
+        tool_descriptions += "\n".join(
+            [
+                f"- {tool.identifier}: {get_tool_definition(tool)}"
+                for tool in client.tools.list(toolgroup_id=x)
+            ]
+        )
 
     # CLIENT TOOLS
-    # tool_names = ", ".join([tool.get_name() for tool in client_tools])
-    # tool_descriptions = "\n".join(
-    #     [f"- {tool.get_name()}: {tool.get_tool_definition()}" for tool in client_tools]
-    # )
+    tool_names += ", "
+    tool_descriptions += "\n"
+    tool_names += ", ".join([tool.get_name() for tool in client_tools])
+    tool_descriptions += "\n".join(
+        [f"- {tool.get_name()}: {tool.get_tool_definition()}" for tool in client_tools]
+    )
     instruction = DEFAULT_REACT_AGENT_SYSTEM_PROMPT_TEMPLATE.replace(
         "<<tool_names>>", tool_names
     ).replace("<<tool_descriptions>>", tool_descriptions)
 
-    # print(tool_names)
-    # print(tool_descriptions)
-    # instruction = "you are a helpful assistant"
+    print(tool_names)
+    print(tool_descriptions)
 
     agent_config = AgentConfig(
         model=model,
@@ -155,10 +136,10 @@ def main():
         sampling_params={
             "strategy": {"type": "top_p", "temperature": 1.0, "top_p": 0.9},
         },
-        toolgroups=["builtin::websearch"],
-        # client_tools=[
-        #     client_tool.get_tool_definition() for client_tool in client_tools
-        # ],
+        toolgroups=builtin_toolgroups,
+        client_tools=[
+            client_tool.get_tool_definition() for client_tool in client_tools
+        ],
         tool_choice="auto",
         tool_prompt_format="json",
         input_shields=[],
@@ -180,6 +161,14 @@ def main():
         stream=True,
     )
     for log in EventLogger().log(response):
+        log.print()
+
+    response2 = agent.create_turn(
+        messages=[{"role": "user", "content": "What is torchtune?"}],
+        session_id=session_id,
+        stream=True,
+    )
+    for log in EventLogger().log(response2):
         log.print()
 
 
