@@ -1,6 +1,6 @@
 # iOSCalendarAssistant
 
-iOSCalendarAssistant is a demo app ([video](https://drive.google.com/file/d/1xjdYVm3zDnlxZGi40X_D4IgvmASfG5QZ/view?usp=sharing)) that takes a meeting transcript, summarizes it, extracts action items, and calls tools to book any followup meetings.
+iOSCalendarAssistant is a demo app ([video](https://drive.google.com/file/d/1xjdYVm3zDnlxZGi40X_D4IgvmASfG5QZ/view?usp=sharing)) that uses Llama Stack Swift SDK's remote inference and agent APIs to take a meeting transcript, summarizes it, extracts action items, and calls tools to book any followup meetings.
 
 You can also test the create calendar event with a direct ask instead of a detailed meeting note.
 
@@ -89,9 +89,9 @@ Sarah: Yes, let’s make that a priority. Anything else? No? Great. Thanks, ever
 You'll see a summary, action items and a Calendar event created, made possible by Llama Stack's custom tool calling API support and Llama 3.1's tool calling capability.
 
 
-## iOSCalendarAssistantWithLocalInf
+# iOSCalendarAssistantWithLocalInf
 
-This project shows you how to run local inference on-device using ExecuTorch in conjunction with Llama Stack Swift SDK.
+iOSCalendarAssistantWithLocalInf is a demo app that uses Llama Stack Swift SDK's local inference and agent APIs and ExecuTorch to run local inference on device.
 
 1. In your work folder, run commands:
 ```
@@ -114,7 +114,7 @@ git submodule update --init --recursive
 
 5. Build and run the app on an iOS simulator or a real device.
 
-### Common Issues
+## Common Issues
 
 1. If you see a build error about cmake not found, then install cmake by following the instruction [here](https://github.com/pytorch/executorch/blob/main/examples/demo-apps/apple_ios/LLaMA/docs/delegates/xnnpack_README.md#1-install-cmake).
 
