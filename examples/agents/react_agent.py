@@ -3,8 +3,6 @@
 #
 # This source code is licensed under the terms described in the LICENSE file in
 # the root directory of this source tree.
-# import os
-import json
 import uuid
 from typing import Any, Dict, List, Optional, Union
 
@@ -13,15 +11,12 @@ import fire
 from llama_stack_client import LlamaStackClient
 from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.lib.agents.client_tool import ClientTool
-from llama_stack_client.lib.agents.output_parser import OutputParser
+from llama_stack_client.lib.agents.react.output_parser import ReActOutputParser
 from llama_stack_client.lib.agents.react.prompts import (
     DEFAULT_REACT_AGENT_SYSTEM_PROMPT_TEMPLATE,
 )
 
-# from llama_stack_client.lib.agents.event_logger import EventLogger
 from llama_stack_client.types.agent_create_params import AgentConfig
-from llama_stack_client.types.agents.turn import CompletionMessage
-from llama_stack_client.types.shared.tool_call import ToolCall
 from llama_stack_client.types.shared.tool_response_message import ToolResponseMessage
 from llama_stack_client.types.shared.user_message import UserMessage
 from llama_stack_client.types.tool_def_param import Parameter
@@ -39,32 +34,6 @@ class ReActOutput(BaseModel):
     thought: str
     action: Optional[Action] = None
     answer: Optional[str] = None
-
-
-class ReActOutputParser(OutputParser):
-    def parse(self, output_message: CompletionMessage) -> CompletionMessage:
-        response_text = str(output_message.content)
-        try:
-            response_json = json.loads(response_text)
-        except json.JSONDecodeError as e:
-            print(f"Error parsing action: {e}")
-            return output_message
-
-        if response_json.get("answer", None):
-            return output_message
-
-        if response_json.get("action", None):
-            tool_name = response_json["action"].get("tool_name", None)
-            tool_params = response_json["action"].get("tool_params", None)
-            if tool_name and tool_params:
-                call_id = str(uuid.uuid4())
-                output_message.tool_calls = [
-                    ToolCall(
-                        call_id=call_id, tool_name=tool_name, arguments=tool_params
-                    )
-                ]
-
-        return output_message
 
 
 class SearchTool(ClientTool):
@@ -90,10 +59,6 @@ class SearchTool(ClientTool):
     def run(
         self, messages: List[Union[UserMessage, ToolResponseMessage]]
     ) -> List[Union[UserMessage, ToolResponseMessage]]:
-        from rich.pretty import pprint
-
-        pprint(messages)
-        print("run for MetaExternalSearchTool called")
         dummy_response = """
             torchtune is a PyTorch library for easily authoring, finetuning and experimenting with LLMs.
 
@@ -107,7 +72,7 @@ class SearchTool(ClientTool):
         """
         return [
             ToolResponseMessage(
-                call_id="random-id",
+                call_id=messages[0].tool_calls[0].call_id,
                 tool_name=self.get_name(),
                 content=dummy_response,
                 role="tool",
