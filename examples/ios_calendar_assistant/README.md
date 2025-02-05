@@ -110,12 +110,10 @@ git submodule update --init --recursive
 
 3. Double click `llama-stack-apps/examples/ios_calendar_assistant/iOSCalendarAssistantWithLocalInf.xcodeproj` to open it in Xcode.
 
-4. Prepare a Llama model file named `llama3_2_spinquant_oct23.pte` by following the steps [here](https://github.com/pytorch/executorch/blob/main/examples/models/llama/README.md#step-2-prepare-model) - you'll also download the `tokenizer.model` file there. Then drag and drop both files to the project above.
+4. In the `iOSCalendarAssistantWithLocalInf` project panel, remove `LocalInferenceImpl.xcodeproj` and drag and drop `LocalInferenceImpl.xcodeproj` from `llama-stack/llama_stack/providers/inline/ios/inference` into the `iOSCalendarAssistantWithLocalInf` project.
 
-5. Build and run the app on an iOS simulator or a real device.
+5. Prepare a Llama model file named `llama3_2_spinquant_oct23.pte` by following the steps [here](https://github.com/pytorch/executorch/blob/main/examples/models/llama/README.md#step-2-prepare-model) - you'll also download the `tokenizer.model` file there. Then drag and drop both files to the project above.
 
-## Common Issues
+6. Build and run the app on an iOS simulator or a real device.
 
-1. If you see a build error about cmake not found, then install cmake by following the instruction [here](https://github.com/pytorch/executorch/blob/main/examples/demo-apps/apple_ios/LLaMA/docs/delegates/xnnpack_README.md#1-install-cmake).
-
-2. If you see build errors related to LocalInferenceImpl, then in your `iOSCalendarAssistantWithLocalInf` project panel, remove `LocalInferenceImpl.xcodeproj` and drag and drop `LocalInferenceImpl.xcodeproj` from `llama-stack/llama_stack/providers/inline/ios/inference` into the `iOSCalendarAssistantWithLocalInf` project.
+**Note** If you see a build error about cmake not found, then install cmake by following the instruction [here](https://github.com/pytorch/executorch/blob/main/examples/demo-apps/apple_ios/LLaMA/docs/delegates/xnnpack_README.md#1-install-cmake).
