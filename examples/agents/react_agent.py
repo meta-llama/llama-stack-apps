@@ -11,6 +11,7 @@ import fire
 from llama_stack_client import LlamaStackClient
 from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.lib.agents.client_tool import ClientTool
+from llama_stack_client.lib.agents.event_logger import EventLogger
 from llama_stack_client.lib.agents.react.output_parser import ReActOutputParser
 from llama_stack_client.lib.agents.react.prompts import (
     DEFAULT_REACT_AGENT_SYSTEM_PROMPT_TEMPLATE,
@@ -22,6 +23,7 @@ from llama_stack_client.types.shared.user_message import UserMessage
 from llama_stack_client.types.tool_def_param import Parameter
 
 from pydantic import BaseModel
+
 from rich.pretty import pprint
 
 
@@ -91,13 +93,61 @@ def main():
         SearchTool(),
     ]
 
-    tool_names = ", ".join([tool.get_name() for tool in client_tools])
-    tool_descriptions = "\n".join(
-        [f"- {tool.get_name()}: {tool.get_description()}" for tool in client_tools]
+    builtin_toolgroups = [
+        "builtin::websearch",
+    ]
+
+    pprint(client.toolgroups.list())
+
+    pprint(client.tools.list(toolgroup_id="builtin::websearch"))
+
+    # BUILTIN TOOLS
+    def get_tool_definition(tool):
+        return {
+            "name": tool.identifier,
+            "description": tool.description,
+            "parameters": tool.parameters,
+        }
+
+    tool_names = ", ".join(
+        [
+            tool.identifier
+            for tool in client.tools.list(toolgroup_id="builtin::websearch")
+        ]
     )
+    tool_descriptions = "\n".join(
+        [
+            f"- {tool.identifier}: {get_tool_definition(tool)}"
+            for tool in client.tools.list(toolgroup_id="builtin::websearch")
+        ]
+    )
+
+    print(tool_names)
+    print(tool_descriptions)
+
+    # pprint(
+    #     client.tool_runtime.invoke_tool(
+    #         tool_name="web_search",
+    #         kwargs={"query": "Current time in New York"},
+    #     )
+    # )
+    # exit(1)
+    # instruction = DEFAULT_REACT_AGENT_SYSTEM_PROMPT_TEMPLATE.replace(
+    #     "<<tool_names>>", tool_names
+    # ).replace("<<tool_descriptions>>", tool_descriptions)
+
+    # CLIENT TOOLS
+    # tool_names = ", ".join([tool.get_name() for tool in client_tools])
+    # tool_descriptions = "\n".join(
+    #     [f"- {tool.get_name()}: {tool.get_tool_definition()}" for tool in client_tools]
+    # )
     instruction = DEFAULT_REACT_AGENT_SYSTEM_PROMPT_TEMPLATE.replace(
         "<<tool_names>>", tool_names
     ).replace("<<tool_descriptions>>", tool_descriptions)
+
+    # print(tool_names)
+    # print(tool_descriptions)
+    # instruction = "you are a helpful assistant"
 
     agent_config = AgentConfig(
         model=model,
@@ -105,9 +155,10 @@ def main():
         sampling_params={
             "strategy": {"type": "top_p", "temperature": 1.0, "top_p": 0.9},
         },
-        client_tools=[
-            client_tool.get_tool_definition() for client_tool in client_tools
-        ],
+        toolgroups=["builtin::websearch"],
+        # client_tools=[
+        #     client_tool.get_tool_definition() for client_tool in client_tools
+        # ],
         tool_choice="auto",
         tool_prompt_format="json",
         input_shields=[],
@@ -124,13 +175,12 @@ def main():
     session_id = agent.create_session(f"ttest-session-{uuid.uuid4().hex}")
 
     response = agent.create_turn(
-        messages=[
-            {"role": "user", "content": "What model families does torchtune support?"}
-        ],
+        messages=[{"role": "user", "content": "What's the current time in new york?"}],
         session_id=session_id,
-        stream=False,
+        stream=True,
     )
-    pprint(response)
+    for log in EventLogger().log(response):
+        log.print()
 
 
 if __name__ == "__main__":
