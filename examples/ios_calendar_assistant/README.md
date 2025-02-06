@@ -93,14 +93,14 @@ You'll see a summary, action items and a Calendar event created, made possible b
 
 iOSCalendarAssistantWithLocalInf is a demo app that uses Llama Stack Swift SDK's local inference and agent APIs and ExecuTorch to run local inference on device.
 
-1. In your work folder, run commands:
+1. On a Mac terminal, in your top level directory, run commands:
 ```
 git clone https://github.com/meta-llama/llama-stack-apps
 cd llama-stack-apps
 git submodule update --init --recursive
 ```
 
-2. Go back to your work folder, run commands:
+2. Go back to your top level directory, run commands:
 
 ```
 git clone https://github.com/meta-llama/llama-stack
