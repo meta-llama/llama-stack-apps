@@ -1,16 +1,18 @@
 # iOSCalendarAssistant
 
-iOSCalendarAssistant is a demo app ([video](https://drive.google.com/file/d/1xjdYVm3zDnlxZGi40X_D4IgvmASfG5QZ/view?usp=sharing)) that takes a meeting transcript, summarizes it, extracts action items, and calls tools to book any followup meetings.
+iOSCalendarAssistant is a demo app ([video](https://drive.google.com/file/d/1xjdYVm3zDnlxZGi40X_D4IgvmASfG5QZ/view?usp=sharing)) that uses Llama Stack Swift SDK's remote inference and agent APIs to take a meeting transcript, summarizes it, extracts action items, and calls tools to book any followup meetings.
 
 You can also test the create calendar event with a direct ask instead of a detailed meeting note.
 
-We also have a demo project for running on-device inference. Checkout the instructions in the section below.
+## Installation
 
-# Installation
+We also have a demo project for running on-device inference. Checkout the instructions in the section `iOSCalendarAssistantWithLocalInf` below.
 
 We recommend you try the [iOS Quick Demo](../ios_quick_demo) first to confirm the prerequisite and installation - both demos have the same prerequisite and the first two installation steps.
 
-## Prerequisite
+The quickest way to try out the demo for remote inference is using Together.ai's Llama Stack distro at https://llama-stack.together.ai - you can skip the next section and go to the Build and Run the iOS demo section directly.
+
+## (Optional) Build and Run Own Llama Stack Distro
 
 You need to set up a remote Llama Stack distributions to run this demo. Assuming you have a [Fireworks](https://fireworks.ai/account/api-keys) or [Together](https://api.together.ai/) API key, which you can get easily by clicking the link above:
 
@@ -41,11 +43,12 @@ The default port is 5000 for `llama stack run` and you can specify a different p
 
 2. Under the iOSCalendarAssistant project - Package Dependencies, click the + sign, then add `https://github.com/meta-llama/llama-stack-client-swift` at the top right and 0.1.0 in the Dependency Rule, then click Add Package.
 
-3. Replace the `RemoteInference` url string in `ContentView.swift` below with the host IP and port of the remote Llama Stack distro started in Prerequisite:
+3. (Optional) Replace the `RemoteInference` url string in `ContentView.swift` below with the host IP and port of the remote Llama Stack distro  in Build and Run Own Llama Stack Distro:
 
 ```
-private let agent = RemoteAgents(url: URL(string: "http://127.0.0.1:5000")!)
+private let agent = RemoteAgents(url: URL(string: "https://llama-stack.together.ai")!)
 ```
+
 **Note:** In order for the app to access the remote URL, the app's `Info.plist` needs to have the entry `App Transport Security Settings` with `Allow Arbitrary Loads` set to YES.
 
 Also, to allow the app to add event to the Calendar app, the `Info.plist` needs to have an entry `Privacy - Calendars Usage Description` and when running the app for the first time, you need to accept the Calendar access request.
@@ -53,12 +56,12 @@ Also, to allow the app to add event to the Calendar app, the `Info.plist` needs 
 4. Build the run the app on an iOS simulator or your device. First you may try a simple request:
 
 ```
-Create a calendar event with a meeting title as Llama Stack update for 2-3pm January 27, 2025.
+Create a calendar event with a meeting title as Llama Stack update for 2-3pm February 3, 2025.
 ```
 
 Then, a detailed meeting note:
 ```
-Date: January 20, 2025
+Date: February 4, 2025
 Time: 10:00 AM - 11:00 AM
 Location: Zoom
 Attendees:
@@ -82,84 +85,37 @@ Sarah: Good. Jane, any updates from operations?
 Jane: Yes, logistics are sorted, and we’ve confirmed the warehouse availability. The only pending item is training customer support for the new product.
 Sarah: Let’s coordinate with the training team to expedite that. Anything else?
 Mike: Quick note—can we get feedback on the beta version by Friday?
-Sarah: Yes, let’s make that a priority. Anything else? No? Great. Thanks, everyone. Let’s meet again next week from 4-5pm on January 27, 2025 to review progress.
+Sarah: Yes, let’s make that a priority. Anything else? No? Great. Thanks, everyone. Let’s meet again next week from 4-5pm on February 11, 2025 to review progress.
 ```
 
 You'll see a summary, action items and a Calendar event created, made possible by Llama Stack's custom tool calling API support and Llama 3.1's tool calling capability.
 
 
 # iOSCalendarAssistantWithLocalInf
-This project shows you how to run local inference on-device using ExecuTorch in conjunction with Llama Stack Swift SDK. 
 
-1. git clone `https://github.com/meta-llama/llama-stack-apps/tree/main/examples/ios_calendar_assistant`
+iOSCalendarAssistantWithLocalInf is a demo app that uses Llama Stack Swift SDK's local inference and agent APIs and ExecuTorch to run local inference on device.
 
-2. Double click `ios_calendar_assistant/iOSCalendarAssistantWithLocalInf.xcodeproj` to open it in Xcode.
-
-3. If there are already Frameworks in the General section of the TARGETS, remove them.
-
-4. In Package Dependencies, delete all dependencies there and clean the dependencies cache.
-
-5. In Package Dependencies, click the + sign, then add `https://github.com/meta-llama/llama-stack-client-swift`. Select Branch and input `v0.1.0`. This should resolve the package and add necessary dependencies in your project panel. (This should add a LlamaStackClient in your Frameworks)
-
-6. In the same place, add `https://github.com/pytorch/executorch`. Select Branch and input `latest`. This will add ExecuTorch as your dependencies.
-
-7. In the Frameworks for TARGETS, add all ExecuTorch kernels (including debug ones), but not `executorch` one. For example:  
+1. On a Mac terminal, in your top level directory, run commands:
 ```
-backend_coreml
-backend_mps
-backend_xnnpack
-kernels_custom
-kernels_optimized
-kernels_portable
-kernels_quantized
+git clone https://github.com/meta-llama/llama-stack-apps
+cd llama-stack-apps
+git submodule update --init --recursive
 ```
 
-8. In your project panel, if there is already a xcode project called `LocalInferenceImpl.xcodeproj`, remove it completely.
+2. Go back to your top level directory, run commands:
 
-9. Then git clone `https://github.com/meta-llama/llama-stack/tree/adecb2a2d3bc5b5fb12280c54096706974e58201/llama_stack/providers/impls/ios/inference/LocalInferenceImpl`
-
-10. In the repo, run `git submodule update --init --recursive` to sync the executorch submodules.
-
-11. Install [Cmake](https://cmake.org/) for the executorch build. Additional [guidance](https://github.com/pytorch/executorch/blob/main/examples/demo-apps/apple_ios/LLaMA/docs/delegates/xnnpack_README.md#1-install-cmake) to install and link cmake
-
-12. Drag `LocalInferenceImpl.xcodeproj` into your `iOSCalendarAssistantWithLocalInf` project. Import it as a reference
-
-13. In LocalInferenceImpl’s Package Dependencies, change `LlamaStackClient package` version to `v0.1.0` matching iOSCalendarAssistantWithLocalInf’s package version. This is important to resolve Stencil dependencies.
-
-14. Add LocalInferenceImpl.framework into the Framework section for TARGETS.
-
-15. In "Build Settings" > "Other Linker Flags" > For both Debug and Release > "Any iOS Simulator SDK", add:
 ```
--force_load
-$(BUILT_PRODUCTS_DIR)/libkernels_optimized-simulator-release.a
--force_load
-$(BUILT_PRODUCTS_DIR)/libkernels_custom-simulator-release.a
--force_load
-$(BUILT_PRODUCTS_DIR)/libkernels_quantized-simulator-release.a
--force_load
-$(BUILT_PRODUCTS_DIR)/libbackend_xnnpack-simulator-release.a
--force_load
-$(BUILT_PRODUCTS_DIR)/libbackend_coreml-simulator-release.a
--force_load
-$(BUILT_PRODUCTS_DIR)/libbackend_mps-simulator-release.a
+git clone https://github.com/meta-llama/llama-stack
+cd llama-stack
+git submodule update --init --recursive
 ```
 
-16. For "Any iOS SDK", add:
-```
--force_load
-$(BUILT_PRODUCTS_DIR)/libkernels_optimized-ios-release.a
--force_load
-$(BUILT_PRODUCTS_DIR)/libkernels_custom-ios-release.a
--force_load
-$(BUILT_PRODUCTS_DIR)/libkernels_quantized-ios-release.a
--force_load
-$(BUILT_PRODUCTS_DIR)/libbackend_xnnpack-ios-release.a
--force_load
-$(BUILT_PRODUCTS_DIR)/libbackend_coreml-ios-release.a
--force_load
-$(BUILT_PRODUCTS_DIR)/libbackend_mps-ios-release.a
-```
+3. Double click `llama-stack-apps/examples/ios_calendar_assistant/iOSCalendarAssistantWithLocalInf.xcodeproj` to open it in Xcode.
 
-17. Lastly prepare the model: prepare a .pte file following the executorch [docs](https://github.com/pytorch/executorch/blob/main/examples/models/llama/README.md#step-2-prepare-model). Bundle the .pte and tokenizer.model file into Build Phases -> Copy Bundle Resources
+4. In the `iOSCalendarAssistantWithLocalInf` project panel, remove `LocalInferenceImpl.xcodeproj` and drag and drop `LocalInferenceImpl.xcodeproj` from `llama-stack/llama_stack/providers/inline/ios/inference` into the `iOSCalendarAssistantWithLocalInf` project.
 
-18. Build the app for simulator or real device
+5. Prepare a Llama model file named `llama3_2_spinquant_oct23.pte` by following the steps [here](https://github.com/pytorch/executorch/blob/main/examples/models/llama/README.md#step-2-prepare-model) - you'll also download the `tokenizer.model` file there. Then drag and drop both files to the project `iOSCalendarAssistantWithLocalInf`.
+
+6. Build and run the app on an iOS simulator or a real device.
+
+**Note** If you see a build error about cmake not found, you can install cmake by following the instruction [here](https://github.com/pytorch/executorch/blob/main/examples/demo-apps/apple_ios/LLaMA/docs/delegates/xnnpack_README.md#1-install-cmake).
