@@ -6,6 +6,8 @@ You can also test the create calendar event with a direct ask instead of a detai
 
 ## Installation
 
+We also have a demo project for running on-device inference. Checkout the instructions in the section `iOSCalendarAssistantWithLocalInf` below.
+
 We recommend you try the [iOS Quick Demo](../ios_quick_demo) first to confirm the prerequisite and installation - both demos have the same prerequisite and the first two installation steps.
 
 The quickest way to try out the demo for remote inference is using Together.ai's Llama Stack distro at https://llama-stack.together.ai - you can skip the next section and go to the Build and Run the iOS demo section directly.
