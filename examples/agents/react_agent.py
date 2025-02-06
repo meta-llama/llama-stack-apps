@@ -4,43 +4,24 @@
 # This source code is licensed under the terms described in the LICENSE file in
 # the root directory of this source tree.
 import uuid
-from typing import Dict, List, Union
 
 import fire
 
 from llama_stack_client import LlamaStackClient
-from llama_stack_client.lib.agents.client_tool import ClientTool
+from llama_stack_client.lib.agents.client_tool import tool
 from llama_stack_client.lib.agents.event_logger import EventLogger
 from llama_stack_client.lib.agents.react.agent import ReActAgent
-from llama_stack_client.types.shared.tool_response_message import ToolResponseMessage
-from llama_stack_client.types.shared.user_message import UserMessage
-from llama_stack_client.types.tool_def_param import Parameter
 
 
-class TorchtuneTool(ClientTool):
+@tool
+def torchtune(query: str = "torchtune"):
+    """
+    Answer information about torchtune.
 
-    def get_name(self) -> str:
-        return "torchtune"
-
-    def get_description(self) -> str:
-        return """
-        Answer information about torchtune.
-        """
-
-    def get_params_definition(self) -> Dict[str, Parameter]:
-        return {
-            "query": Parameter(
-                name="query",
-                parameter_type="str",
-                description="The query to use for querying the internet",
-                required=True,
-            )
-        }
-
-    def run(
-        self, messages: List[Union[UserMessage, ToolResponseMessage]]
-    ) -> List[Union[UserMessage, ToolResponseMessage]]:
-        dummy_response = """
+    :param query: The query to use for querying the internet
+    :returns: Information about torchtune
+    """
+    dummy_response = """
             torchtune is a PyTorch library for easily authoring, finetuning and experimenting with LLMs.
 
             torchtune provides:
@@ -50,15 +31,8 @@ class TorchtuneTool(ClientTool):
             Out-of-the-box memory efficiency, performance improvements, and scaling with the latest PyTorch APIs
             YAML configs for easily configuring training, evaluation, quantization or inference recipes
             Built-in support for many popular dataset formats and prompt templates
-        """
-        return [
-            ToolResponseMessage(
-                call_id=messages[0].tool_calls[0].call_id,
-                tool_name=self.get_name(),
-                content=dummy_response,
-                role="tool",
-            )
-        ]
+    """
+    return dummy_response
 
 
 def main():
@@ -67,12 +41,12 @@ def main():
     )
 
     model = "meta-llama/Llama-3.1-8B-Instruct"
-
+    print(type(torchtune))
     agent = ReActAgent(
         client=client,
         model=model,
         builtin_toolgroups=["builtin::websearch"],
-        client_tools=[TorchtuneTool()],
+        client_tools=[torchtune],
     )
 
     session_id = agent.create_session(f"ttest-session-{uuid.uuid4().hex}")
