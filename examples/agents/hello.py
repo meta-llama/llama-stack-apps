@@ -33,7 +33,9 @@ def main(host: str, port: int):
         print(f"Available shields found: {available_shields}")
 
     available_models = [
-        model.identifier for model in client.models.list() if model.model_type == "llm"
+        model.identifier
+        for model in client.models.list()
+        if model.model_type == "llm" and "405B" not in model.identifier
     ]
     if not available_models:
         print(colored("No available models. Exiting.", "red"))
