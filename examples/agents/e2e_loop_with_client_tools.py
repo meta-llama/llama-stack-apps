@@ -61,7 +61,6 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
         output_shields=available_shields if available_shields else [],
         enable_session_persistence=False,
     )
-    print(agent_config)
 
     agent = Agent(client, agent_config, client_tools)
     session_id = agent.create_session("test-session")
