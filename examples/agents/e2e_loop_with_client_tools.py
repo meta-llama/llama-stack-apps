@@ -7,13 +7,13 @@ import asyncio
 import os
 
 import fire
+
+from examples.client_tools.ticker_data import get_ticker_data
+from examples.client_tools.web_search import WebSearchTool
 from llama_stack_client import LlamaStackClient
 from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.lib.agents.event_logger import EventLogger
 from llama_stack_client.types.agent_create_params import AgentConfig
-
-from examples.client_tools.ticker_data import TickerDataTool
-from examples.client_tools.web_search import WebSearchTool
 
 
 async def run_main(host: str, port: int, disable_safety: bool = False):
@@ -38,8 +38,9 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
     else:
         selected_model = supported_models[0]
         print(f"Using model: {selected_model}")
+
     client_tools = [
-        TickerDataTool(),
+        get_ticker_data,
         WebSearchTool(os.getenv("BRAVE_SEARCH_API_KEY")),
     ]
     agent_config = AgentConfig(
