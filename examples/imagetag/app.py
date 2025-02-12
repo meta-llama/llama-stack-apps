@@ -1,19 +1,18 @@
 import base64
+import json
 import mimetypes
 import os
 import re
 import shelve
 import subprocess
 from multiprocessing import freeze_support
+from pathlib import Path
 from typing import Generator, List, Optional
 
 import gradio as gr
 from dotenv import load_dotenv
 
 from llama_stack.distribution.library_client import LlamaStackAsLibraryClient
-from llama_stack.distribution.utils.config_dirs import RUNTIME_BASE_DIR
-
-from llama_stack_client import LlamaStackClient
 from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.lib.agents.event_logger import EventLogger
 from llama_stack_client.types.agent_create_params import AgentConfig
@@ -92,11 +91,33 @@ class MetaData(BaseModel):
     )
 
 
-def encode_image_to_data_url(image_path):
+def encode_image_to_data(image_path):
     with open(image_path, "rb") as image_file:
-        base64_string = base64.b64encode(image_file.read()).decode("utf-8")
-        base64_url = f"data:image/png;base64,{base64_string}"
-        return base64_url
+        return base64.b64encode(image_file.read()).decode("utf-8")
+
+
+def find_images_set(search_directory):
+    # Common image file extensions
+    image_extensions = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".webp"}
+    # Add uppercase versions of extensions
+    image_extensions.update({ext.upper() for ext in image_extensions})
+
+    image_path = Path(search_directory)
+    return [
+        str(file) for file in image_path.rglob("*.*") if file.suffix in image_extensions
+    ]
+
+
+def data_url_from_image(file_path):
+    mime_type, _ = mimetypes.guess_type(file_path)
+    if mime_type is None:
+        raise ValueError("Could not determine MIME type of the file")
+
+    with open(file_path, "rb") as image_file:
+        encoded_string = base64.b64encode(image_file.read()).decode("utf-8")
+
+    data_url = f"data:{mime_type};base64,{encoded_string}"
+    return data_url
 
 
 class LlamaChatInterface:
@@ -106,12 +127,34 @@ class LlamaChatInterface:
         self.imagestore = None
         self.agent = None
         self.session_id = None
+        self.vector_db_id = "imagestore_db"
+
+    def setup_vector_dbs(self):
+        """Set up the vector db if it doesn't exist."""
+        providers = self.client.providers.list()
+        vector_io_provider = [
+            provider for provider in providers if provider.api == "vector_io"
+        ]
+        provider_id = vector_io_provider[0].provider_id
+        vector_dbs = self.client.vector_dbs.list()
+        print("vector_dbs: ", vector_dbs)
+        # Check if vector_dbs exists by identifier
+        if vector_dbs and any(
+            bank.identifier == self.vector_db_id for bank in vector_dbs
+        ):
+            self.client.vector_dbs.unregister(self.vector_db_id)
+            print(f"vector_dbs '{self.vector_db_id}' exists but replaced with new one.")
+        self.client.vector_dbs.register(
+            vector_db_id=self.vector_db_id,
+            embedding_model="all-MiniLM-L6-v2",
+            embedding_dimension=384,
+        )
+        print(f"vector_dbs registered.")
 
     def initialize_system(self, provider_name="ollama"):
         """Initialize the entire system including memory bank and agent."""
-        # path_to_yaml = os.path.abspath(os.path.join(os.path.dirname(__file__), "llama_stack_run.yaml"))
         self.client = LlamaStackAsLibraryClient(provider_name)
-        # print(type(self.client.async_client.config), self.client.async_client.config)
+
 
         # Disable scoring and eval by modifying the config
         self.client.async_client.config.apis = [
@@ -135,109 +178,126 @@ class LlamaChatInterface:
         self.client.async_client.config.tool_groups = tool_groups
 
         self.client.initialize()
+        self.setup_vector_dbs()
         self.initialize_agent()
 
-    # def get_metadata_from_image(self, image_path, custom_prompt):
-    #     # Extract metadata from the image
-    #     data_url = encode_image_to_data_url(image_path)
-    #     if custom_prompt:
-    #         prompt = custom_prompt
-    #     else:
-    #         prompt = DEFAULT_PROMPT
-    #         message = {
-    #             "role": "user",
-    #             "content": [
-    #                 {
-    #                     "type": "image",
-    #                     "image": {
-    #                         "url": {
-    #                             "uri": data_url
-    #                             # "uri": "https://www.healthypawspetinsurance.com/Images/V3/DogAndPuppyInsurance/Dog_CTA_Desktop_HeroImage.jpg"
-    #                         },
-    #                     },
-    #                 },
-    #                 {
-    #                     "type": "text",
-    #                     "text": prompt,
-    #                 },
-    #             ],
-    #         }
-    #     response = self.client.inference.chat_completion(
-    #         messages=[message],
-    #         model_id=MODEL_NAME,
-    #     )
-    #     return response.completion_message.content
 
     def get_metadata_from_image(self, image_path, prompt):
-        # Extract metadata from the image
-        data_url = encode_image_to_data_url(image_path)
+        assert prompt is not None, "Prompt is not provided"
+        assert len(prompt) > 0, "Prompt is empty"
+        print(f"Prompt: {prompt}")
         message = {
-            "role": "user",
-            "content": [
-                {
-                    "type": "image",
-                    "image": {
-                        "url": {"uri": data_url},
+        "role": "user",
+        "content": [
+            {
+                "type": "image",
+                "image": {
+                    "url": {
+                        # TODO: Replace with Github based URI to resources/sample1.jpg
+                        "uri": data_url_from_image(image_path)
+                        #"uri": "https://www.healthypawspetinsurance.com/Images/V3/DogAndPuppyInsurance/Dog_CTA_Desktop_HeroImage.jpg"
                     },
                 },
-                {
-                    "type": "text",
-                    "text": prompt,
-                },
-            ],
+            },
+            {
+                "type": "text",
+                "text": prompt,
+            },
+        ],
         }
         response = self.client.inference.chat_completion(
-            messages=[message],
             model_id=MODEL_NAME,
+            messages=[message],
+            stream=False
         )
-        return response.completion_message.content
+        metadata = response.completion_message.content.lower().strip()
+        return metadata
 
     def process_folder(self, folder_path):
-        if os.exists(folder_path + "/imagestore.db"):
+        if os.path.exists(folder_path + "/imagestore.json"):
             print(
-                f"Found imagestore.db in {folder_path}, skipping images that have already been processed"
+                f"Found imagestore.json in {folder_path}, skipping images that have already been processed"
             )
-            if not self.imagestore:
-                self.imagestore = shelves.open(
-                    folder_path + "/imagestore.db", writeback=True
-                )
-            else:
-                new_imagestore = shelves.open(
-                    folder_path + "/imagestore.db", writeback=True
-                )
-                self.imagestore = self.imagestore + new_imagestore
-            if imagestore.get("main_path") != folder_path:
+            with open(folder_path + "/imagestore.json", "r") as file:
+                self.imagestore = json.load(file)
+            if self.imagestore.get("main_path") != folder_path:
                 print(
-                    f"Found imagestore.db in {folder_path}, but it is not for the current folder {folder_path}, skipping images that have already been processed"
+                    f"Found imagestore.json in {folder_path}, but it is not for the current folder {folder_path}, skipping images that have already been processed"
                 )
-                return f"Found imagestore.db in {folder_path}, but it is not for the current folder {folder_path}, skipping images that have already been processed"
-        for file in os.listdir(folder_path):
-            if (
-                file.endswith(".png")
-                or file.endswith(".jpg")
-                or file.endswith(".jpeg")
-                or file.endswith(".gif")
-                or file.endswith(".webp")
-                or file.endswith(".bmp")
-                or file.endswith(".tiff")
-            ):
-                image_path = os.path.join(folder_path, file)
-                if imagestore.get(image_path) is not None:
-                    print(
-                        f"Skipping {image_path} because it has already been processed"
-                    )
-                    continue
-                print(f"Processing image: {image_path}")
-                # Extract metadata from the image
-
-                if self.custom_prompt:
-                    prompt = self.custom_prompt
-                else:
-                    prompt = DEFAULT_PROMPT
+                return f"Found imagestore.json in {folder_path}, but it is not for the current folder {folder_path}, skipping images that have already been processed"
+        else:
+            self.imagestore = {}
+            self.imagestore["main_path"] = folder_path
+        image_files = find_images_set(folder_path)
+        for image_path in image_files:
+            # image_path = os.path.join(folder_path, file)
+            if self.imagestore.get(image_path) is not None:
+                print(f"Skipping {image_path} because it has already been processed")
+                continue
+            print(f"Processing image: {image_path}")
+            # Extract metadata from the image
+            if self.custom_prompt:
+                prompt = self.custom_prompt
+            else:
+                prompt = DEFAULT_PROMPT
+            try:
                 metadata = self.get_metadata_from_image(image_path, prompt)
                 print(f"Metadata for {image_path}: {metadata}")
-                self.imagestore[image_path] = metadata
+            except Exception as e:
+                print(f"Error processing image: {image_path}")
+                print(f"Error: {e}")
+                continue
+            self.imagestore[image_path] = metadata
+        with open(folder_path + "/imagestore.json", "w") as file:
+            json.dump(self.imagestore, file)
         print(f"Processed Selected folder: {folder_path}")
+
+    # def process_folder(self, folder_path):
+    #     if os.path.exists(folder_path + "/imagestore.db"):
+    #         print(
+    #             f"Found imagestore.db in {folder_path}, skipping images that have already been processed"
+    #         )
+    #         if not self.imagestore:
+    #             self.imagestore = shelve.open(
+    #                 folder_path + "/imagestore.db", writeback=True
+    #             )
+    #         else:
+    #             new_imagestore = shelve.open(
+    #                 folder_path + "/imagestore.db", writeback=True
+    #             )
+    #             self.imagestore = self.imagestore + new_imagestore
+    #         if self.imagestore.get("main_path") != folder_path:
+    #             print(
+    #                 f"Found imagestore.db in {folder_path}, but it is not for the current folder {folder_path}, skipping images that have already been processed"
+    #             )
+    #             return f"Found imagestore.db in {folder_path}, but it is not for the current folder {folder_path}, skipping images that have already been processed"
+    #     else:
+    #         self.imagestore = shelve.open(
+    #             folder_path + "/imagestore.db", writeback=True
+    #         )
+    #         self.imagestore["main_path"] = folder_path
+    #     image_files = find_images_set(folder_path)
+    #     for image_path in image_files:
+    #         # image_path = os.path.join(folder_path, file)
+    #         if self.imagestore.get(image_path) is not None:
+    #             print(f"Skipping {image_path} because it has already been processed")
+    #             continue
+    #         print(f"Processing image: {image_path}")
+    #         # Extract metadata from the image
+    #         if self.custom_prompt:
+    #             prompt = self.custom_prompt
+    #         else:
+    #             prompt = DEFAULT_PROMPT
+    #         try:
+    #             metadata = self.get_metadata_from_image(image_path, prompt)
+    #             print(f"Metadata for {image_path}: {metadata}")
+    #         except Exception as e:
+    #             print(f"Error processing image: {image_path}")
+    #             print(f"Error: {e}")
+    #             continue
+    #         self.imagestore[image_path] = metadata
+
+    #     print(f"Processed Selected folder: {folder_path}")
 
     def set_custom_prompt(self, custom_prompt):
         self.custom_prompt = custom_prompt
@@ -261,6 +321,8 @@ class LlamaChatInterface:
 
     def create_rag_from_imagestore(self):
         """Load documents from the specified directory into vector db."""
+        assert self.imagestore is not None, "Imagestore is not initialized"
+        documents = []
         for filename, content in self.imagestore.items():
             document = Document(
                 document_id=filename,
@@ -306,7 +368,7 @@ class LlamaChatInterface:
 
     def search_database(self, query, image_path=None):
         if image_path:
-            metadata = self.get_metadata_from_image(image_path, query)
+            metadata = self.get_metadata_from_image(image_path, DEFAULT_PROMPT)
             rewritten_query = self.rewrite_query(query, metadata)
             response = self.agent.create_turn(
                 messages=[{"role": "user", "content": rewritten_query}],
@@ -362,19 +424,18 @@ def create_gradio_interface():
                 #     interactive=True,  # Show only directories
                 # )
                 folder_input = gr.Textbox(label="Select a Folder Path with images")
-                folder_input.change(
-                    fn=chat_interface.process_folder,
-                    inputs=folder_input,
-                )
                 custom_prompt = gr.Textbox(
                     label="Custom Prompt", placeholder="Describe this image in detail."
                 )
-                chat_interface.set_custom_prompt(custom_prompt)
+                if custom_prompt.value:
+                    chat_interface.set_custom_prompt(custom_prompt.value)
                 setup_button = gr.Button("Setup Interface")
                 setup_output = gr.Textbox(label="Setup", interactive=False)
 
                 # Function to handle the initial input and transition to the chat interface
-                def setup_chat_interface(model_name, provider_name, api_key):
+                def setup_chat_interface(
+                    model_name, provider_name, api_key, folder_input
+                ):
                     global MODEL_NAME
                     MODEL_NAME = model_name
                     if provider_name == "together":
@@ -387,6 +448,8 @@ def create_gradio_interface():
                         print("Using model: ", model_name)
                         print("Using provider: ", provider_name)
                         chat_interface.initialize_system(provider_name)
+                        chat_interface.process_folder(folder_input)
+                        chat_interface.create_rag_from_imagestore()
                     except Exception as e:
                         print(f"Error: {e}")
                         raise gr.exceptions.Error(e)
@@ -397,11 +460,7 @@ def create_gradio_interface():
 
                 setup_button.click(
                     setup_chat_interface,
-                    inputs=[
-                        model_name_input,
-                        provider_name,
-                        api_key,
-                    ],
+                    inputs=[model_name_input, provider_name, api_key, folder_input],
                     outputs=setup_output,
                 )
         with gr.Tab("Chat", visible=True) as chat_tab:
