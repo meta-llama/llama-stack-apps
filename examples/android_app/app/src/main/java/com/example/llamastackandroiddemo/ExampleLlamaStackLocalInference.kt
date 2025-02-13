@@ -139,21 +139,21 @@ class ExampleLlamaStackLocalInference(
             val callback = ctx as InferenceStreamingCallback
             result.use {
                 result.asSequence().forEach {
-                    val delta = it.asChatCompletionResponseStreamChunk().event().delta()
+                    val delta = it.event().delta()
                     if(delta.isToolCall()) {
                         val toolCall = delta.toolCall()?.toolCall()
                         if (toolCall != null) {
-                            callback.onStreamReceived("\n" + functionDispatchWithoutAgent(listOf(toolCall), ctx))
+                            callback.onStreamReceived("\n" + functionDispatchWithoutAgent(listOf(toolCall.asToolCall()), ctx))
                         } else {
                             callback.onStreamReceived("\n" + "Empty tool call. File a bug")
                         }
                     }
-                    if (it.asChatCompletionResponseStreamChunk().event().stopReason().toString() != "end_of_turn") {
+                    if (it.event().stopReason().toString() != "end_of_turn") {
                         callback.onStreamReceived(
-                            it.asChatCompletionResponseStreamChunk().event().delta().text()?.text().toString())
+                            it.event().delta().text()?.text().toString())
                     } else {
                         // response is complete so stats like tps is available
-                        tps = (it.asChatCompletionResponseStreamChunk()._additionalProperties()["tps"] as JsonNumber).value as Float
+                        tps = (it._additionalProperties()["tps"] as JsonNumber).value as Float
                         callback.onStatStreamReceived(tps)
                     }
                 }
@@ -168,17 +168,19 @@ class ExampleLlamaStackLocalInference(
                     )
                     .build()
             )
-            response = result.asChatCompletionResponse().completionMessage().content().string().toString();
+            response = result.completionMessage().content().string().toString();
             tps =
-                (result.asChatCompletionResponse()._additionalProperties()["tps"] as JsonNumber).value as Float
+                (result._additionalProperties()["tps"] as JsonNumber).value as Float
 
             if (response == "") {
                 //Empty content as Llama Stack is returning a tool call for non-streaming
-                val toolCalls = result.asChatCompletionResponse().completionMessage().toolCalls()
-                return if (toolCalls.isNotEmpty()) {
-                    functionDispatch(toolCalls, ctx)
-                } else {
-                    "Empty tool calls and model response. File a bug"
+                val toolCalls = result.completionMessage().toolCalls()
+                if (toolCalls != null) {
+                    return if (toolCalls.isNotEmpty()) {
+                        functionDispatch(toolCalls, ctx)
+                    } else {
+                        "Empty tool calls and model response. File a bug"
+                    }
                 }
             }
         }
