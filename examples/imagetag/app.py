@@ -90,6 +90,15 @@ DEFAULT_SEARCH_PROMPT = Template("""
     return your answer in json format, with the key "answer" and "source". 
     the "source" MUST only be the absolute file path of the document that relates to the answer so that we can open it.
 """)
+
+DEFAULT_IMAGE_SEARCH_PROMPT = Template("""
+    You are a helpful assistant. Given the user's query, image and provided documents, you can answer the user's question.
+    First, you need to extract the metadata from the image, including title, description, tags, and primary colors. 
+    Then, you can use the metadata and provided documents as context to answer the user's query:
+    User query: $user_query
+    return your answer in json format, with the key "answer" and "source". 
+    the "source" MUST only be the absolute file path of the document from the context that relates to the answer so that we can open it.
+""")
 class MetaData(BaseModel):
     """Product description saved as metadata"""
 
@@ -283,7 +292,7 @@ class LlamaChatInterface:
             enable_session_persistence=True,
         )
         self.agent = Agent(self.client, agent_config)
-        self.session_id = self.agent.create_session(f"session-docqa")
+        self.session_id = self.agent.create_session(f"session-imagetag")
 
     def create_rag_from_imagestore(self):
         """Load documents from the specified directory into vector db."""
@@ -306,37 +315,63 @@ class LlamaChatInterface:
             )
             print(f"Loaded {len(documents)} metadata from imagestore")
 
-    def rewrite_query(self, original_query, metadata):
-        print(f"Rewriting query: {original_query}")
-        messages = [
-            {"role": "user", "content": DEFAULT_REWRITE_PROMPT.substitute(item_description=metadata,user_query=original_query)},
-        ]
+    # def rewrite_query(self, original_query, metadata):
+    #     print(f"Rewriting query: {original_query}")
+    #     messages = [
+    #         {"role": "user", "content": DEFAULT_REWRITE_PROMPT.substitute(item_description=metadata,user_query=original_query)},
+    #     ]
 
-        try:
-            response = self.client.inference.chat_completion(
-                model=MODEL_NAME, messages=messages
-            )
-            rewritten_query = response.completion_message.content
-            print(f"Rewritten query: {rewritten_query}")
-            return rewritten_query
-        except Exception as e:
-            print(f"Error rewriting query: {e}")
-            return original_query
+    #     try:
+    #         response = self.client.inference.chat_completion(
+    #             model=MODEL_NAME, messages=messages
+    #         )
+    #         rewritten_query = response.completion_message.content
+    #         print(f"Rewritten query: {rewritten_query}")
+    #         return rewritten_query
+    #     except Exception as e:
+    #         print(f"Error rewriting query: {e}")
+    #         return original_query
 
     def search_database(self, query, image_path=None):
+        """Search the database for the given query."""
+        print(image_path)
         if image_path:
-            metadata = self.get_metadata_from_image(image_path, DEFAULT_METADATA_PROMPT)
-            query = self.rewrite_query(query, metadata)
+        # Use DEFAULT_IMAGE_SEARCH_PROMPT if image_path is provided
+            message = {
+            "role": "user",
+            "content": [
+                {
+                    "type": "image",
+                    "image": {
+                    "url": {
+                        "uri": data_url_from_image(image_path)
+                        },
+                    },
+                },
+                {
+                "type": "text",
+                "text": DEFAULT_IMAGE_SEARCH_PROMPT.substitute(user_query=query)
+                },
+            ],
+            }
+        else:
+            message = {
+                "role": "user",
+                "content": DEFAULT_SEARCH_PROMPT.substitute(user_query=query)
+            }
+
         response = self.agent.create_turn(
-                messages=[{"role": "user", "content": DEFAULT_SEARCH_PROMPT.substitute(user_query=query)}],
+                messages=[message],
                 session_id=self.session_id,
+
             )
-        logs = [str(log) for log in EventLogger().log(response) if log is not None]
-        logs_str = "".join(logs).split("inference>")[-1]
-        print(f"Search Results: {logs_str}")
+        logs = "".join([str(log) for log in EventLogger().log(response) if log is not None])
+        print(f"Logs: {logs}")
+        final_str =logs.split("inference>")[-1]
+        print(f"Search Results: {final_str}")
         source = []
         try:
-            response = json.loads(logs_str.strip())
+            response = json.loads(final_str.strip())
             if "answer" in response:
                 anwser = response["answer"]
             if "source" in response:
@@ -347,8 +382,8 @@ class LlamaChatInterface:
                 return anwser, [(source,self.imagestore[source])]
         except Exception as e:
             print(f"Error parsing response: {e}")
-            return logs_str, source
-        return logs_str, source
+            return final_str, source
+        return final_str, source
 
 
 def create_gradio_interface():
@@ -358,7 +393,7 @@ def create_gradio_interface():
             query_input = gr.Textbox(label="Enter your query")
             response_output = gr.Textbox(label="Response")
         with gr.Row():
-            image_input = gr.Image(label="Select an image")
+            image_input = gr.Image(label="Select an image", type="filepath")
             image_output = gr.Gallery(label="Retrieved Images")
         with gr.Row():
             search_button = gr.Button("Search")
