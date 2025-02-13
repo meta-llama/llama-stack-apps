@@ -12,6 +12,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.llama.llamastack.models.CompletionMessage
 import com.llama.llamastack.models.ContentDelta
+import com.llama.llamastack.models.ToolCall
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -19,12 +20,12 @@ import java.util.TimeZone
 
 //Tool calling helper functions
 
-fun functionDispatchWithoutAgent(toolCalls:List<ContentDelta.ToolCallDelta.ToolCall>, ctx: Context): String {
+fun functionDispatchWithoutAgent(toolCalls:List<ToolCall>, ctx: Context): String {
     var response = ""
     
     for (toolCall in toolCalls) {
-        val toolName = toolCall.toolCall()?.toolName().toString()
-        val properties = toolCall.toolCall()?.arguments()?._additionalProperties()!!
+        val toolName = toolCall.toolName().toString()
+        val properties = toolCall.arguments()._additionalProperties()
         response += when (toolName) {
             "createCalendarEvent" -> createCalendarEvent(
                 properties["title"].toString(),
@@ -46,7 +47,7 @@ fun functionDispatchWithoutAgent(toolCalls:List<ContentDelta.ToolCallDelta.ToolC
     }
 }
 
-fun functionDispatch(toolCalls:List<CompletionMessage.ToolCall>, ctx: Context): String {
+fun functionDispatch(toolCalls:List<ToolCall>, ctx: Context): String {
     var response = ""
 
     for (toolCall in toolCalls) {

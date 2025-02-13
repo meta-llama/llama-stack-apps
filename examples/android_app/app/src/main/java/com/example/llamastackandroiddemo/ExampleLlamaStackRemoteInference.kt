@@ -20,7 +20,6 @@ import com.llama.llamastack.models.SamplingParams
 import com.llama.llamastack.models.SystemMessage
 import com.llama.llamastack.models.ToolDef
 import com.llama.llamastack.models.ToolResponseMessage
-import com.llama.llamastack.models.Url
 import com.llama.llamastack.models.UserMessage
 import com.llama.llamastack.services.blocking.agents.TurnService
 import kotlinx.datetime.Clock
@@ -144,20 +143,20 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
                 val callback = ctx as InferenceStreamingCallback
                 result.use {
                     result.asSequence().forEach {
-                        val delta = it.asChatCompletionResponseStreamChunk().event().delta()
+                        val delta = it.event().delta()
 
                         if (delta.isToolCall()) {
                             val toolCall = delta.toolCall()?.toolCall()
                             if (toolCall != null) {
-                                callback.onStreamReceived("\n" + functionDispatchWithoutAgent(listOf(toolCall), ctx))
+                                callback.onStreamReceived("\n" + functionDispatchWithoutAgent(listOf(toolCall.asToolCall()), ctx))
                             } else {
                                 callback.onStreamReceived("\n" + "Empty tool call. File a bug")
                             }
 
                         }
-                        if (it.asChatCompletionResponseStreamChunk().event().stopReason().toString() != "end_of_turn") {
+                        if (it.event().stopReason().toString() != "end_of_turn") {
                             callback.onStreamReceived(
-                                it.asChatCompletionResponseStreamChunk().event().delta().text()
+                                it.event().delta().text()
                                     ?.text()
                                     .toString())
                         }
@@ -178,14 +177,16 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
                         )
                         .build()
                 )
-                response = result.asChatCompletionResponse().completionMessage().content().string().toString();
+                response = result.completionMessage().content().string().toString();
                 if (response == "") {
                     //Empty content as Llama Stack is returning a tool call in non-streaming mode
-                    val toolCalls = result.asChatCompletionResponse().completionMessage().toolCalls()
-                    return if (toolCalls.isNotEmpty()) {
-                        functionDispatch(toolCalls, ctx)
-                    } else {
-                        "Empty tool calls and model response. File a bug"
+                    val toolCalls = result.completionMessage().toolCalls()
+                    if (toolCalls != null) {
+                        return if (toolCalls.isNotEmpty()) {
+                            functionDispatch(toolCalls, ctx)
+                        } else {
+                            "Empty tool calls and model response. File a bug"
+                        }
                     }
                 }
             }
@@ -275,32 +276,30 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
         val callback = ctx as InferenceStreamingCallback
         agentTurnCreateResponseStream.use {
             agentTurnCreateResponseStream.asSequence().forEach {
-                val agentResponsePayload = it.responseStreamChunk()?.event()?.payload()
-                if (agentResponsePayload != null) {
-                    when {
-                        agentResponsePayload.isAgentTurnResponseTurnStart() -> {
-                            // Handle Turn Start Payload
+                val agentResponsePayload = it.event().payload()
+                when {
+                    agentResponsePayload.isAgentTurnResponseTurnStart() -> {
+                        // Handle Turn Start Payload
+                    }
+                    agentResponsePayload.isAgentTurnResponseStepStart() -> {
+                        // Handle Step Start Payload
+                    }
+                    agentResponsePayload.isAgentTurnResponseStepProgress() -> {
+                        // Handle Step Progress Payload
+                        val result = agentResponsePayload.agentTurnResponseStepProgress()?.delta()?.text()?.text()
+                        if (result != null) {
+                            callback.onStreamReceived(result.toString())
                         }
-                        agentResponsePayload.isAgentTurnResponseStepStart() -> {
-                            // Handle Step Start Payload
+                    }
+                    agentResponsePayload.isAgentTurnResponseStepComplete() -> {
+                        // Handle Step Complete Payload
+                        val toolCalls = agentResponsePayload.agentTurnResponseStepComplete()?.stepDetails()?.asInferenceStep()?.modelResponse()?.toolCalls()
+                        if (!toolCalls.isNullOrEmpty()) {
+                            callback.onStreamReceived(functionDispatch(toolCalls, ctx))
                         }
-                        agentResponsePayload.isAgentTurnResponseStepProgress() -> {
-                            // Handle Step Progress Payload
-                            val result = agentResponsePayload.agentTurnResponseStepProgress()?.delta()?.text()?.text()
-                            if (result != null) {
-                                callback.onStreamReceived(result.toString())
-                            }
-                        }
-                        agentResponsePayload.isAgentTurnResponseStepComplete() -> {
-                            // Handle Step Complete Payload
-                            val toolCalls = agentResponsePayload.agentTurnResponseStepComplete()?.stepDetails()?.asInferenceStep()?.modelResponse()?.toolCalls()
-                            if (!toolCalls.isNullOrEmpty()) {
-                                callback.onStreamReceived(functionDispatch(toolCalls, ctx))
-                            }
-                        }
-                        agentResponsePayload.isAgentTurnResponseTurnComplete() -> {
-                            // Handle Turn Complete Payload
-                        }
+                    }
+                    agentResponsePayload.isAgentTurnResponseTurnComplete() -> {
+                        // Handle Turn Complete Payload
                     }
                 }
             }
@@ -365,7 +364,7 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
                     val contentResolver = ctx.contentResolver
                     val imageFilePath = getFilePathFromUri(contentResolver, imageUri)
                     val imageDataUrl = imageFilePath?.let { encodeImageToDataUrl(it) }
-                    val imageUrl = imageDataUrl?.let { Url.builder().uri(it).build() }
+                    val imageUrl = imageDataUrl?.let { InterleavedContent.ImageContentItem.Image.Url.builder().uri(it).build() }
                     if (imageUrl != null) {
                         image = InterleavedContent.ImageContentItem.Image.builder().url(imageUrl).build()
                     }
