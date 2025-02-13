@@ -66,8 +66,8 @@ CUSTOM_CSS = """
 """
 from pydantic import BaseModel, Field
 
-
-DEFAULT_PROMPT = f"""
+from string import Template 
+DEFAULT_METADATA_PROMPT = f"""
     Given the image of a product, provide the following information in English:
     - Product Title
     - Product Description
@@ -77,7 +77,19 @@ DEFAULT_PROMPT = f"""
     - MUST return the information in JSON format, with the keys "title", "description", "tags", "primary_colors".
     """
 
+DEFAULT_REWRITE_PROMPT = Template("""
+    You are a helpful assistant. Rewrite the user's query to include details from the item description.
+    Item description: $item_description
+    User query: $user_query
+    Please rewrite the query to include relevant details from the item description
+""")
 
+DEFAULT_SEARCH_PROMPT = Template("""
+    You are a helpful assistant. Given the user's query and provided documents, you can answer the user's question.
+    User query: $user_query
+    return your answer in json format, with the key "answer" and "source". 
+    the "source" MUST only be the absolute file path of the document that relates to the answer so that we can open it.
+""")
 class MetaData(BaseModel):
     """Product description saved as metadata"""
 
@@ -239,7 +251,7 @@ class LlamaChatInterface:
             if self.custom_prompt:
                 prompt = self.custom_prompt
             else:
-                prompt = DEFAULT_PROMPT
+                prompt = DEFAULT_METADATA_PROMPT
             try:
                 metadata = self.get_metadata_from_image(image_path, prompt)
                 print(f"Metadata for {image_path}: {metadata}")
@@ -252,52 +264,6 @@ class LlamaChatInterface:
             json.dump(self.imagestore, file)
         print(f"Processed Selected folder: {folder_path}")
 
-    # def process_folder(self, folder_path):
-    #     if os.path.exists(folder_path + "/imagestore.db"):
-    #         print(
-    #             f"Found imagestore.db in {folder_path}, skipping images that have already been processed"
-    #         )
-    #         if not self.imagestore:
-    #             self.imagestore = shelve.open(
-    #                 folder_path + "/imagestore.db", writeback=True
-    #             )
-    #         else:
-    #             new_imagestore = shelve.open(
-    #                 folder_path + "/imagestore.db", writeback=True
-    #             )
-    #             self.imagestore = self.imagestore + new_imagestore
-    #         if self.imagestore.get("main_path") != folder_path:
-    #             print(
-    #                 f"Found imagestore.db in {folder_path}, but it is not for the current folder {folder_path}, skipping images that have already been processed"
-    #             )
-    #             return f"Found imagestore.db in {folder_path}, but it is not for the current folder {folder_path}, skipping images that have already been processed"
-    #     else:
-    #         self.imagestore = shelve.open(
-    #             folder_path + "/imagestore.db", writeback=True
-    #         )
-    #         self.imagestore["main_path"] = folder_path
-    #     image_files = find_images_set(folder_path)
-    #     for image_path in image_files:
-    #         # image_path = os.path.join(folder_path, file)
-    #         if self.imagestore.get(image_path) is not None:
-    #             print(f"Skipping {image_path} because it has already been processed")
-    #             continue
-    #         print(f"Processing image: {image_path}")
-    #         # Extract metadata from the image
-    #         if self.custom_prompt:
-    #             prompt = self.custom_prompt
-    #         else:
-    #             prompt = DEFAULT_PROMPT
-    #         try:
-    #             metadata = self.get_metadata_from_image(image_path, prompt)
-    #             print(f"Metadata for {image_path}: {metadata}")
-    #         except Exception as e:
-    #             print(f"Error processing image: {image_path}")
-    #             print(f"Error: {e}")
-    #             continue
-    #         self.imagestore[image_path] = metadata
-
-    #     print(f"Processed Selected folder: {folder_path}")
 
     def set_custom_prompt(self, custom_prompt):
         self.custom_prompt = custom_prompt
@@ -343,16 +309,7 @@ class LlamaChatInterface:
     def rewrite_query(self, original_query, metadata):
         print(f"Rewriting query: {original_query}")
         messages = [
-            {
-                "role": "system",
-                "content": "You are a helpful fashion assistant. Rewrite the user's query to include details from the item description.",
-            },
-            {"role": "user", "content": f"Item description: {metadata}"},
-            {"role": "user", "content": f"User query: {original_query}"},
-            {
-                "role": "user",
-                "content": "Please rewrite the query to include relevant details from the item description.",
-            },
+            {"role": "user", "content": DEFAULT_REWRITE_PROMPT.substitute(item_description=metadata,user_query=original_query)},
         ]
 
         try:
@@ -368,32 +325,47 @@ class LlamaChatInterface:
 
     def search_database(self, query, image_path=None):
         if image_path:
-            metadata = self.get_metadata_from_image(image_path, DEFAULT_PROMPT)
-            rewritten_query = self.rewrite_query(query, metadata)
-            response = self.agent.create_turn(
-                messages=[{"role": "user", "content": rewritten_query}],
+            metadata = self.get_metadata_from_image(image_path, DEFAULT_METADATA_PROMPT)
+            query = self.rewrite_query(query, metadata)
+        response = self.agent.create_turn(
+                messages=[{"role": "user", "content": DEFAULT_SEARCH_PROMPT.substitute(user_query=query)}],
                 session_id=self.session_id,
             )
-        else:
-            response = self.agent.create_turn(
-                messages=[{"role": "user", "content": query}],
-                session_id=self.session_id,
-            )
-        return response.completion_message.content
+        logs = [str(log) for log in EventLogger().log(response) if log is not None]
+        logs_str = "".join(logs).split("inference>")[-1]
+        print(f"Search Results: {logs_str}")
+        source = []
+        try:
+            response = json.loads(logs_str.strip())
+            if "answer" in response:
+                anwser = response["answer"]
+            if "source" in response:
+                source = response["source"]
+                assert os.path.exists(response["source"]), "Source file does not exist"
+                assert response["source"] in self.imagestore, "Source file is not in imagestore"
+                # return answer to textbox and (source, description) to display in gallery 
+                return anwser, [(source,self.imagestore[source])]
+        except Exception as e:
+            print(f"Error parsing response: {e}")
+            return logs_str, source
+        return logs_str, source
 
 
 def create_gradio_interface():
     chat_interface = LlamaChatInterface()
     with gr.Blocks(theme=gr.themes.Soft(), css=CUSTOM_CSS) as main_interface:
-        query_interface = gr.Interface(
+        with gr.Row():
+            query_input = gr.Textbox(label="Enter your query")
+            response_output = gr.Textbox(label="Response")
+        with gr.Row():
+            image_input = gr.Image(label="Select an image")
+            image_output = gr.Gallery(label="Retrieved Images")
+        with gr.Row():
+            search_button = gr.Button("Search")
+        search_button.click(
             fn=chat_interface.search_database,
-            inputs=[
-                gr.Textbox(label="Text Query", placeholder="Enter text to search..."),
-                gr.Image(label="Or Upload Image to Search", type="filepath"),
-            ],
-            outputs=gr.Textbox(label="Search Results"),
-            title="Multi-modal Search Interface",
-            description="Search the database using text or image queries",
+            inputs=[query_input, image_input],
+            outputs=[response_output, image_output],
         )
 
     # Combine both interfaces
@@ -424,11 +396,11 @@ def create_gradio_interface():
                 #     interactive=True,  # Show only directories
                 # )
                 folder_input = gr.Textbox(label="Select a Folder Path with images")
-                custom_prompt = gr.Textbox(
-                    label="Custom Prompt", placeholder="Describe this image in detail."
-                )
-                if custom_prompt.value:
-                    chat_interface.set_custom_prompt(custom_prompt.value)
+                # custom_prompt = gr.Textbox(
+                #     label="Custom Prompt", placeholder="Describe this image in detail."
+                # )
+                # if custom_prompt.value:
+                #     chat_interface.set_custom_prompt(custom_prompt.value)
                 setup_button = gr.Button("Setup Interface")
                 setup_output = gr.Textbox(label="Setup", interactive=False)
 
