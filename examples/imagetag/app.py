@@ -77,18 +77,23 @@ DEFAULT_METADATA_PROMPT = f"""
     - MUST return the information in JSON format, with the keys "title", "description", "tags", "primary_colors".
     """
 
+# DEFAULT_REWRITE_PROMPT = Template("""
+#     You are a helpful assistant. Rewrite the user's query to include details from the item description.
+#     Item description: $item_description
+#     User query: $user_query
+#     Please rewrite the user query to include relevant details from the item description so that the query is more specific and can be answered with the item description. Only return the rewritten query with no other text.
+# """)
 DEFAULT_REWRITE_PROMPT = Template("""
-    You are a helpful assistant. Rewrite the user's query to include details from the item description.
-    Item description: $item_description
+    You are a helpful assistant. You can first extract the metadata from the image, including title, description, tags, and primary colors
+    Then rewrite the user's query to include details from the extracted metadata.
     User query: $user_query
     Please rewrite the user query to include relevant details from the item description so that the query is more specific and can be answered with the item description. Only return the rewritten query with no other text.
 """)
-
 DEFAULT_SEARCH_PROMPT = Template("""
     You are a helpful assistant. Given the user's query and provided documents, you can answer the user's question.
     User query: $user_query
-    return your answer in json format, with the key "answer" and "source". 
-    the "source" MUST only be the absolute file path of the document that relates to the answer so that we can open it.
+    Read the provided documents context carefully and select the most relevant document as the source. You must remember the file path of your source. Return your answer in json format, with the key "answer" and "source_file". 
+    The "source_file" MUST only be the absolute file path of the document that you selected as the source
 """)
 
 DEFAULT_IMAGE_SEARCH_PROMPT = Template("""
@@ -131,8 +136,10 @@ def find_images_set(search_directory):
 
 def data_url_from_image(file_path):
     mime_type, _ = mimetypes.guess_type(file_path)
+    print('getting mime type', mime_type, file_path)
     if mime_type is None:
-        raise ValueError("Could not determine MIME type of the file")
+        print("Could not determine MIME type of the file")
+        mime_type = 'image/jpeg'
 
     with open(file_path, "rb") as image_file:
         encoded_string = base64.b64encode(image_file.read()).decode("utf-8")
@@ -206,7 +213,8 @@ class LlamaChatInterface:
     def get_metadata_from_image(self, image_path, prompt=None):
         if prompt is None:
             prompt = DEFAULT_METADATA_PROMPT
-        print(f"Prompt: {prompt}")
+        print(f"Prompt: {prompt}", image_path)
+        assert os.path.exists(image_path), "Image path does not exist"
         message = {
         "role": "user",
         "content": [
@@ -315,16 +323,36 @@ class LlamaChatInterface:
             )
             print(f"Loaded {len(documents)} metadata from imagestore")
 
-    def rewrite_query(self, original_query, metadata):
+    def rewrite_query(self, original_query, image_path):
         print(f"Rewriting query: {original_query}")
-        messages = [
-            
-            {"role": "user", "content": DEFAULT_REWRITE_PROMPT.substitute(item_description=metadata,user_query=original_query)},
-        ]
+        # messages = [
+        #     {"role": "user", "content": DEFAULT_METADATA_PROMPT},
+        #     {"role": "user", "content": DEFAULT_REWRITE_PROMPT.substitute(item_description=metadata,user_query=original_query)},
+        # ]
+
+        message = {
+        "role": "user",
+        "content": [
+            {
+                "type": "image",
+                "image": {
+                    "url": {
+                        # TODO: Replace with Github based URI to resources/sample1.jpg
+                        "uri": data_url_from_image(image_path)
+                        #"uri": "https://www.healthypawspetinsurance.com/Images/V3/DogAndPuppyInsurance/Dog_CTA_Desktop_HeroImage.jpg"
+                    },
+                },
+            },
+            {
+                "type": "text",
+                "text": DEFAULT_REWRITE_PROMPT.substitute(user_query=original_query),
+            },
+        ],
+        }
 
         try:
             response = self.client.inference.chat_completion(
-                model_id=MODEL_NAME, messages=messages,stream=False,
+                model_id=MODEL_NAME, messages=[message],stream=False,
             )
             rewritten_query = response.completion_message.content
             print(f"Rewritten query: {rewritten_query}")
@@ -335,33 +363,32 @@ class LlamaChatInterface:
 
     def search_database(self, query, image_path=None):
         """Search the database for the given query."""
-        print(image_path)
+        print('search_database',image_path)
         if image_path:
         # Use DEFAULT_IMAGE_SEARCH_PROMPT if image_path is provided
-            metadata = self.get_metadata_from_image(image_path, DEFAULT_METADATA_PROMPT)
-            query = self.rewrite_query(query, metadata)
-            message = {
+            #metadata = self.get_metadata_from_image(image_path, DEFAULT_METADATA_PROMPT)
+            query = self.rewrite_query(query,image_path)
+            # message = {
+            # "role": "user",
+            # "content": [
+            #     # {
+            #     #     "type": "image",
+            #     #     "image": {
+            #     #     "url": {
+            #     #         "uri": data_url_from_image(image_path)
+            #     #         },
+            #     #     },
+            #     # },
+            #     {
+            #     "type": "text",
+            #     "text": DEFAULT_IMAGE_SEARCH_PROMPT.substitute(user_query=query)
+            #     },
+            # ],
+            # }
+        message = {
             "role": "user",
-            "content": [
-                {
-                    "type": "image",
-                    "image": {
-                    "url": {
-                        "uri": data_url_from_image(image_path)
-                        },
-                    },
-                },
-                {
-                "type": "text",
-                "text": DEFAULT_IMAGE_SEARCH_PROMPT.substitute(user_query=query)
-                },
-            ],
-            }
-        else:
-            message = {
-                "role": "user",
-                "content": DEFAULT_SEARCH_PROMPT.substitute(user_query=query)
-            }
+            "content": DEFAULT_SEARCH_PROMPT.substitute(user_query=query)
+        }
 
         response = self.agent.create_turn(
                 messages=[message],
@@ -384,7 +411,22 @@ class LlamaChatInterface:
                 # return answer to textbox and (source, description) to display in gallery 
                 return anwser, [(source,self.imagestore[source])]
         except Exception as e:
+            if '"source_file":'in final_str:
+                source = final_str.split('"source_file":')[-1].strip().replace('"', '')
+            else:
+                response_list = final_str.split(" ")
+                # find the last word in the list that contains ".jpg", ".png", ".jpeg", ".gif", ".bmp", or ".tiff"
+                for word in response_list[::-1]:
+                    if ".jpg" in word or ".png" in word or ".jpeg" in word or ".gif" in word or ".bmp" in word or ".tiff" in word:
+                        source = word
+                        break
+            if source:
+                source = source.replace('"', '')
+                if os.path.exists(source):
+                    print(f"Found source file: {source}")
+                    return final_str, source
             print(f"Error parsing response: {e}")
+            print(f"Not found source file: {source}")
             return final_str, source
         return final_str, source
 
@@ -428,17 +470,7 @@ def create_gradio_interface():
                     label="Provider List",
                 )
                 api_key = gr.Textbox(label="Put your API key here")
-                # folder_input = gr.FileExplorer(
-                #     glob="**/",
-                #     label="Select a folder",
-                #     interactive=True,  # Show only directories
-                # )
                 folder_input = gr.Textbox(label="Select a Folder Path with images")
-                # custom_prompt = gr.Textbox(
-                #     label="Custom Prompt", placeholder="Describe this image in detail."
-                # )
-                # if custom_prompt.value:
-                #     chat_interface.set_custom_prompt(custom_prompt.value)
                 setup_button = gr.Button("Setup Interface")
                 setup_output = gr.Textbox(label="Setup", interactive=False)
 
