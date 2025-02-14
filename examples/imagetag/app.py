@@ -81,7 +81,7 @@ DEFAULT_REWRITE_PROMPT = Template("""
     You are a helpful assistant. Rewrite the user's query to include details from the item description.
     Item description: $item_description
     User query: $user_query
-    Please rewrite the query to include relevant details from the item description
+    Please rewrite the user query to include relevant details from the item description so that the query is more specific and can be answered with the item description. Only return the rewritten query with no other text.
 """)
 
 DEFAULT_SEARCH_PROMPT = Template("""
@@ -203,9 +203,9 @@ class LlamaChatInterface:
         self.initialize_agent()
 
 
-    def get_metadata_from_image(self, image_path, prompt):
-        assert prompt is not None, "Prompt is not provided"
-        assert len(prompt) > 0, "Prompt is empty"
+    def get_metadata_from_image(self, image_path, prompt=None):
+        if prompt is None:
+            prompt = DEFAULT_METADATA_PROMPT
         print(f"Prompt: {prompt}")
         message = {
         "role": "user",
@@ -315,28 +315,31 @@ class LlamaChatInterface:
             )
             print(f"Loaded {len(documents)} metadata from imagestore")
 
-    # def rewrite_query(self, original_query, metadata):
-    #     print(f"Rewriting query: {original_query}")
-    #     messages = [
-    #         {"role": "user", "content": DEFAULT_REWRITE_PROMPT.substitute(item_description=metadata,user_query=original_query)},
-    #     ]
+    def rewrite_query(self, original_query, metadata):
+        print(f"Rewriting query: {original_query}")
+        messages = [
+            
+            {"role": "user", "content": DEFAULT_REWRITE_PROMPT.substitute(item_description=metadata,user_query=original_query)},
+        ]
 
-    #     try:
-    #         response = self.client.inference.chat_completion(
-    #             model=MODEL_NAME, messages=messages
-    #         )
-    #         rewritten_query = response.completion_message.content
-    #         print(f"Rewritten query: {rewritten_query}")
-    #         return rewritten_query
-    #     except Exception as e:
-    #         print(f"Error rewriting query: {e}")
-    #         return original_query
+        try:
+            response = self.client.inference.chat_completion(
+                model_id=MODEL_NAME, messages=messages,stream=False,
+            )
+            rewritten_query = response.completion_message.content
+            print(f"Rewritten query: {rewritten_query}")
+            return rewritten_query
+        except Exception as e:
+            print(f"Error rewriting query: {e}")
+            return original_query
 
     def search_database(self, query, image_path=None):
         """Search the database for the given query."""
         print(image_path)
         if image_path:
         # Use DEFAULT_IMAGE_SEARCH_PROMPT if image_path is provided
+            metadata = self.get_metadata_from_image(image_path, DEFAULT_METADATA_PROMPT)
+            query = self.rewrite_query(query, metadata)
             message = {
             "role": "user",
             "content": [
