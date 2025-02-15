@@ -3,33 +3,50 @@ import subprocess
 import threading
 import time
 from multiprocessing import freeze_support
-
 import customtkinter as ctk
 from dotenv import load_dotenv
-
 from llama_stack.distribution.library_client import LlamaStackAsLibraryClient
 from llama_stack_client import LlamaStackClient
 from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.lib.agents.event_logger import EventLogger
 from llama_stack_client.types import Document
 from llama_stack_client.types.agent_create_params import AgentConfig
-
-# Set CustomTkinter to light mode to mimic OpenAI's website
+from tkinter import filedialog
+import traceback
 ctk.set_appearance_mode("light")
-ctk.set_default_color_theme("blue")  # Adjust color theme as needed
-
-# Load environment variables and set defaults
+ctk.set_default_color_theme("blue")
 load_dotenv()
-MODEL_NAME = os.getenv("MODEL_NAME", "meta-llama/Llama-3.2-1B-Instruct")
-DOCS_DIR = "/root/rag_data/output" if os.getenv("USE_GPU_FOR_DOC_INGESTION", False) else "/root/rag_data/"
 
+MODEL_NAME = os.getenv("MODEL_NAME", "meta-llama/Llama-3.2-1B-Instruct")
+DOCS_DIR = (
+    "/root/rag_data/output"
+    if os.getenv("USE_GPU_FOR_DOC_INGESTION", False)
+    else "/root/rag_data/"
+)
+
+import base64
+import mimetypes
+import random
+
+def data_url_from_file(file_path: str) -> str:
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"File not found: {file_path}")
+
+    with open(file_path, "rb") as file:
+        file_content = file.read()
+
+    base64_content = base64.b64encode(file_content).decode("utf-8")
+    mime_type, _ = mimetypes.guess_type(file_path)
+
+    data_url = f"data:{mime_type};base64,{base64_content}"
+    return data_url
 class LlamaChatInterface:
     def __init__(self):
         self.docs_dir = None
         self.client = None
         self.agent = None
         self.session_id = None
-        self.vector_db_id = "docqa_vector_db"
+        self.vector_db_id = "DocQA_Vector_DB"
 
     def initialize_system(self, provider_name="ollama"):
         self.client = LlamaStackAsLibraryClient(provider_name)
@@ -37,6 +54,7 @@ class LlamaChatInterface:
         del self.client.async_client.config.providers["scoring"]
         del self.client.async_client.config.providers["eval"]
         tool_groups = []
+        # only keep rag-runtime provider
         for provider in self.client.async_client.config.tool_groups:
             if provider.provider_id == "rag-runtime":
                 tool_groups.append(provider)
@@ -50,6 +68,7 @@ class LlamaChatInterface:
         providers = self.client.providers.list()
         vector_io_provider = [provider for provider in providers if provider.api == "vector_io"]
         provider_id = vector_io_provider[0].provider_id
+        print(f"Setting up vector_dbs with provider_id: {provider_id}")
         vector_dbs = self.client.vector_dbs.list()
         if vector_dbs and any(bank.identifier == self.vector_db_id for bank in vector_dbs):
             print(f"vector_dbs '{self.vector_db_id}' exists.")
@@ -59,6 +78,7 @@ class LlamaChatInterface:
                 vector_db_id=self.vector_db_id,
                 embedding_model="all-MiniLM-L6-v2",
                 embedding_dimension=384,
+                provider_id=provider_id,
             )
             self.load_documents()
             print("vector_dbs registered.")
@@ -73,6 +93,15 @@ class LlamaChatInterface:
                 document = Document(
                     document_id=filename,
                     content=content,
+                    mime_type="text/plain",
+                    metadata={"filename": filename},
+                )
+                documents.append(document)
+            elif filename.endswith((".pdf")):
+                file_path = os.path.join(self.docs_dir, filename)
+                document = Document(
+                    document_id=filename,
+                    content=data_url_from_file(file_path),
                     mime_type="text/plain",
                     metadata={"filename": filename},
                 )
@@ -93,15 +122,13 @@ class LlamaChatInterface:
                 "name": "builtin::rag",
                 "args": {"vector_db_ids": [self.vector_db_id]},
             }],
-            enable_session_persistence=True,
+            enable_session_persistence=False,
         )
         self.agent = Agent(self.client, agent_config)
-        self.session_id = self.agent.create_session("session-docqa")
+        self.session_id = self.agent.create_session("session-"+str(random.randint(0, 10000)))
 
-    def chat_stream(self, message: str, history):
+    def chat_stream(self, message: str):
         try:
-            history = history or []
-            history.append([message, ""])
             response = self.agent.create_turn(
                 messages=[{"role": "user", "content": message}],
                 session_id=self.session_id,
@@ -110,24 +137,25 @@ class LlamaChatInterface:
             print(f"Error: {e}")
             yield f"Error: {e}"
             return
+
         current_response = ""
         for log in EventLogger().log(response):
             if hasattr(log, "content"):
                 if "tool_execution>" not in str(log):
                     current_response += log.content
-                    history[-1][1] = current_response
-                    yield history.copy()
+                    yield current_response
+
 
 class App(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.title("LlamaStack Chat")
-        self.geometry("1000x700")
+        self.geometry("1100x800")
         self.configure(padx=20, pady=20)
-        
         self.chat_interface = LlamaChatInterface()
-        self.chat_history = []  # List of [user_message, assistant_message]
+        self.chat_history = []
         self.setup_completed = False
+        self.is_processing = False
 
         # Header Frame
         self.header_frame = ctk.CTkFrame(self, fg_color="transparent")
@@ -145,7 +173,7 @@ class App(ctk.CTk):
         self.tabview.add("Setup")
         self.tabview.add("Chat")
 
-        # ------------------- Setup Tab -------------------
+        # Setup Tab
         self.setup_tab = self.tabview.tab("Setup")
         self.setup_inner_frame = ctk.CTkFrame(self.setup_tab, corner_radius=10)
         self.setup_inner_frame.pack(pady=20, padx=20, fill="both", expand=True)
@@ -155,6 +183,9 @@ class App(ctk.CTk):
         self.folder_entry = ctk.CTkEntry(self.setup_inner_frame, width=500, font=("Inter", 14))
         self.folder_entry.pack(pady=8)
         self.folder_entry.insert(0, DOCS_DIR)
+        
+        self.browse_button = ctk.CTkButton(self.setup_inner_frame, text="Browse", font=("Inter", 14), command=self.choose_folder)
+        self.browse_button.pack(pady=8)
 
         self.model_label = ctk.CTkLabel(self.setup_inner_frame, text="Llama Model Name:", font=("Inter", 16))
         self.model_label.pack(pady=8)
@@ -167,7 +198,6 @@ class App(ctk.CTk):
                 "meta-llama/Llama-3.2-3B-Instruct",
                 "meta-llama/Llama-3.1-8B-Instruct",
                 "meta-llama/Llama-3.1-70B-Instruct",
-                "meta-llama/Llama-3.1-405B-Instruct",
             ]
         )
         self.model_combobox.pack(pady=8)
@@ -179,11 +209,7 @@ class App(ctk.CTk):
             self.setup_inner_frame,
             width=400,
             font=("Inter", 14),
-            values=[
-                "ollama",
-                "together",
-                "fireworks",
-            ]
+            values=["ollama", "together", "fireworks"]
         )
         self.provider_combobox.pack(pady=8)
         self.provider_combobox.set("ollama")
@@ -205,22 +231,20 @@ class App(ctk.CTk):
         self.setup_status_label = ctk.CTkLabel(self.setup_inner_frame, text="", font=("Inter", 14))
         self.setup_status_label.pack(pady=8)
 
-        # ------------------- Chat Tab -------------------
+        # Chat Tab
         self.chat_tab = self.tabview.tab("Chat")
         self.chat_inner_frame = ctk.CTkFrame(self.chat_tab, corner_radius=10)
         self.chat_inner_frame.pack(pady=20, padx=20, fill="both", expand=True)
 
-        # Chat display using CTkTextbox; we will access its internal _textbox for tags.
         self.chat_display = ctk.CTkTextbox(
             self.chat_inner_frame,
             width=920,
             height=400,
             font=("Inter", 14),
-            fg_color="white",      # Light background
+            fg_color="white",
             text_color="black"
         )
         self.chat_display.pack(pady=10)
-        # Configure tags on the underlying tkinter.Text widget:
         self.chat_display._textbox.tag_configure("user", foreground="#0066FF", font=("Inter", 14, "bold"))
         self.chat_display._textbox.tag_configure("assistant", foreground="#008800", font=("Inter", 14))
         self.chat_display.configure(state="disabled")
@@ -259,12 +283,17 @@ class App(ctk.CTk):
         )
         self.exit_button.pack(side="left", padx=10)
 
+    def choose_folder(self):
+        folder_selected = filedialog.askdirectory(title="Select Data Folder")
+        if folder_selected:
+            self.folder_entry.delete(0, "end")
+            self.folder_entry.insert(0, folder_selected)
+
     def setup_chat_interface(self):
         folder_path = self.folder_entry.get()
         model_name = self.model_combobox.get()
         provider_name = self.provider_combobox.get()
         api_key = self.api_entry.get()
-
         global MODEL_NAME, DOCS_DIR
         DOCS_DIR = folder_path
         MODEL_NAME = model_name
@@ -289,9 +318,13 @@ class App(ctk.CTk):
                 subprocess.Popen(
                     f"/usr/local/bin/ollama run {ollama_name} --keepalive=99h".split(),
                     stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL
                 )
                 time.sleep(3)
             except Exception as e:
+                print(e)
+                print(''.join(traceback.format_tb(e.__traceback__)))
+
                 self.setup_status_label.configure(text=f"Error: {e}", text_color="red")
                 return
         elif provider_name == "together":
@@ -305,51 +338,84 @@ class App(ctk.CTk):
             self.setup_status_label.configure(text=f"Model {model_name} started using provider {provider_name}.", text_color="green")
             self.setup_completed = True
         except Exception as e:
+            print(e)
+            print(''.join(traceback.format_tb(e.__traceback__)))
+
             self.setup_status_label.configure(text=f"Error during setup: {e}", text_color="red")
 
     def send_message(self):
+        if self.is_processing:
+            return
+            
         if not self.setup_completed:
             self.append_chat("System: Please complete setup first.\n")
             return
-
+            
         message = self.message_entry.get().strip()
         if not message:
             return
-        # Append the user message to chat history
-        self.chat_history.append([message, ""])
-        self.update_chat_display()
+            
+        self.is_processing = True
+        self.send_button.configure(state="disabled")
         self.message_entry.delete(0, "end")
+        
+        # Add user message to chat history and display
+        self.chat_history.append({"role": "user", "content": message})
+        self.update_chat_display()
+        
+        # Start processing in a separate thread
         threading.Thread(target=self.process_chat, args=(message,), daemon=True).start()
 
     def process_chat(self, message):
-        generator = self.chat_interface.chat_stream(message, self.chat_history)
         try:
-            for history in generator:
-                self.chat_history = history
-                self.after(0, self.update_chat_display)
-                time.sleep(0.1)
+            current_response = ""
+            for response in self.chat_interface.chat_stream(message):
+                current_response = response
+                # Update the assistant's response in chat history
+                if len(self.chat_history) % 2 == 1:  # If last message was from user
+                    self.chat_history.append({"role": "assistant", "content": current_response})
+                else:
+                    self.chat_history[-1]["content"] = current_response
+                
+                # Schedule a single update to the chat display
+                self.after(100, self.update_chat_display)
+                
         except Exception as e:
-            self.after(0, lambda error=e: self.append_chat(f"\nError: {error}\n"))
+            print(e)
+            print(''.join(traceback.format_tb(e.__traceback__)))
+            self.after(0, lambda: self.append_chat(f"\nError: {e}\n"))
+        finally:
+            self.after(0, self.reset_input_state)
+
+    def reset_input_state(self):
+        self.is_processing = False
+        self.send_button.configure(state="normal")
+        self.message_entry.focus()
 
     def update_chat_display(self):
-        # Enable the underlying textbox for text updates.
         self.chat_display.configure(state="normal")
         self.chat_display._textbox.delete("1.0", "end")
-        for entry in self.chat_history:
-            self.chat_display._textbox.insert("end", f"User: {entry[0]}\n", "user")
-            self.chat_display._textbox.insert("end", f"Assistant: {entry[1]}\n\n", "assistant")
+        
+        for message in self.chat_history:
+            if message["role"] == "user":
+                self.chat_display._textbox.insert("end", f"User: {message['content']}\n", "user")
+            else:
+                self.chat_display._textbox.insert("end", f"Assistant: {message['content']}\n\n", "assistant")
+        
         self.chat_display.configure(state="disabled")
         self.chat_display._textbox.see("end")
 
     def clear_chat(self):
         self.chat_history = []
         self.update_chat_display()
+        self.session_id = self.agent.create_session("session-"+str(random.randint(0, 10000)))
 
     def append_chat(self, text):
         self.chat_display.configure(state="normal")
         self.chat_display._textbox.insert("end", text)
         self.chat_display.configure(state="disabled")
         self.chat_display._textbox.see("end")
+
 
 if __name__ == "__main__":
     freeze_support()
