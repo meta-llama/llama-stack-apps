@@ -24,6 +24,7 @@ def main(host: str, port: int):
 
     client = LlamaStackClient(
         base_url=f"http://{host}:{port}",
+        provider_data={"tavily_search_api_key": os.getenv("TAVILY_SEARCH_API_KEY")},
     )
 
     available_shields = [shield.identifier for shield in client.shields.list()]
