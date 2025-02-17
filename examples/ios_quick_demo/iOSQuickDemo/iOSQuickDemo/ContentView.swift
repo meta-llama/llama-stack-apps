@@ -17,13 +17,16 @@ struct ContentView: View {
 
   var body: some View {
     VStack(spacing: 20) {
-      Text(message.isEmpty ? "Click Inference to see Llama's answer" : message)
+      ScrollView {
+        Text(message.isEmpty ? "Click Inference to see Llama's answer" : message)
           .font(.headline)
           .foregroundColor(.blue)
           .padding()
           .frame(maxWidth: .infinity)
           .background(Color.gray.opacity(0.2))
           .cornerRadius(8)
+      }
+      .frame(maxHeight: 500)
 
       VStack(alignment: .leading, spacing: 10) {
         Text("Question")
@@ -57,6 +60,8 @@ struct ContentView: View {
       return
     }
 
+    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    
     message = ""
 
     let workItem = DispatchWorkItem {
@@ -74,22 +79,22 @@ struct ContentView: View {
           for await chunk in try await inference.chatCompletion(
             request:
               Components.Schemas.ChatCompletionRequest(
+                model_id: "meta-llama/Llama-3.1-8B-Instruct",
                 messages: [
                   .user(
                     Components.Schemas.UserMessage(
+                      role: .user,
                       content:
                           .InterleavedContentItem(
                               .text(Components.Schemas.TextContentItem(
-                                  text: userInput,
-                                  _type: .text
+                                  _type: .text,
+                                  text: userInput
                               )
                           )
-                      ),
-                      role: .user
+                      )
                   )
                 )
               ],
-              model_id: "meta-llama/Llama-3.1-8B-Instruct",
               stream: true)
           ) {
             switch (chunk.event.delta) {
