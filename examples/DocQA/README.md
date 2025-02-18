@@ -20,9 +20,12 @@ Register an account in [TogetherAI](https://www.together.ai/) or [FireworksAI](h
 ### How to run DocQA app:
 
 1. To get the dmg file, you can just download raw file from [here](https://github.com/meta-llama/llama-stack-apps/blob/docqav2/examples/DocQA/DocQA.dmg) or use git clone by first following instructions [here](https://docs.github.com/en/repositories/working-with-files/managing-large-files/installing-git-large-file-storage) to enable git lfs and do another `git pull`.
+
 2. Open the `DocQA.dmg` in the folder and move `DocQA.app` to Application folder to have it installed.
+(If `macOS can't verify that the app is free of malware` warning pops up and stops you from installing the app, please check [this documentation](https://support.apple.com/en-us/102445) on how to bypass this warning and install)
 
 3. Double click `DocQA.app` in the Application folder.
+
 4. Choose your data folder then select the models and providers. Put your API key if you choose to use TogetherAI or FireworksAI, as shown below:
 
 ![Setup](./assets/DocQA_setup.png)
