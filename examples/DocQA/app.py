@@ -158,7 +158,9 @@ class LlamaChatInterface:
         for log in EventLogger().log(response):
             if hasattr(log, "content"):
                 print(f"Debug Response: {log.content}")
-                if "tool_execution>" not in str(log):
+                if "tool_execution>" in str(log):
+                    current_response += "<tool-begin> " + log.content + " <tool-end>"
+                else:
                     current_response += log.content
                     yield current_response
 
@@ -280,10 +282,13 @@ class App(ctk.CTk):
         )
         self.chat_display.pack(pady=10)
         self.chat_display._textbox.tag_configure(
-            "user", foreground="#0066FF", font=("Inter", 14, "bold")
+            "user", foreground="#26d679", font=("Inter", 14, "bold")
         )
         self.chat_display._textbox.tag_configure(
-            "assistant", foreground="#008800", font=("Inter", 14)
+            "assistant", foreground="#6c6d7b", font=("Inter", 14, "bold")
+        )
+        self.chat_display._textbox.tag_configure(
+            "tool", foreground="#f44f4f", font=("Inter", 14, "italic")
         )
         self.chat_display.configure(state="disabled")
 
@@ -456,9 +461,33 @@ class App(ctk.CTk):
                     "end", f"User: {message['content']}\n", "user"
                 )
             else:
-                self.chat_display._textbox.insert(
-                    "end", f"Assistant: {message['content']}\n\n", "assistant"
-                )
+                # Check if the message contains a tool execution
+                tool_execution = False
+                words = message["content"].split()
+                cur_message = ""
+                for word in words:
+                    if word.startswith("<tool-begin>"):
+                        tool_execution = True
+                    elif word.startswith("<tool-end>"):
+                        self.chat_display._textbox.insert(
+                            "end",
+                            f"Tool Execution: {cur_message}\n",
+                            "tool",
+                        )
+                        cur_message = ""
+                        tool_execution = False
+                    else:
+                        cur_message += " " + word
+                if cur_message and tool_execution:
+                    self.chat_display._textbox.insert(
+                        "end",
+                        f"Tool Execution: {cur_message}\n",
+                        "tool",
+                    )
+                else:
+                    self.chat_display._textbox.insert(
+                        "end", f"Assistant: {cur_message}\n\n", "assistant"
+                    )
 
         self.chat_display.configure(state="disabled")
         self.chat_display._textbox.see("end")
