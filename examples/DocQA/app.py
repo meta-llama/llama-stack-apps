@@ -4,8 +4,7 @@ import threading
 import time
 import traceback
 from multiprocessing import freeze_support
-from tkinter import filedialog
-from typing import List
+from tkinter import filedialog, StringVar
 
 import customtkinter as ctk
 from dotenv import load_dotenv
@@ -15,20 +14,12 @@ from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.lib.agents.event_logger import EventLogger
 from llama_stack_client.types import Document
 from llama_stack_client.types.agent_create_params import AgentConfig
-
-try:
-    from tkinterdnd2 import DND_FILES, TkinterDnD
-except ImportError:
-    print(
-        "Please install tkinterdnd2 via 'pip install tkinterdnd2' to enable drag-and-drop functionality."
-    )
-    DND_FILES = None
 ctk.set_appearance_mode("light")
 ctk.set_default_color_theme("blue")
 load_dotenv()
 
-MODEL_NAME = os.getenv("MODEL_NAME", "meta-llama/Llama-3.2-1B-Instruct")
-DOCS_DIR = "./example_data"
+MODEL_NAME = ""
+DOCS_DIR = ""
 
 import base64
 import mimetypes
@@ -69,6 +60,7 @@ class LlamaChatInterface:
             if provider.provider_id == "rag-runtime":
                 tool_groups.append(provider)
         vector_io = []
+        # only keep faiss provider
         for provider in self.client.async_client.config.providers["vector_io"]:
             if provider.provider_id == "faiss":
                 vector_io.append(provider)
@@ -165,7 +157,7 @@ class LlamaChatInterface:
         current_response = ""
         for log in EventLogger().log(response):
             if hasattr(log, "content"):
-                print(f"Debug Response: {log.content}")
+                #print(f"Debug Response: {log.content}")
                 if "tool_execution>" in str(log):
                     current_response += "<tool-begin> " + log.content + " <tool-end>"
                 else:
@@ -173,110 +165,7 @@ class LlamaChatInterface:
                     yield current_response
 
 
-# Add this new class after LlamaChatInterface class
-class DatabaseTab:
-    def __init__(self, parent_tab):
-        self.parent = parent_tab
-        self.files: List[str] = []
-        self.create_widgets()
-
-    def create_widgets(self):
-        # Left frame for file list
-        self.file_list_frame = ctk.CTkFrame(self.parent, width=300)
-        self.file_list_frame.pack(side="left", fill="y", padx=10, pady=10)
-
-        self.file_list_label = ctk.CTkLabel(
-            self.file_list_frame, text="Files in Database", font=("Inter", 16, "bold")
-        )
-        self.file_list_label.pack(pady=10)
-
-        self.file_list = ctk.CTkTextbox(
-            self.file_list_frame, width=280, height=500, font=("Inter", 12)
-        )
-        self.file_list.configure(state="disabled")
-        self.file_list.pack(padx=5, pady=5)
-
-        # Right frame for drop area
-        self.drop_frame = ctk.CTkFrame(self.parent, width=480)
-        self.drop_frame.pack(side="right", fill="both", expand=True, padx=10, pady=10)
-
-        self.drop_label = ctk.CTkLabel(
-            self.drop_frame, text="Drag and Drop Files Here", font=("Inter", 18, "bold")
-        )
-        self.drop_label.pack(pady=20)
-
-        # Register drop zone if DND is available
-        if DND_FILES:
-            self.drop_frame.drop_target_register(DND_FILES)
-            self.drop_frame.dnd_bind("<<Drop>>", self.on_drop)
-
-        self.browse_button = ctk.CTkButton(
-            self.drop_frame,
-            text="Browse Files",
-            font=("Inter", 14),
-            command=self.browse_files,
-        )
-        self.browse_button.pack(pady=20)
-
-    def on_drop(self, event):
-        files = self.parent.tk.splitlist(event.data)
-        for file_path in files:
-            self.process_file(file_path)
-
-    def browse_files(self):
-        files = filedialog.askopenfilenames(
-            title="Select Files",
-            filetypes=(
-                ("Text files", "*.txt"),
-                ("PDF files", "*.pdf"),
-                ("Markdown files", "*.md"),
-                ("All files", "*.*"),
-            ),
-        )
-        for file_path in files:
-            self.process_file(file_path)
-
-    def process_file(self, file_path: str):
-        if file_path not in self.files:
-            self.files.append(file_path)
-            self.update_file_list()
-            # Here you would call the RAG database update function
-            self.update_rag_database(file_path)
-
-    def update_file_list(self):
-        self.file_list.configure(state="normal")
-        self.file_list.delete("1.0", "end")
-        for file in self.files:
-            self.file_list.insert("end", f"{os.path.basename(file)}\n")
-        self.file_list.configure(state="disabled")
-
-    def update_rag_database(self, file_path: str):
-        # This would integrate with the existing LlamaChatInterface
-        try:
-            document = Document(
-                document_id=os.path.basename(file_path),
-                content=(
-                    data_url_from_file(file_path)
-                    if file_path.endswith(".pdf")
-                    else open(file_path, "r", encoding="utf-8").read()
-                ),
-                mime_type=(
-                    "application/pdf" if file_path.endswith(".pdf") else "text/plain"
-                ),
-                metadata={"filename": os.path.basename(file_path)},
-            )
-
-            # Use the existing tool runtime to insert the document
-            App.chat_interface.client.tool_runtime.rag_tool.insert(
-                documents=[document],
-                vector_db_id=App.chat_interface.vector_db_id,
-                chunk_size_in_tokens=256,
-            )
-        except Exception as e:
-            print(f"Error processing file {file_path}: {e}")
-
-
-class App(TkinterDnD.Tk if DND_FILES else ctk.CTk):
+class App(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.title("LlamaStack Chat")
@@ -286,7 +175,6 @@ class App(TkinterDnD.Tk if DND_FILES else ctk.CTk):
         self.chat_history = []
         self.setup_completed = False
         self.is_processing = False
-        self.file_paths = []
 
         # Header Frame
         self.header_frame = ctk.CTkFrame(self, fg_color="transparent")
@@ -301,7 +189,6 @@ class App(TkinterDnD.Tk if DND_FILES else ctk.CTk):
         self.tabview.pack(pady=10)
         self.tabview.add("Setup")
         self.tabview.add("Chat")
-        self.tabview.add("Database")  # Add this line after other tab additions
 
         # Setup Tab
         self.setup_tab = self.tabview.tab("Setup")
@@ -326,37 +213,36 @@ class App(TkinterDnD.Tk if DND_FILES else ctk.CTk):
         )
         self.browse_button.pack(pady=8)
 
-        self.model_label = ctk.CTkLabel(
-            self.setup_inner_frame, text="Llama Model Name:", font=("Inter", 16)
-        )
-        self.model_label.pack(pady=8)
-        self.model_combobox = ctk.CTkComboBox(
-            self.setup_inner_frame,
-            width=400,
-            font=("Inter", 14),
-            values=[
-                "meta-llama/Llama-3.2-1B-Instruct",
-                "meta-llama/Llama-3.2-3B-Instruct",
-                "meta-llama/Llama-3.1-8B-Instruct",
-                "meta-llama/Llama-3.1-70B-Instruct",
-            ],
-        )
-        self.model_combobox.pack(pady=8)
-        self.model_combobox.set("meta-llama/Llama-3.2-1B-Instruct")
-
         self.provider_label = ctk.CTkLabel(
             self.setup_inner_frame, text="Provider List:", font=("Inter", 16)
         )
         self.provider_label.pack(pady=8)
         self.provider_combobox = ctk.CTkComboBox(
             self.setup_inner_frame,
+            command=self.provider_modified,
             width=400,
             font=("Inter", 14),
             values=["ollama", "together", "fireworks"],
         )
-        self.provider_combobox.pack(pady=8)
-        self.provider_combobox.set("ollama")
-
+        self.provider_combobox.pack(pady=8)  
+        #self.provider_combobox.set("ollama")
+        self.model_label = ctk.CTkLabel(
+            self.setup_inner_frame, text="Llama Model Name:", font=("Inter", 16)
+        )
+        values=[
+                    "meta-llama/Llama-3.2-1B-Instruct",
+                    "meta-llama/Llama-3.2-3B-Instruct",
+                    "meta-llama/Llama-3.1-8B-Instruct",
+            ]
+        self.model_label.pack(pady=8)
+        self.model_combobox = ctk.CTkComboBox(
+            self.setup_inner_frame,
+            width=400,
+            font=("Inter", 14),
+            values=values
+        )
+        self.model_combobox.pack(pady=8)
+        #self.model_combobox.set("meta-llama/Llama-3.2-1B-Instruct")
         self.api_label = ctk.CTkLabel(
             self.setup_inner_frame, text="API Key (if needed):", font=("Inter", 16)
         )
@@ -440,10 +326,23 @@ class App(TkinterDnD.Tk if DND_FILES else ctk.CTk):
             corner_radius=8,
         )
         self.exit_button.pack(side="left", padx=10)
-        # Database Tab
-        self.database_tab = self.tabview.tab("Database")
-        self.database_manager = DatabaseTab(self.database_tab)
-
+    def provider_modified(self, choice):
+        print("Provider modified:", self.provider_combobox.get())
+        provider = self.provider_combobox.get()
+        if provider == "ollama":
+            values=[
+                    "meta-llama/Llama-3.2-1B-Instruct",
+                    "meta-llama/Llama-3.2-3B-Instruct",
+                    "meta-llama/Llama-3.1-8B-Instruct",
+            ]
+        else:
+            values=[
+                    "meta-llama/Llama-3.1-8B-Instruct",
+                    "meta-llama/Llama-3.3-70B-Instruct",
+                    "meta-llama/Llama-3.1-405B-Instruct-FP8"
+            ]
+        self.model_combobox.set(values[0])
+        self.model_combobox.configure(values=values)
     def choose_folder(self):
         folder_selected = filedialog.askdirectory(title="Select Data Folder")
         if folder_selected:
@@ -454,6 +353,7 @@ class App(TkinterDnD.Tk if DND_FILES else ctk.CTk):
         folder_path = self.folder_entry.get()
         model_name = self.model_combobox.get()
         provider_name = self.provider_combobox.get()
+        print('Start the config with',provider_name, model_name, folder_path)
         api_key = self.api_entry.get()
         global MODEL_NAME, DOCS_DIR
         DOCS_DIR = folder_path
