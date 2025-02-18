@@ -5,6 +5,7 @@ import time
 import traceback
 from multiprocessing import freeze_support
 from tkinter import filedialog
+from typing import List
 
 import customtkinter as ctk
 from dotenv import load_dotenv
@@ -15,6 +16,13 @@ from llama_stack_client.lib.agents.event_logger import EventLogger
 from llama_stack_client.types import Document
 from llama_stack_client.types.agent_create_params import AgentConfig
 
+try:
+    from tkinterdnd2 import DND_FILES, TkinterDnD
+except ImportError:
+    print(
+        "Please install tkinterdnd2 via 'pip install tkinterdnd2' to enable drag-and-drop functionality."
+    )
+    DND_FILES = None
 ctk.set_appearance_mode("light")
 ctk.set_default_color_theme("blue")
 load_dotenv()
@@ -165,12 +173,6 @@ class LlamaChatInterface:
                     yield current_response
 
 
-from typing import List
-
-# Add these imports at the top of the file
-from tkinterdnd2 import DND_FILES, TkinterDnD
-
-
 # Add this new class after LlamaChatInterface class
 class DatabaseTab:
     def __init__(self, parent_tab):
@@ -274,7 +276,7 @@ class DatabaseTab:
             print(f"Error processing file {file_path}: {e}")
 
 
-class App(ctk.CTk):
+class App(TkinterDnD.Tk if DND_FILES else ctk.CTk):
     def __init__(self):
         super().__init__()
         self.title("LlamaStack Chat")
@@ -284,6 +286,7 @@ class App(ctk.CTk):
         self.chat_history = []
         self.setup_completed = False
         self.is_processing = False
+        self.file_paths = []
 
         # Header Frame
         self.header_frame = ctk.CTkFrame(self, fg_color="transparent")
