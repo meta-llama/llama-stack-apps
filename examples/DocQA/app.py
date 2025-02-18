@@ -165,6 +165,115 @@ class LlamaChatInterface:
                     yield current_response
 
 
+from typing import List
+
+# Add these imports at the top of the file
+from tkinterdnd2 import DND_FILES, TkinterDnD
+
+
+# Add this new class after LlamaChatInterface class
+class DatabaseTab:
+    def __init__(self, parent_tab):
+        self.parent = parent_tab
+        self.files: List[str] = []
+        self.create_widgets()
+
+    def create_widgets(self):
+        # Left frame for file list
+        self.file_list_frame = ctk.CTkFrame(self.parent, width=300)
+        self.file_list_frame.pack(side="left", fill="y", padx=10, pady=10)
+
+        self.file_list_label = ctk.CTkLabel(
+            self.file_list_frame, text="Files in Database", font=("Inter", 16, "bold")
+        )
+        self.file_list_label.pack(pady=10)
+
+        self.file_list = ctk.CTkTextbox(
+            self.file_list_frame, width=280, height=500, font=("Inter", 12)
+        )
+        self.file_list.configure(state="disabled")
+        self.file_list.pack(padx=5, pady=5)
+
+        # Right frame for drop area
+        self.drop_frame = ctk.CTkFrame(self.parent, width=480)
+        self.drop_frame.pack(side="right", fill="both", expand=True, padx=10, pady=10)
+
+        self.drop_label = ctk.CTkLabel(
+            self.drop_frame, text="Drag and Drop Files Here", font=("Inter", 18, "bold")
+        )
+        self.drop_label.pack(pady=20)
+
+        # Register drop zone if DND is available
+        if DND_FILES:
+            self.drop_frame.drop_target_register(DND_FILES)
+            self.drop_frame.dnd_bind("<<Drop>>", self.on_drop)
+
+        self.browse_button = ctk.CTkButton(
+            self.drop_frame,
+            text="Browse Files",
+            font=("Inter", 14),
+            command=self.browse_files,
+        )
+        self.browse_button.pack(pady=20)
+
+    def on_drop(self, event):
+        files = self.parent.tk.splitlist(event.data)
+        for file_path in files:
+            self.process_file(file_path)
+
+    def browse_files(self):
+        files = filedialog.askopenfilenames(
+            title="Select Files",
+            filetypes=(
+                ("Text files", "*.txt"),
+                ("PDF files", "*.pdf"),
+                ("Markdown files", "*.md"),
+                ("All files", "*.*"),
+            ),
+        )
+        for file_path in files:
+            self.process_file(file_path)
+
+    def process_file(self, file_path: str):
+        if file_path not in self.files:
+            self.files.append(file_path)
+            self.update_file_list()
+            # Here you would call the RAG database update function
+            self.update_rag_database(file_path)
+
+    def update_file_list(self):
+        self.file_list.configure(state="normal")
+        self.file_list.delete("1.0", "end")
+        for file in self.files:
+            self.file_list.insert("end", f"{os.path.basename(file)}\n")
+        self.file_list.configure(state="disabled")
+
+    def update_rag_database(self, file_path: str):
+        # This would integrate with the existing LlamaChatInterface
+        try:
+            document = Document(
+                document_id=os.path.basename(file_path),
+                content=(
+                    data_url_from_file(file_path)
+                    if file_path.endswith(".pdf")
+                    else open(file_path, "r", encoding="utf-8").read()
+                ),
+                mime_type=(
+                    "application/pdf" if file_path.endswith(".pdf") else "text/plain"
+                ),
+                metadata={"filename": os.path.basename(file_path)},
+            )
+
+            # Use the existing tool runtime to insert the document
+            App.chat_interface.client.tool_runtime.rag_tool.insert(
+                documents=[document],
+                vector_db_id=App.chat_interface.vector_db_id,
+                chunk_size_in_tokens=256,
+            )
+        except Exception as e:
+            print(f"Error processing file {file_path}: {e}")
+
+
 class App(ctk.CTk):
     def __init__(self):
         super().__init__()
@@ -189,6 +298,7 @@ class App(ctk.CTk):
         self.tabview.pack(pady=10)
         self.tabview.add("Setup")
         self.tabview.add("Chat")
+        self.tabview.add("Database")  # Add this line after other tab additions
 
         # Setup Tab
         self.setup_tab = self.tabview.tab("Setup")
@@ -327,6 +437,9 @@ class App(ctk.CTk):
             corner_radius=8,
         )
         self.exit_button.pack(side="left", padx=10)
+        # Database Tab
+        self.database_tab = self.tabview.tab("Database")
+        self.database_manager = DatabaseTab(self.database_tab)
 
     def choose_folder(self):
         folder_selected = filedialog.askdirectory(title="Select Data Folder")
