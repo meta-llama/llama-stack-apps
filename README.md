@@ -76,11 +76,11 @@ We have built sample demo scripts for interacting with the Stack server.
 
 With the server running, you may run to test out an simple Agent
 
-This example will require the API key from Brave Search. You need to set it to the environment variable `BRAVE_SEARCH_API_KEY`
+This example will require the API key from Tavily Search. You need to set it to the environment variable `TAVILY_SEARCH_API_KEY`
 
 Linux/Mac
 ```
-export BRAVE_SEARCH_API_KEY=[KEY]
+export TAVILY_SEARCH_API_KEY=[KEY]
 ```
 To run:
 ```
