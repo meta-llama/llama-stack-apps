@@ -14,7 +14,7 @@ from typing import Any, Dict, List, Optional
 from dotenv import load_dotenv
 
 from llama_stack_client import LlamaStackClient
-from llama_stack_client.types import Attachment, Document, QueryConfig, UserMessage
+from llama_stack_client.types import Document, QueryConfig, UserMessage
 from llama_stack_client.types.agent_create_params import AgentConfig
 
 from termcolor import colored
@@ -205,7 +205,7 @@ class AgentStore:
 
         return "memory_bank"
 
-    async def chat(self, agent_choice, message, attachments) -> str:
+    async def chat(self, agent_choice, message, documents) -> str:
         assert (
             agent_choice in self.agents
         ), f"Agent of type {agent_choice} not initialized"
@@ -221,12 +221,12 @@ class AgentStore:
             self.first_turn[agent_id] = False
 
         session_id = self.sessions[agent_choice]
-        atts = []
-        if attachments is not None:
-            for attachment in attachments:
-                atts.append(
-                    Attachment(
-                        content=data_url_from_file(attachment),
+        docs = []
+        if documents is not None:
+            for document in documents:
+                docs.append(
+                    Document(
+                        content=data_url_from_file(document),
                         # hardcoded for now since mimetype is inferred from data_url
                         mime_type="text/plain",
                     )
@@ -236,7 +236,7 @@ class AgentStore:
             agent_id=self.agents[agent_choice],
             session_id=session_id,
             messages=messages,
-            attachments=atts,
+            documents=docs,
             stream=True,
         )
         for chunk in generator:
