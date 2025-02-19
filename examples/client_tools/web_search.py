@@ -8,9 +8,9 @@ import json
 from typing import Dict
 
 import requests
-from llama_stack_client.types.tool_def_param import Parameter
 
-from .single_message import SingleMessageClientTool
+from llama_stack_client.lib.agents.client_tool import ClientTool
+from llama_stack_client.types.tool_def_param import Parameter
 
 
 class BraveSearch:
@@ -126,7 +126,7 @@ class BraveSearch:
         return {"query": query, "top_k": clean_response}
 
 
-class WebSearchTool(SingleMessageClientTool):
+class WebSearchTool(ClientTool):
     """Tool to search web for queries"""
 
     def __init__(self, api_key: str):

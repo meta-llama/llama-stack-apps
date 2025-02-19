@@ -24,6 +24,7 @@ def main(host: str, port: int):
 
     client = LlamaStackClient(
         base_url=f"http://{host}:{port}",
+        provider_data={"tavily_search_api_key": os.getenv("TAVILY_SEARCH_API_KEY")},
     )
 
     available_shields = [shield.identifier for shield in client.shields.list()]
@@ -33,7 +34,9 @@ def main(host: str, port: int):
         print(f"Available shields found: {available_shields}")
 
     available_models = [
-        model.identifier for model in client.models.list() if model.model_type == "llm"
+        model.identifier
+        for model in client.models.list()
+        if model.model_type == "llm" and "405B" not in model.identifier
     ]
     if not available_models:
         print(colored("No available models. Exiting.", "red"))

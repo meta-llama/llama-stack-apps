@@ -5,16 +5,14 @@
 # the root directory of this source tree.
 import asyncio
 import os
-
 import fire
+from examples.client_tools.ticker_data import get_ticker_data
+from examples.client_tools.web_search import WebSearchTool
+from examples.client_tools.calculator import calculator
 from llama_stack_client import LlamaStackClient
 from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.lib.agents.event_logger import EventLogger
 from llama_stack_client.types.agent_create_params import AgentConfig
-
-from examples.client_tools.ticker_data import TickerDataTool
-from examples.client_tools.web_search import WebSearchTool
-
 
 async def run_main(host: str, port: int, disable_safety: bool = False):
     client = LlamaStackClient(
@@ -38,13 +36,15 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
     else:
         selected_model = supported_models[0]
         print(f"Using model: {selected_model}")
+
     client_tools = [
-        TickerDataTool(),
+        get_ticker_data,
         WebSearchTool(os.getenv("BRAVE_SEARCH_API_KEY")),
+        calculator,
     ]
     agent_config = AgentConfig(
         model=selected_model,
-        instructions="You are a helpful assistant",
+        instructions="You are a helpful assistant. Use the tools you have access to for providing relevant answers.",
         sampling_params={
             "strategy": {"type": "top_p", "temperature": 1.0, "top_p": 0.9},
         },
@@ -68,6 +68,7 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
     user_prompts = [
         "What was the closing price of Google stock (ticker symbol GOOG) for 2023 ?",
         "Who was the 42nd president of the United States?",
+        "What is 40+30?",
     ]
     for prompt in user_prompts:
         response = agent.create_turn(

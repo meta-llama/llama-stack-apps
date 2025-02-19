@@ -29,7 +29,7 @@ To get started with Llama Stack Apps, you'll need to:
 3. Start a Llama Stack server
 4. Connect your client agentic app to Llama Stack server
 
-Once started, you can then just point your agentic app to the URL for this server (e.g. `http://localhost:5000`).
+Once started, you can then just point your agentic app to the URL for this server (e.g. `http://localhost:8321`).
 
 ### 1. Install Prerequisites
 
@@ -63,11 +63,11 @@ Serving POST /agentic_system/step/get
 Serving POST /agentic_system/turn/get
 Serving GET /telemetry/get_trace
 Serving POST /telemetry/log_event
-Listening on :::5000
+Listening on :::8321
 INFO:     Started server process [587053]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
-INFO:     Uvicorn running on http://[::]:5000 (Press CTRL+C to quit)
+INFO:     Uvicorn running on http://[::]:8321 (Press CTRL+C to quit)
 ```
 
 ### 3. Test agents demo script
@@ -76,15 +76,15 @@ We have built sample demo scripts for interacting with the Stack server.
 
 With the server running, you may run to test out an simple Agent
 
-This example will require the API key from Brave Search. You need to set it to the environment variable `BRAVE_SEARCH_API_KEY`
+This example will require the API key from Tavily Search. You need to set it to the environment variable `TAVILY_SEARCH_API_KEY`
 
 Linux/Mac
 ```
-export BRAVE_SEARCH_API_KEY=[KEY]
+export TAVILY_SEARCH_API_KEY=[KEY]
 ```
 To run:
 ```
-python -m examples.agents.hello localhost 5000
+python -m examples.agents.hello localhost 8321
 ```
 
 You will see outputs of the form --
@@ -112,7 +112,7 @@ We have built sample scripts, notebooks and a UI chat interface ( using [Gradio]
 
 Start an app (local) and interact with it by running the following command:
 ```bash
-PYTHONPATH=. python examples/agent_store/app.py localhost 5000
+PYTHONPATH=. python examples/agent_store/app.py localhost 8321
 ```
 This will start a mesop app and you can go to `localhost:7860` to play with the chat interface.
 
@@ -133,7 +133,7 @@ cd <path-to-llama-stack-apps-repo>
 conda activate $ENV
 llama stack run <name> # If not already started
 
-python -m examples.agents.rag_with_vector_db localhost 5000
+python -m examples.agents.rag_with_vector_db localhost 8321
 ```
 
 You should see outputs to stdout of the form --
