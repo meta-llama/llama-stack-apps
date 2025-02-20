@@ -24,7 +24,9 @@ struct ContentView: View {
   @State private var showAlert = false
   @State private var alertMessage = ""
   
-  private let agent = RemoteAgents(url: URL(string: "http://127.0.0.1:5000")!)
+  // replace the URL string if you build and run your own Llama Stack distro as shown in https://github.com/meta-llama/llama-stack-apps/tree/main/examples/ios_quick_demo#optional-build-and-run-own-llama-stack-distro
+  private let agent = RemoteAgents(url: URL(string: "https://llama-stack.together.ai")!)
+  
   @State var agentId = ""
   @State var agenticSystemSessionId = ""
 
@@ -112,8 +114,8 @@ struct ContentView: View {
         let request = Components.Schemas.CreateAgentTurnRequest(
         messages: [
           .UserMessage(Components.Schemas.UserMessage(
-            content: .case1("Summarize the following conversation in 1-2 sentences:\n\n \(prompt)"),
-            role: .user
+            role: .user,
+            content: .case1("Summarize the following conversation in 1-2 sentences:\n\n \(prompt)")
           ))
         ],
         stream: true
@@ -158,8 +160,8 @@ struct ContentView: View {
     let request = Components.Schemas.CreateAgentTurnRequest(
       messages: [
         .UserMessage(Components.Schemas.UserMessage(
-          content: .case1("List out any action items based on this text:\n\n \(prompt)"),
-          role: .user
+          role: .user,
+          content: .case1("List out any action items based on this text:\n\n \(prompt)")
         ))
       ],
       stream: true
@@ -199,8 +201,8 @@ struct ContentView: View {
     let request = Components.Schemas.CreateAgentTurnRequest(
       messages: [
         .UserMessage(Components.Schemas.UserMessage(
-          content: .case1("Call functions as needed to handle any actions in the following text:\n\n" + prompt),
-          role: .user
+          role: .user,
+          content: .case1("Call functions as needed to handle any actions in the following text:\n\n" + prompt)
         ))
       ],
       stream: true
@@ -283,11 +285,10 @@ struct ContentView: View {
             request: Components.Schemas.CreateAgentRequest(
               agent_config: Components.Schemas.AgentConfig(
                 client_tools: [ CustomTools.getCreateEventToolForAgent() ],
-                enable_session_persistence: false,
-                instructions: "You are a helpful assistant",
                 max_infer_iters: 1,
-                model: "meta-llama/Llama-3.1-8B-Instruct"
-                //toolgroups: ["builtin::websearch"],
+                model: "meta-llama/Llama-3.1-8B-Instruct",
+                instructions: "You are a helpful assistant",
+                enable_session_persistence: false
               )
             )
           )

@@ -19,18 +19,18 @@ You need to set up a remote Llama Stack distributions to run this demo. Assuming
 ```
 conda create -n llama-stack python=3.10
 conda activate llama-stack
-pip install --no-cache llama-stack==0.1.0 llama-models==0.1.0 llama-stack-client==0.1.0
+pip install --no-cache llama-stack==0.1.3 llama-models==0.1.3 llama-stack-client==0.1.3
 ```
 
 Then, either:
 ```
-PYPI_VERSION=0.1.0 llama stack build --template fireworks --image-type conda
+PYPI_VERSION=0.1.3 llama stack build --template fireworks --image-type conda
 export FIREWORKS_API_KEY="<your_fireworks_api_key>"
 llama stack run fireworks
 ```
 or
 ```
-PYPI_VERSION=0.1.0 llama stack build --template together --image-type conda
+PYPI_VERSION=0.1.3 llama stack build --template together --image-type conda
 export TOGETHER_API_KEY="<your_together_api_key>"
 llama stack run together
 ```
@@ -56,12 +56,12 @@ Also, to allow the app to add event to the Calendar app, the `Info.plist` needs 
 4. Build the run the app on an iOS simulator or your device. First you may try a simple request:
 
 ```
-Create a calendar event with a meeting title as Llama Stack update for 2-3pm February 3, 2025.
+Create a calendar event with a meeting title as Llama Stack update for 2-3pm February 19, 2025.
 ```
 
 Then, a detailed meeting note:
 ```
-Date: February 4, 2025
+Date: February 20, 2025
 Time: 10:00 AM - 11:00 AM
 Location: Zoom
 Attendees:
@@ -85,7 +85,7 @@ Sarah: Good. Jane, any updates from operations?
 Jane: Yes, logistics are sorted, and we’ve confirmed the warehouse availability. The only pending item is training customer support for the new product.
 Sarah: Let’s coordinate with the training team to expedite that. Anything else?
 Mike: Quick note—can we get feedback on the beta version by Friday?
-Sarah: Yes, let’s make that a priority. Anything else? No? Great. Thanks, everyone. Let’s meet again next week from 4-5pm on February 11, 2025 to review progress.
+Sarah: Yes, let’s make that a priority. Anything else? No? Great. Thanks, everyone. Let’s meet again next week from 4-5pm on February 27, 2025 to review progress.
 ```
 
 You'll see a summary, action items and a Calendar event created, made possible by Llama Stack's custom tool calling API support and Llama 3.1's tool calling capability.
