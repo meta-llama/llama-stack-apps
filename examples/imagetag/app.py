@@ -67,15 +67,67 @@ CUSTOM_CSS = """
 from pydantic import BaseModel, Field
 
 from string import Template 
-DEFAULT_METADATA_PROMPT = f"""
-    Given the image of a product, provide the following information in English:
-    - Product Title
-    - Product Description
-    - At least 7 Product Tags for SEO purposes
-    - At most 3 primary Colors of the Product, excluding the background colors.
-    - Do not include any information that is not relevant to the product or is not visible in the image.
-    - MUST return the information in JSON format, with the keys "title", "description", "tags", "primary_colors".
-    """
+DEFAULT_METADATA_PROMPT = """
+As an AI image analyzer, please extract and provide detailed product metadata from the given image in the following structured format:
+
+    Please analyze the image and provide a JSON response with these specifications:
+    Write the following Gender, Category, Gender, Product_Type, Product_Color,Product_Description in JSON FORMAT, PLEASE DO NOT FORGET JSON,
+    Guidelines:
+    1. Only start your response with a dictionary like the example below, nothing else, I NEED TO PARSE IT LATER, SO DONT ADD ANYTHING ELSE-IT WILL BREAK MY CODE
+    Remember-DO NOT SAY ANYTHING ELSE ABOUT WHAT IS GOING ON, just the opening brace is the first thing in your response nothing else ok?
+    2. REMEMBER TO CLOSE THE DICTIONARY WITH '}'BRACE, IT GOES AFTER THE END OF DESCRIPTION-YOU ALWAYS FORGET IT, THIS WILL CAUSE A LOT OF ISSUES
+    1. Base analysis ONLY on visible elements in the image
+    2. Maintain objectivity and accuracy in categorization
+    3. Use standard color names for consistency
+    4. Ensure description is clear and concise
+    5. Follow exact JSON structure
+    6. Exclude any assumptions about non-visible features
+    7. Use proper capitalization and formatting
+    6. Return your answer in dictionary format, see the example below
+    Example response format:
+    {
+    "product_description": "Lightweight mesh running shoes with cushioned sole",
+    "category": "Footwear",
+    "product_type": "Running Shoes",
+    "product_color": "Navy Blue",
+    "gender": "Women"
+    }
+    Example: ALWAYS RETURN ANSWERS IN THE DICTIONARY FORMAT BELOW OK?
+    {
+    "product_description": < Concise product description based on visible attributes, must be less than 20 words>  
+    "category": < Main product category (e.g., Apparel, Footwear, Accessories)>, 
+    "product_type": < Specific product type within category (e.g., T-shirt, Sneakers, Backpack)>, 
+    "product_color": < Main color of the product, just one color>,
+    "gender": < Target demographic for the product, must be one of ['Men' 'Women' 'Boys' 'Girls' 'Unisex']>,
+    } """
+# DEFAULT_METADATA_PROMPT = """
+#     As an AI image analyzer, please extract and provide detailed product metadata from the given image in the following structured format:
+
+#     Please analyze the image and provide a JSON response with these specifications:
+#     - Gender (Target demographic for the product, must be one of ['Men' 'Women' 'Boys' 'Girls' 'Unisex'])
+#     - Category (Main product category (e.g., Apparel, Footwear, Accessories))
+#     - Product_Type (Specific product type within category (e.g., T-shirt, Sneakers, Backpack)")
+#     - Product_Color (main color of the product, just one color)
+#     - Product_Description (Concise product description based on visible attributes, must be less than 10 words)
+#     Guidelines:
+#     1. Base analysis ONLY on visible elements in the image
+#     2. Maintain objectivity and accuracy in categorization
+#     3. Use standard color names for consistency
+#     4. Ensure description is clear and concise
+#     5. Follow exact JSON structure
+#     6. Exclude any assumptions about non-visible features
+#     7. Use proper capitalization and formatting
+
+#     Example response format:
+#     {
+#     "gender": "Women",
+#     "category": "Footwear",
+#     "product_type": "Running Shoes",
+#     "colors": "Navy Blue",
+#     "description": "Lightweight mesh running shoes with cushioned sole"
+#     }
+#     Do not include any other text or explanations. You must start the response with the JSON structure: { "gender": 
+#     """
 
 # DEFAULT_REWRITE_PROMPT = Template("""
 #     You are a helpful assistant. Rewrite the user's query to include details from the item description.
@@ -104,17 +156,7 @@ DEFAULT_IMAGE_SEARCH_PROMPT = Template("""
     return your answer in json format, with the key "answer" and "source". 
     the "source" MUST only be the absolute file path of the document from the context that relates to the answer so that we can open it.
 """)
-class MetaData(BaseModel):
-    """Product description saved as metadata"""
 
-    title: str = Field(..., title="Product Title", description="Title of the product")
-    description: str = Field(
-        ..., title="Product Description", description="Description of the product"
-    )
-    tags: list = Field([], title="Product Tags", description="Tags for SEO")
-    primary_colors: list = Field(
-        [], title="Primary Colors", description="Primary colors of the product"
-    )
 
 
 def encode_image_to_data(image_path):
@@ -133,7 +175,17 @@ def find_images_set(search_directory):
         str(file) for file in image_path.rglob("*.*") if file.suffix in image_extensions
     ]
 
-
+def get_description_from_metadata(metadata):
+    try:
+        meta_json = json.loads(metadata)
+        product_description = meta_json.get("product_description")
+        product_color = meta_json.get("product_color")
+        product_type = meta_json.get("product_type")
+        product_category = meta_json.get("category")
+        product_gender = meta_json.get("gender")
+        return f"{product_description}, {product_color},{product_type}, {product_category}, {product_gender}"
+    except Exception:
+        return metadata
 def data_url_from_image(file_path):
     mime_type, _ = mimetypes.guess_type(file_path)
     print('getting mime type', mime_type, file_path)
@@ -147,7 +199,23 @@ def data_url_from_image(file_path):
     data_url = f"data:{mime_type};base64,{encoded_string}"
     return data_url
 
-
+def extract_json(text):
+    try:
+        pattern = r'\{(?:[^{}]|(?R))*\}'
+        matches = re.findall(r'\{(?:[^{}]|(?:\{[^{}]*\}))*\}', text)
+        if not matches:
+            return text
+        # Validate each match is valid JSON
+        valid_jsons = []
+        for match in matches:
+            try:
+                json.loads(match)
+                valid_jsons.append(match)
+            except json.JSONDecodeError:
+                continue
+        return valid_jsons[0]
+    except Exception:
+        return None
 class LlamaChatInterface:
     def __init__(self):
         self.client = None
@@ -240,6 +308,7 @@ class LlamaChatInterface:
             stream=False
         )
         metadata = response.completion_message.content.lower().strip()
+        metadata = extract_json(metadata)
         return metadata
 
     def process_folder(self, folder_path):
@@ -281,7 +350,6 @@ class LlamaChatInterface:
             json.dump(self.imagestore, file)
         print(f"Processed Selected folder: {folder_path}")
 
-
     def set_custom_prompt(self, custom_prompt):
         self.custom_prompt = custom_prompt
 
@@ -307,9 +375,10 @@ class LlamaChatInterface:
         assert self.imagestore is not None, "Imagestore is not initialized"
         documents = []
         for filename, content in self.imagestore.items():
+            description = get_description_from_metadata(content)
             document = Document(
                 document_id=filename,
-                content=content,
+                content=description,
                 mime_type="text/plain",
                 metadata={"filename": filename},
             )
