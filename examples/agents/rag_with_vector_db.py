@@ -11,6 +11,7 @@ from llama_stack_client.lib.agents.event_logger import EventLogger
 from llama_stack_client.types import Document
 from llama_stack_client.types.agent_create_params import AgentConfig
 from termcolor import colored
+from uuid import uuid4
 
 
 def run_main(host: str, port: int, disable_safety: bool = False):
@@ -49,7 +50,7 @@ def run_main(host: str, port: int, disable_safety: bool = False):
         print(f"Available shields found: {available_shields}")
 
     # Create a vector database instead of memory bank
-    vector_db_id = "test_vector_db"
+    vector_db_id = f"test_vector_db_{uuid4()}"
     client.vector_dbs.register(
         vector_db_id=vector_db_id,
         embedding_model="all-MiniLM-L6-v2",
