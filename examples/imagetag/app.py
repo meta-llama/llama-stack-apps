@@ -144,6 +144,7 @@ DEFAULT_REWRITE_PROMPT = Template("""
 DEFAULT_SEARCH_PROMPT = Template("""
     You are a helpful assistant. Given the user's query and provided documents, you can answer the user's question.
     User query: $user_query
+    item description: $item_description
     Read the provided documents context carefully and select the most relevant document as the source. You must remember the file path of your source. Return your answer in json format, with the key "answer" and "source_file". 
     The "source_file" MUST only be the absolute file path of the document that you selected as the source
 """)
