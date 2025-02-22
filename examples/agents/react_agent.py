@@ -52,7 +52,12 @@ def main():
     session_id = agent.create_session(f"ttest-session-{uuid.uuid4().hex}")
 
     response = agent.create_turn(
-        messages=[{"role": "user", "content": "What's the current time in new york?"}],
+        messages=[
+            {
+                "role": "user",
+                "content": "Whats the best place in new york for a pizza slice at 2am ?",
+            }
+        ],
         session_id=session_id,
         stream=True,
     )
@@ -60,7 +65,12 @@ def main():
         log.print()
 
     response2 = agent.create_turn(
-        messages=[{"role": "user", "content": "What is torchtune?"}],
+        messages=[
+            {
+                "role": "user",
+                "content": "What are the popular llms supported in torchtune?",
+            }
+        ],
         session_id=session_id,
         stream=True,
     )
