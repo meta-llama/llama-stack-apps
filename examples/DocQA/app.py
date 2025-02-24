@@ -18,8 +18,6 @@ ctk.set_appearance_mode("light")
 ctk.set_default_color_theme("blue")
 load_dotenv()
 
-MODEL_NAME = ""
-DOCS_DIR = ""
 
 import base64
 import mimetypes
@@ -39,6 +37,16 @@ def data_url_from_file(file_path: str) -> str:
     data_url = f"data:{mime_type};base64,{base64_content}"
     return data_url
 
+def find_file_set(search_directory):
+    # Common image file extensions
+    file_extensions = {".txt", ".pdf", ".md", ".rst"}
+    # Add uppercase versions of extensions
+    file_extensions.update({ext.upper() for ext in file_extensions})
+
+    file_path = Path(search_directory)
+    return [
+        str(file) for file in file_path.rglob("*.*") if file.suffix in file_extensions
+    ]
 
 class LlamaChatInterface:
     def __init__(self):
@@ -47,6 +55,7 @@ class LlamaChatInterface:
         self.agent = None
         self.session_id = None
         self.vector_db_id = "DocQA_Vector_DB"
+        self.model_name = "meta-llama/Llama-3.2-1B-Instruct"
 
     def initialize_system(self, provider_name="ollama"):
         self.client = LlamaStackAsLibraryClient(provider_name)
@@ -68,7 +77,6 @@ class LlamaChatInterface:
         self.client.async_client.config.providers["vector_io"] = vector_io
         # print(self.client.async_client.config)
         self.client.initialize()
-        self.docs_dir = DOCS_DIR
         self.setup_vector_dbs()
         self.initialize_agent()
 
@@ -97,8 +105,10 @@ class LlamaChatInterface:
 
     def load_documents(self):
         documents = []
-        for filename in os.listdir(self.docs_dir):
-            if filename.endswith((".txt", ".md")):
+        # Load all files in the docs_dir
+        file_set = find_file_set(self.docs_dir)
+        for filename in file_set:
+            if filename.endswith((".txt", ".md",".rst")):
                 file_path = os.path.join(self.docs_dir, filename)
                 with open(file_path, "r", encoding="utf-8") as file:
                     content = file.read()
@@ -128,7 +138,7 @@ class LlamaChatInterface:
 
     def initialize_agent(self):
         agent_config = AgentConfig(
-            model=MODEL_NAME,
+            model=self.model_name,
             instructions="You are a helpful assistant that can answer questions based on provided documents. Return your answer short and concise, less than 50 words.",
             toolgroups=[
                 {
@@ -159,7 +169,7 @@ class LlamaChatInterface:
             if hasattr(log, "content"):
                 #print(f"Debug Response: {log.content}")
                 if "tool_execution>" in str(log):
-                    current_response += "<tool-begin> " + log.content + " <tool-end>"
+                    current_response += " <tool-begin> " + log.content + " <tool-end> "
                 else:
                     current_response += log.content
                     yield current_response
@@ -203,7 +213,7 @@ class App(ctk.CTk):
             self.setup_inner_frame, width=500, font=("Inter", 14)
         )
         self.folder_entry.pack(pady=8)
-        self.folder_entry.insert(0, DOCS_DIR)
+        #self.folder_entry.insert(0, DOCS_DIR)
 
         self.browse_button = ctk.CTkButton(
             self.setup_inner_frame,
@@ -350,21 +360,18 @@ class App(ctk.CTk):
             self.folder_entry.insert(0, folder_selected)
 
     def setup_chat_interface(self):
-        folder_path = self.folder_entry.get()
-        model_name = self.model_combobox.get()
+        self.docs_dir = self.folder_entry.get()
+        self.model_name = self.model_combobox.get()
         provider_name = self.provider_combobox.get()
-        print('Start the config with',provider_name, model_name, folder_path)
+        print('Start the config with',provider_name, self.model_name, self.docs_dir)
         api_key = self.api_entry.get()
-        global MODEL_NAME, DOCS_DIR
-        DOCS_DIR = folder_path
-        MODEL_NAME = model_name
         os.environ["INFERENCE_MODEL"] = (
-            model_name  # Set inference model environment variable
+            self.model_name  # Set inference model environment variable
         )
 
-        if not os.path.exists(folder_path):
+        if not os.path.exists(self.docs_dir):
             self.setup_status_label.configure(
-                text=f"Folder {folder_path} does not exist.", text_color="red"
+                text=f"Folder {self.docs_dir} does not exist.", text_color="red"
             )
             return
 
@@ -374,15 +381,20 @@ class App(ctk.CTk):
                 "meta-llama/Llama-3.2-3B-Instruct": "llama3.2:3b-instruct-fp16",
                 "meta-llama/Llama-3.1-8B-Instruct": "llama3.1:8b-instruct-fp16",
             }
-            if model_name not in ollama_name_dict:
+            if self.model_name not in ollama_name_dict:
                 self.setup_status_label.configure(
-                    text=f"Model {model_name} is not supported. Use 1B, 3B, or 8B.",
+                    text=f"Model {self.model_name} is not supported. Use 1B, 3B, or 8B.",
                     text_color="red",
                 )
                 return
-            ollama_name = ollama_name_dict[model_name]
+            ollama_name = ollama_name_dict[self.model_name]
             try:
                 print("Starting Ollama server...")
+                subprocess.Popen(
+                    f"/usr/local/bin/ollama pull {ollama_name}".split(),
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
                 subprocess.Popen(
                     f"/usr/local/bin/ollama run {ollama_name} --keepalive=99h".split(),
                     stdout=subprocess.DEVNULL,
@@ -404,7 +416,7 @@ class App(ctk.CTk):
             print("Initializing LlamaStack client...")
             self.chat_interface.initialize_system(provider_name)
             self.setup_status_label.configure(
-                text=f"Model {model_name} started using provider {provider_name}.",
+                text=f"Model {self.model_name} started using provider {provider_name}.",
                 text_color="green",
             )
             self.setup_completed = True
