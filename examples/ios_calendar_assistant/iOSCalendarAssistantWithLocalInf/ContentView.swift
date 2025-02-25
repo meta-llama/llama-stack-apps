@@ -134,8 +134,8 @@ struct ContentView: View {
       let request = Components.Schemas.CreateAgentTurnRequest(
         messages: [
           .UserMessage(Components.Schemas.UserMessage(
-            content: .case1("Summarize the following conversation in 1-2 sentences:\n\n \(prompt)"),
-            role: .user
+            role: .user,
+            content: .case1("Summarize the following conversation in 1-2 sentences:\n\n \(prompt)")
           ))
         ],
         stream: true
@@ -179,8 +179,8 @@ struct ContentView: View {
     let request = Components.Schemas.CreateAgentTurnRequest(
       messages: [
         .UserMessage(Components.Schemas.UserMessage(
-          content: .case1("List out any action items based on this text:\n\n \(prompt)"),
-          role: .user
+          role: .user,
+          content: .case1("List out any action items based on this text:\n\n \(prompt)")
         ))
       ],
       stream: true
@@ -219,8 +219,8 @@ struct ContentView: View {
     let request = Components.Schemas.CreateAgentTurnRequest(
       messages: [
         .UserMessage(Components.Schemas.UserMessage(
-          content: .case1("Call functions as needed to handle any actions in the following text:\n\n" + prompt),
-          role: .user
+          role: .user,
+          content: .case1("Call functions as needed to handle any actions in the following text:\n\n" + prompt)
         ))
       ],
       stream: true
@@ -308,10 +308,10 @@ struct ContentView: View {
             request: Components.Schemas.CreateAgentRequest(
               agent_config: Components.Schemas.AgentConfig(
                 client_tools: [ CustomTools.getCreateEventToolForAgent() ],
-                enable_session_persistence: false,
-                instructions: "You are a helpful assistant",
                 max_infer_iters: 1,
-                model: "meta-llama/Llama-3.1-8B-Instruct"
+                model: "meta-llama/Llama-3.1-8B-Instruct",
+                instructions: "You are a helpful assistant",
+                enable_session_persistence: false
               )
             )
           )
