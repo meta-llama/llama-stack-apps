@@ -1,12 +1,12 @@
 # Llama Stack Android Demo App
 
-[![Maven Central Version](https://img.shields.io/badge/maven%20central-v0.1.2-8A2BE2)](https://central.sonatype.com/artifact/com.llama.llamastack/llama-stack-client-kotlin/0.1.2)
+[![Maven Central Version](https://img.shields.io/badge/maven%20central-v0.1.4.1-8A2BE2)](https://central.sonatype.com/artifact/com.llama.llamastack/llama-stack-client-kotlin/0.1.4.1)
 
 
 
-## [Latest Update - 02/13/2025]
+## [Latest Update - 02/25/2025]
 
-We have updated the demo app to be compatible with Llama Stack Kotlin SDK [v0.1.2](https://github.com/meta-llama/llama-stack-client-kotlin/releases/tag/v0.1.23) and Llama Stack version [v0.1.2](https://github.com/meta-llama/llama-stack/releases/tag/v0.1.2). 
+We have updated the demo app to be compatible with Llama Stack Kotlin SDK [v0.1.4.1](https://github.com/meta-llama/llama-stack-client-kotlin/releases/tag/v0.1.4.1) and Llama Stack version [v0.1.4.1](https://github.com/meta-llama/llama-stack/releases/tag/v0.1.4.1). 
 
 ### Remote
 * Agent workflow for tool calling inference - Now the demo app default to use agent in the chat. You can switch between simple inference workflow or agent workflow by setting `boolean useAgent`. We also added `CustomTools.kt` as an example to add client customized tools. When selecting `Remote` mode, the app will setup a new remote agent and create a new session for running turns. NOTE: In Agent workflow, the chat history including images are stored per Agent session on the server side. There is no need to look up for chat history in the app unless you are running image reasoning.
