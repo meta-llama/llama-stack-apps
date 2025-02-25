@@ -5,6 +5,7 @@ import time
 import traceback
 from multiprocessing import freeze_support
 from tkinter import filedialog, StringVar
+from pathlib import Path
 
 import customtkinter as ctk
 from dotenv import load_dotenv
@@ -55,9 +56,13 @@ class LlamaChatInterface:
         self.agent = None
         self.session_id = None
         self.vector_db_id = "DocQA_Vector_DB"
-        self.model_name = "meta-llama/Llama-3.2-1B-Instruct"
-
+        self.model_name = None
+    def set_docs_dir(self, docs_dir):
+        self.docs_dir = docs_dir
+    def set_model_name(self, model_name):
+        self.model_name = model_name
     def initialize_system(self, provider_name="ollama"):
+        print(f"Initializing system with provider_name: {provider_name}, docs_dir: {self.docs_dir}")
         self.client = LlamaStackAsLibraryClient(provider_name)
         # Remove scoring and eval providers.
         # print(self.client.async_client.config)
@@ -68,13 +73,8 @@ class LlamaChatInterface:
         for provider in self.client.async_client.config.tool_groups:
             if provider.provider_id == "rag-runtime":
                 tool_groups.append(provider)
-        vector_io = []
-        # only keep faiss provider
-        for provider in self.client.async_client.config.providers["vector_io"]:
-            if provider.provider_id == "faiss":
-                vector_io.append(provider)
+        
         self.client.async_client.config.tool_groups = tool_groups
-        self.client.async_client.config.providers["vector_io"] = vector_io
         # print(self.client.async_client.config)
         self.client.initialize()
         self.setup_vector_dbs()
@@ -106,6 +106,7 @@ class LlamaChatInterface:
     def load_documents(self):
         documents = []
         # Load all files in the docs_dir
+        print(f"Loading documents from {self.docs_dir}")
         file_set = find_file_set(self.docs_dir)
         for filename in file_set:
             if filename.endswith((".txt", ".md",".rst")):
@@ -360,36 +361,48 @@ class App(ctk.CTk):
             self.folder_entry.insert(0, folder_selected)
 
     def setup_chat_interface(self):
-        self.docs_dir = self.folder_entry.get()
-        self.model_name = self.model_combobox.get()
+        docs_dir = self.folder_entry.get()
+        model_name = self.model_combobox.get()
+        self.chat_interface.set_model_name(model_name)
         provider_name = self.provider_combobox.get()
-        print('Start the config with',provider_name, self.model_name, self.docs_dir)
+        print('Start the config with',provider_name, model_name, docs_dir)
         api_key = self.api_entry.get()
         os.environ["INFERENCE_MODEL"] = (
-            self.model_name  # Set inference model environment variable
+            model_name  # Set inference model environment variable
         )
 
-        if not os.path.exists(self.docs_dir):
+        if not os.path.exists(docs_dir):
             self.setup_status_label.configure(
-                text=f"Folder {self.docs_dir} does not exist.", text_color="red"
+                text=f"Folder {docs_dir} does not exist.", text_color="red"
             )
             return
-
+        # setting up the chat interface
+        self.chat_interface.set_docs_dir(docs_dir)
         if provider_name == "ollama":
             ollama_name_dict = {
                 "meta-llama/Llama-3.2-1B-Instruct": "llama3.2:1b-instruct-fp16",
                 "meta-llama/Llama-3.2-3B-Instruct": "llama3.2:3b-instruct-fp16",
                 "meta-llama/Llama-3.1-8B-Instruct": "llama3.1:8b-instruct-fp16",
             }
-            if self.model_name not in ollama_name_dict:
+            if model_name not in ollama_name_dict:
                 self.setup_status_label.configure(
-                    text=f"Model {self.model_name} is not supported. Use 1B, 3B, or 8B.",
+                    text=f"Model {model_name} is not supported. Use 1B, 3B, or 8B.",
                     text_color="red",
                 )
                 return
-            ollama_name = ollama_name_dict[self.model_name]
+            ollama_name = ollama_name_dict[model_name]
             try:
                 print("Starting Ollama server...")
+                subprocess.Popen(
+                    f"/usr/local/bin/ollama pull all-minilm:latest".split(),
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+                subprocess.Popen(
+                    f"/usr/local/bin/ollama run all-minilm:latest".split(),
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
                 subprocess.Popen(
                     f"/usr/local/bin/ollama pull {ollama_name}".split(),
                     stdout=subprocess.DEVNULL,
@@ -411,12 +424,11 @@ class App(ctk.CTk):
             os.environ["TOGETHER_API_KEY"] = api_key
         elif provider_name == "fireworks":
             os.environ["FIREWORKS_API_KEY"] = api_key
-
         try:
             print("Initializing LlamaStack client...")
             self.chat_interface.initialize_system(provider_name)
             self.setup_status_label.configure(
-                text=f"Model {self.model_name} started using provider {provider_name}.",
+                text=f"Model {model_name} started using provider {provider_name}.",
                 text_color="green",
             )
             self.setup_completed = True
