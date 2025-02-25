@@ -147,7 +147,8 @@ struct ContentView: View {
           break
         case .turn_complete(_):
           break
-
+        case .turn_awaiting_input(_):
+          break
         }
 
       }
@@ -191,6 +192,8 @@ struct ContentView: View {
       case .turn_start(_):
         break
       case .turn_complete(_):
+        break
+      case .turn_awaiting_input(_):
         break
       }
     }
@@ -255,6 +258,8 @@ struct ContentView: View {
       case .turn_start(_):
         break
       case .turn_complete(_):
+        break
+      case .turn_awaiting_input(_):
         break
       }
     }
