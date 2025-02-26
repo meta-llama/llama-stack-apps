@@ -35,9 +35,9 @@ def torchtune(query: str = "torchtune"):
     return dummy_response
 
 
-def main():
+def main(host: str, port: int):
     client = LlamaStackClient(
-        base_url="http://localhost:8321",
+        base_url=f"http://{host}:{port}",
     )
 
     model = "meta-llama/Llama-3.1-8B-Instruct"
