@@ -103,12 +103,12 @@ cd llama-stack-client-swift
 git submodule update --init --recursive
 ```
 
-1. Open `llama-stack-apps/examples/ios_calendar_assistant/iOSCalendarAssistantWithLocalInf.xcodeproj` in Xcode.
+2. Open `llama-stack-apps/examples/ios_calendar_assistant/iOSCalendarAssistantWithLocalInf.xcodeproj` in Xcode.
 
-2. In the `iOSCalendarAssistantWithLocalInf` project panel, remove `LocalInferenceImpl.xcodeproj` and drag and drop `LocalInferenceImpl.xcodeproj` from `llama-stack-client-swift/local_inference` into the project - in the "Choose options for adding these files" dialog, select "Reference files in place" for Action.
+3. In the `iOSCalendarAssistantWithLocalInf` project panel, remove `LocalInferenceImpl.xcodeproj` and drag and drop `LocalInferenceImpl.xcodeproj` from `llama-stack-client-swift/local_inference` into the project - in the "Choose options for adding these files" dialog, select "Reference files in place" for Action.
 
-3. Prepare a Llama model file named `llama3_2_spinquant_oct23.pte` by following the steps [here](https://github.com/pytorch/executorch/blob/main/examples/models/llama/README.md#step-2-prepare-model) - you'll also download the `tokenizer.model` file there. Then remove the two missing files from the the project `iOSCalendarAssistantWithLocalInf`, and drag and drop both files to the project, also selecting "Reference files in place" for Action.
+4. Prepare a Llama model file named `llama3_2_spinquant_oct23.pte` by following the steps [here](https://github.com/pytorch/executorch/blob/main/examples/models/llama/README.md#step-2-prepare-model) - you'll also download the `tokenizer.model` file there. Then remove the two missing files from the the project `iOSCalendarAssistantWithLocalInf`, and drag and drop both files to the project, also selecting "Reference files in place" for Action.
 
-4. Build and run the app on an iOS simulator or a real device.
+5. Build and run the app on an iOS simulator or a real device.
 
 **Note** If you see a build error about cmake not found, you can install cmake by following the instruction [here](https://github.com/pytorch/executorch/blob/main/examples/demo-apps/apple_ios/LLaMA/docs/delegates/xnnpack_README.md#1-install-cmake).
