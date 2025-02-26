@@ -4,7 +4,7 @@ opentelemetry-exporter-otlp-proto-http
 datasets
 pypdf
 chardet
-llama-stack==0.1.4
+llama-stack==0.1.3
 faiss-cpu
 ollama
 sentence_transformers

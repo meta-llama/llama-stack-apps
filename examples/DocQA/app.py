@@ -73,8 +73,13 @@ class LlamaChatInterface:
         for provider in self.client.async_client.config.tool_groups:
             if provider.provider_id == "rag-runtime":
                 tool_groups.append(provider)
-        
+        vector_io = []
+        # only keep faiss provider
+        for provider in self.client.async_client.config.providers["vector_io"]:
+            if provider.provider_id == "faiss":
+                vector_io.append(provider)
         self.client.async_client.config.tool_groups = tool_groups
+        self.client.async_client.config.providers["vector_io"] = vector_io
         # print(self.client.async_client.config)
         self.client.initialize()
         self.setup_vector_dbs()

@@ -4,19 +4,15 @@ from PyInstaller.utils.hooks import collect_submodules
 
 hidden_imports=[]
 hidden_imports+= collect_submodules('llama_stack')
-hidden_imports+= collect_submodules('llama_stack.providers.registry')
-hidden_imports+= collect_submodules('llama_stack.providers.registry.*')
 hidden_imports+= collect_submodules('llama_stack_client')
 hidden_imports+= collect_submodules('llama_models')
 
 datas = []
-datas += collect_data_files('safehttpx')
 datas += collect_data_files('llama_stack')
 datas += collect_data_files('llama_stack',subdir='providers',include_py_files=True)
 datas += collect_data_files('llama_models')
 datas += collect_data_files('llama_stack_client')
 datas += collect_data_files('blobfile')
-datas += collect_data_files('sqlite-vec')
 datas += [('/opt/homebrew/anaconda3/envs/blank/lib/python3.10/site-packages/customtkinter', 'customtkinter/')]
 
 
@@ -41,7 +37,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='MacQA',
+    name='DocQA',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -60,9 +56,9 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='MacQA',
+    name='DocQA',
 )
 app = BUNDLE(coll,
-             name='MacQA.app',
-             icon='MacQA.icns',
+             name='DocQA.app',
+             icon='DocQA.icns',
              bundle_identifier=None)
