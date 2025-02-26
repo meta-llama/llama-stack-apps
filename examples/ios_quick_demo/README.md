@@ -13,18 +13,18 @@ You need to set up a remote Llama Stack distributions to run this demo. Assuming
 ```
 conda create -n llama-stack python=3.10
 conda activate llama-stack
-pip install --no-cache llama-stack==0.1.3 llama-models==0.1.3 llama-stack-client==0.1.3
+pip install --no-cache llama-stack==0.1.4 llama-models==0.1.4 llama-stack-client==0.1.4
 ```
 
 Then, either:
 ```
-PYPI_VERSION=0.1.3 llama stack build --template fireworks --image-type conda
+PYPI_VERSION=0.1.4 llama stack build --template fireworks --image-type conda
 export FIREWORKS_API_KEY="<your_fireworks_api_key>"
 llama stack run fireworks
 ```
 or
 ```
-PYPI_VERSION=0.1.3 llama stack build --template together --image-type conda
+PYPI_VERSION=0.1.4 llama stack build --template together --image-type conda
 export TOGETHER_API_KEY="<your_together_api_key>"
 llama stack run together
 ```
@@ -35,12 +35,9 @@ The default port is 5000 for `llama stack run` and you can specify a different p
 
 1. Double click `iOSQuickDemo/iOSQuickDemo.xcodeproj` to open it in Xcode.
 
-2. Under the iOSQuickDemo project - Package Dependencies, click the + sign, then add `https://github.com/meta-llama/llama-stack-client-swift` at the top right and 0.1.3 in the Dependency Rule, then click Add Package.
+2. Under the iOSQuickDemo project - Package Dependencies, click the + sign, then add `https://github.com/meta-llama/llama-stack-client-swift` at the top right, set "Dependency Rule" to "Up to Next Major Version" and 0.1.4, then click Add Package.
 
-![](quick1.png)
-![](quick2.png)
-
-3. (Optional) Replace the `RemoteInference` url string in `ContentView.swift` below with the host IP and port of the remote Llama Stack distro in Build and Run Own Llama Stack Distro:
+3. (Optional) Replace the `RemoteInference` url string in `ContentView.swift` below with the host IP and port of the remote Llama Stack distro (e.g. http://localhost:5000) in Build and Run Own Llama Stack Distro:
 
 ```
 let inference = RemoteInference(url: URL(string: "https://llama-stack.together.ai")!)
