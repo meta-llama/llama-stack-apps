@@ -35,10 +35,7 @@ The default port is 5000 for `llama stack run` and you can specify a different p
 
 1. Double click `iOSQuickDemo/iOSQuickDemo.xcodeproj` to open it in Xcode.
 
-2. Under the iOSQuickDemo project - Package Dependencies, click the + sign, then add `https://github.com/meta-llama/llama-stack-client-swift` at the top right and 0.1.3 in the Dependency Rule, then click Add Package.
-
-![](quick1.png)
-![](quick2.png)
+2. Under the iOSQuickDemo project - Package Dependencies, click the + sign, then add `https://github.com/meta-llama/llama-stack-client-swift` at the top right, set "Dependency Rule" to "Up to Next Major Version" and 0.1.4, then click Add Package.
 
 3. (Optional) Replace the `RemoteInference` url string in `ContentView.swift` below with the host IP and port of the remote Llama Stack distro in Build and Run Own Llama Stack Distro:
 
