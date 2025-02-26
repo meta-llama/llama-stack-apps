@@ -6,7 +6,7 @@
 
 ## [Latest Update - 02/25/2025]
 
-We have updated the demo app to be compatible with Llama Stack Kotlin SDK [v0.1.4.1](https://github.com/meta-llama/llama-stack-client-kotlin/releases/tag/v0.1.4.1) and Llama Stack version [v0.1.4.1](https://github.com/meta-llama/llama-stack/releases/tag/v0.1.4.1). 
+We have updated the demo app to be compatible with Llama Stack Kotlin SDK [v0.1.4.1](https://github.com/meta-llama/llama-stack-client-kotlin/releases/tag/v0.1.4.1) and Llama Stack version [v0.1.4](https://github.com/meta-llama/llama-stack/releases/tag/v0.1.4). 
 
 ### Remote
 * Agent workflow for tool calling inference - Now the demo app default to use agent in the chat. You can switch between simple inference workflow or agent workflow by setting `boolean useAgent`. We also added `CustomTools.kt` as an example to add client customized tools. When selecting `Remote` mode, the app will setup a new remote agent and create a new session for running turns. NOTE: In Agent workflow, the chat history including images are stored per Agent session on the server side. There is no need to look up for chat history in the app unless you are running image reasoning.
@@ -129,7 +129,7 @@ For on-device, here is the list of models we support currently and growing:
 ## Building and Run the Demo App
 1. Clone the repo
 2. Open the project in Android Studio
-3. Add .aar file for local inference: Use and download the `download-prebuilt-et-lib.sh` script file from the [llama-stack-client-kotlin-client-local](https://github.com/meta-llama/llama-stack-client-kotlin/blob/release/0.0.58/llama-stack-client-kotlin-client-local/download-prebuilt-et-lib.sh) directory to your local machine. Place the script in the top level of your Android app where the `app/` directory resides.
+3. Add .aar file for local inference: Use and download the `download-prebuilt-et-lib.sh` script file from the [llama-stack-client-kotlin-client-local](https://github.com/meta-llama/llama-stack-client-kotlin/blob/release/0.1.4.1/llama-stack-client-kotlin-client-local/download-prebuilt-et-lib.sh) directory to your local machine. Place the script in the top level of your Android app where the `app/` directory resides.
 
 ```
 # downloads the executorch.aar and places it in the newly created directory app/libs
