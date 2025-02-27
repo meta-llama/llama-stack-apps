@@ -6,7 +6,6 @@ import android.database.Cursor
 import android.net.Uri
 import android.provider.MediaStore
 import android.util.Base64
-import android.util.Log
 import com.llama.llamastack.client.LlamaStackClientClient
 import com.llama.llamastack.client.okhttp.LlamaStackClientOkHttpClient
 import com.llama.llamastack.core.JsonValue
@@ -39,6 +38,7 @@ interface InferenceStreamingCallback {
 
 class ExampleLlamaStackRemoteInference(remoteURL: String) {
 
+    var DEFAULT_TOP_P_VALUE = 0.7
     var client: LlamaStackClientClient? = null
 
     init {
@@ -335,7 +335,10 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
                 .samplingParams(
                     SamplingParams.builder()
                         .strategy(
-                            SamplingParams.Strategy.ofGreedySampling()
+                            SamplingParams.Strategy.TopPSamplingStrategy.builder()
+                                .temperature(temperature)
+                                .topP(DEFAULT_TOP_P_VALUE)
+                                .build()
                         )
                         .build()
                 )

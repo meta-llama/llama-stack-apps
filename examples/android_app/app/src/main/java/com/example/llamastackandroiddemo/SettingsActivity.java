@@ -50,7 +50,7 @@ public class SettingsActivity extends AppCompatActivity {
   private TextView mRemoteModelTextView;
 
   private DemoSharedPreferences mDemoSharedPreferences;
-  public static double TEMPERATURE_MIN_VALUE = 0.0;
+  public static double TEMPERATURE_MIN_VALUE = 0.01;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
