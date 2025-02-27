@@ -1,42 +1,30 @@
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+# All rights reserved.
+#
+# This source code is licensed under the terms described in the LICENSE file in
+# the root directory of this source tree.
+
 import os
 import subprocess
 import threading
 import time
 import traceback
+import random
 from multiprocessing import freeze_support
-from tkinter import filedialog, StringVar
 from pathlib import Path
+from tkinter import filedialog
 
 import customtkinter as ctk
-from dotenv import load_dotenv
 from llama_stack.distribution.library_client import LlamaStackAsLibraryClient
-from llama_stack_client import LlamaStackClient
 from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.lib.agents.event_logger import EventLogger
+from llama_stack_client.lib.inference.utils import MessageAttachment
 from llama_stack_client.types import Document
 from llama_stack_client.types.agent_create_params import AgentConfig
+
 ctk.set_appearance_mode("light")
 ctk.set_default_color_theme("blue")
-load_dotenv()
 
-
-import base64
-import mimetypes
-import random
-
-
-def data_url_from_file(file_path: str) -> str:
-    if not os.path.exists(file_path):
-        raise FileNotFoundError(f"File not found: {file_path}")
-
-    with open(file_path, "rb") as file:
-        file_content = file.read()
-
-    base64_content = base64.b64encode(file_content).decode("utf-8")
-    mime_type, _ = mimetypes.guess_type(file_path)
-
-    data_url = f"data:{mime_type};base64,{base64_content}"
-    return data_url
 
 def find_file_set(search_directory):
     # Common image file extensions
@@ -49,6 +37,7 @@ def find_file_set(search_directory):
         str(file) for file in file_path.rglob("*.*") if file.suffix in file_extensions
     ]
 
+
 class LlamaChatInterface:
     def __init__(self):
         self.docs_dir = None
@@ -57,15 +46,13 @@ class LlamaChatInterface:
         self.session_id = None
         self.vector_db_id = "DocQA_Vector_DB"
         self.model_name = None
-    def set_docs_dir(self, docs_dir):
-        self.docs_dir = docs_dir
-    def set_model_name(self, model_name):
-        self.model_name = model_name
+
     def initialize_system(self, provider_name="ollama"):
-        print(f"Initializing system with provider_name: {provider_name}, docs_dir: {self.docs_dir}")
+        print(
+            f"Initializing system with provider_name: {provider_name}, docs_dir: {self.docs_dir}"
+        )
         self.client = LlamaStackAsLibraryClient(provider_name)
         # Remove scoring and eval providers.
-        # print(self.client.async_client.config)
         del self.client.async_client.config.providers["scoring"]
         del self.client.async_client.config.providers["eval"]
         tool_groups = []
@@ -78,9 +65,9 @@ class LlamaChatInterface:
         for provider in self.client.async_client.config.providers["vector_io"]:
             if provider.provider_id == "faiss":
                 vector_io.append(provider)
+        assert len(vector_io) == 1
         self.client.async_client.config.tool_groups = tool_groups
         self.client.async_client.config.providers["vector_io"] = vector_io
-        # print(self.client.async_client.config)
         self.client.initialize()
         self.setup_vector_dbs()
         self.initialize_agent()
@@ -114,7 +101,7 @@ class LlamaChatInterface:
         print(f"Loading documents from {self.docs_dir}")
         file_set = find_file_set(self.docs_dir)
         for filename in file_set:
-            if filename.endswith((".txt", ".md",".rst")):
+            if filename.endswith((".txt", ".md", ".rst")):
                 file_path = os.path.join(self.docs_dir, filename)
                 with open(file_path, "r", encoding="utf-8") as file:
                     content = file.read()
@@ -129,7 +116,7 @@ class LlamaChatInterface:
                 file_path = os.path.join(self.docs_dir, filename)
                 document = Document(
                     document_id=filename,
-                    content=data_url_from_file(file_path),
+                    content=MessageAttachment.base64(file_path),
                     mime_type="text/plain",
                     metadata={"filename": filename},
                 )
@@ -173,7 +160,7 @@ class LlamaChatInterface:
         current_response = ""
         for log in EventLogger().log(response):
             if hasattr(log, "content"):
-                #print(f"Debug Response: {log.content}")
+                # print(f"Debug Response: {log.content}")
                 if "tool_execution>" in str(log):
                     current_response += " <tool-begin> " + log.content + " <tool-end> "
                 else:
@@ -219,7 +206,7 @@ class App(ctk.CTk):
             self.setup_inner_frame, width=500, font=("Inter", 14)
         )
         self.folder_entry.pack(pady=8)
-        #self.folder_entry.insert(0, DOCS_DIR)
+        # self.folder_entry.insert(0, DOCS_DIR)
 
         self.browse_button = ctk.CTkButton(
             self.setup_inner_frame,
@@ -240,25 +227,21 @@ class App(ctk.CTk):
             font=("Inter", 14),
             values=["ollama", "together", "fireworks"],
         )
-        self.provider_combobox.pack(pady=8)  
-        #self.provider_combobox.set("ollama")
+        self.provider_combobox.pack(pady=8)
+        # self.provider_combobox.set("ollama")
         self.model_label = ctk.CTkLabel(
             self.setup_inner_frame, text="Llama Model Name:", font=("Inter", 16)
         )
-        values=[
-                    "meta-llama/Llama-3.2-1B-Instruct",
-                    "meta-llama/Llama-3.2-3B-Instruct",
-                    "meta-llama/Llama-3.1-8B-Instruct",
-            ]
+        values = [
+            "meta-llama/Llama-3.2-1B-Instruct",
+            "meta-llama/Llama-3.2-3B-Instruct",
+            "meta-llama/Llama-3.1-8B-Instruct",
+        ]
         self.model_label.pack(pady=8)
         self.model_combobox = ctk.CTkComboBox(
-            self.setup_inner_frame,
-            width=400,
-            font=("Inter", 14),
-            values=values
+            self.setup_inner_frame, width=400, font=("Inter", 14), values=values
         )
         self.model_combobox.pack(pady=8)
-        #self.model_combobox.set("meta-llama/Llama-3.2-1B-Instruct")
         self.api_label = ctk.CTkLabel(
             self.setup_inner_frame, text="API Key (if needed):", font=("Inter", 16)
         )
@@ -342,23 +325,25 @@ class App(ctk.CTk):
             corner_radius=8,
         )
         self.exit_button.pack(side="left", padx=10)
-    def provider_modified(self, choice):
+
+    def provider_modified(self):
         print("Provider modified:", self.provider_combobox.get())
         provider = self.provider_combobox.get()
         if provider == "ollama":
-            values=[
-                    "meta-llama/Llama-3.2-1B-Instruct",
-                    "meta-llama/Llama-3.2-3B-Instruct",
-                    "meta-llama/Llama-3.1-8B-Instruct",
+            values = [
+                "meta-llama/Llama-3.2-1B-Instruct",
+                "meta-llama/Llama-3.2-3B-Instruct",
+                "meta-llama/Llama-3.1-8B-Instruct",
             ]
         else:
-            values=[
-                    "meta-llama/Llama-3.1-8B-Instruct",
-                    "meta-llama/Llama-3.3-70B-Instruct",
-                    "meta-llama/Llama-3.1-405B-Instruct-FP8"
+            values = [
+                "meta-llama/Llama-3.1-8B-Instruct",
+                "meta-llama/Llama-3.3-70B-Instruct",
+                "meta-llama/Llama-3.1-405B-Instruct-FP8",
             ]
         self.model_combobox.set(values[0])
         self.model_combobox.configure(values=values)
+
     def choose_folder(self):
         folder_selected = filedialog.askdirectory(title="Select Data Folder")
         if folder_selected:
@@ -368,9 +353,9 @@ class App(ctk.CTk):
     def setup_chat_interface(self):
         docs_dir = self.folder_entry.get()
         model_name = self.model_combobox.get()
-        self.chat_interface.set_model_name(model_name)
+        self.chat_interface.model_name = model_name
         provider_name = self.provider_combobox.get()
-        print('Start the config with',provider_name, model_name, docs_dir)
+        print("Start the config with", provider_name, model_name, docs_dir)
         api_key = self.api_entry.get()
         os.environ["INFERENCE_MODEL"] = (
             model_name  # Set inference model environment variable
@@ -382,7 +367,7 @@ class App(ctk.CTk):
             )
             return
         # setting up the chat interface
-        self.chat_interface.set_docs_dir(docs_dir)
+        self.chat_interface.docs_dir = docs_dir
         if provider_name == "ollama":
             ollama_name_dict = {
                 "meta-llama/Llama-3.2-1B-Instruct": "llama3.2:1b-instruct-fp16",
