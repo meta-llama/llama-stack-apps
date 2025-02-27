@@ -22,7 +22,13 @@ Register an account in [TogetherAI](https://www.together.ai/) or [FireworksAI](h
 1. To get the dmg file, you can just download raw file from [here](https://github.com/meta-llama/llama-stack-apps/blob/docqav2/examples/DocQA/DocQA.dmg) or use git clone by first following instructions [here](https://docs.github.com/en/repositories/working-with-files/managing-large-files/installing-git-large-file-storage) to enable git lfs and do another `git pull`.
 
 2. Open the `DocQA.dmg` in the folder and move `DocQA.app` to Application folder to have it installed.
-(If `macOS can't verify that the app is free of malware` warning pops up and stops you from installing the app, you need to open `System Settings` -> `Privacy & Security` -> Choose `Open Anyway`, shown here: ![open-app-anyway](./assets/open-app-anyway.png) please check [this documentation](https://support.apple.com/en-us/102445) for more details on how to bypass this warning and install.)
+(If you see this warning pops up and stops you from installing the app:
+
+![open-app-anyway](./assets/warning.png)
+
+You need to open `System Settings` -> `Privacy & Security` -> Choose `Open Anyway`, shown here: ![open-app-anyway](./assets/open-app-anyway.png)
+
+Please check [this documentation](https://support.apple.com/en-us/102445) for more details on how to bypass this warning and install.)
 
 3. Double click `DocQA.app` in the Application folder.
 
