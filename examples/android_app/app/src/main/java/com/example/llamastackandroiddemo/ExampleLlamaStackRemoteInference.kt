@@ -2,6 +2,7 @@ package com.example.llamastackandroiddemo
 
 import android.content.ContentResolver
 import android.content.Context
+import android.database.Cursor
 import android.net.Uri
 import android.provider.MediaStore
 import android.util.Base64
@@ -430,24 +431,15 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
     }
 
     private fun getFilePathFromUri(contentResolver: ContentResolver, uri: Uri): String? {
-        val id = uri.lastPathSegment
+        var filePath: String? = null
         val projection = arrayOf(MediaStore.Images.Media.DATA)
-        val selection = "${MediaStore.Images.Media._ID} = ?"
-        val selectionArgs = arrayOf(id)
-        val cursor = contentResolver.query(
-            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-            projection,
-            selection,
-            selectionArgs,
-            null
-        )
-        if (cursor != null) {
-            if (cursor.moveToFirst()) {
-                val columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
-                return cursor.getString(columnIndex)
+        val cursor: Cursor? = contentResolver.query(uri, projection, null, null, null)
+        cursor?.use {
+            if (it.moveToFirst()) {
+                val columnIndex = it.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
+                filePath = it.getString(columnIndex)
             }
-            cursor.close()
         }
-        return null
+        return filePath
     }
 }
