@@ -40,13 +40,13 @@ def main(host: str, port: int):
         base_url=f"http://{host}:{port}",
     )
 
-    model = "meta-llama/Llama-3.1-8B-Instruct"
-    print(type(torchtune))
+    model = "meta-llama/Llama-3.3-70B-Instruct"
     agent = ReActAgent(
         client=client,
         model=model,
         builtin_toolgroups=["builtin::websearch"],
         client_tools=[torchtune],
+        json_response_format=True,
     )
 
     session_id = agent.create_session(f"ttest-session-{uuid.uuid4().hex}")
