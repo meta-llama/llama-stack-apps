@@ -317,7 +317,7 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
         //If no System prompt configured by the user, use default tool call system prompt
         if (instruction == "") {
             clientTools.add(CustomTools.getCreateCalendarEventTool())
-            instruction = "You are a helpful assistant. For your reference, Today Date is $formattedZdt"
+            instruction = "Think step by step to decide if you need to generate a tool call based on tools available to you. If not, just answer the question. If you decide to generate function, reply with the function you only. For your reference, Today Date is $formattedZdt."
         }
         //Llama 1B/3B text model only support PYTHON_LIST at the moment. Whereas Vision instruction models only support JSON format.
         var toolPromptFormat = AgentConfig.ToolPromptFormat.PYTHON_LIST
