@@ -326,7 +326,7 @@ class App(ctk.CTk):
         )
         self.exit_button.pack(side="left", padx=10)
 
-    def provider_modified(self):
+    def provider_modified(self,choice):
         print("Provider modified:", self.provider_combobox.get())
         provider = self.provider_combobox.get()
         if provider == "ollama":

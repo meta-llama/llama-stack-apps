@@ -12,3 +12,4 @@ aiosqlite
 pyinstaller
 customtkinter
 openai
+mcp
