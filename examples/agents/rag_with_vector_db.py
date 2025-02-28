@@ -88,7 +88,7 @@ def run_main(host: str, port: int, disable_safety: bool = False):
             }
         ],
         tool_choice="auto",
-        tool_prompt_format="json",
+        tool_prompt_format="python_list",
         input_shields=available_shields if available_shields else [],
         output_shields=available_shields if available_shields else [],
         enable_session_persistence=False,
