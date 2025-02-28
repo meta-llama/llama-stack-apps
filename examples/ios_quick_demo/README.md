@@ -1,6 +1,9 @@
 # iOSQuickDemo
 
-iOSQuickDemo is a demo app ([video](https://drive.google.com/file/d/1HnME3VmsYlyeFgsIOMlxZy5c8S2xP4r4/view?usp=sharing)) that shows how to use the Llama Stack Swift SDK ([repo](https://github.com/meta-llama/llama-stack-client-swift)) and its `ChatCompletionRequest` API with a remote Llama Stack server to perform remote inference with Llama 3.1.
+iOSQuickDemo is a demo app ([video](https://drive.google.com/file/d/1X6rohq9PhVqzqWDtVKdGEhMpWaiTp79D/view?usp=sharing)) that shows how to use the Llama Stack Swift SDK ([repo](https://github.com/meta-llama/llama-stack-client-swift)) and its `ChatCompletionRequest` API with a Llama Stack server to perform remote text and image inference with Llama 3.1/3.2.
+
+![](ios1.png)
+![](ios2.png)
 
 ## Installation
 
@@ -52,6 +55,8 @@ let inference = RemoteInference(url: URL(string: "https://llama-stack.together.a
 
 The Llama Stack `chatCompletion` API is used for the inference. Its paramater `request` requires three parameters: a list of messages, the model id, and the stream setting. A `UserMessage`'s `content` contains the user text input inside `TextContentItem`.
 
+### Text Inference
+
 Inside the async return of the `chatCompletion`, each returned text chunk is appended to the message as the answer to the user input question.
 
 ```swift
@@ -64,12 +69,7 @@ for await chunk in try await inference.chatCompletion(
             Components.Schemas.UserMessage(
                 role: .user,
                 content:
-                    .InterleavedContentItem(
-                        .text(Components.Schemas.TextContentItem(
-                            _type: .text,
-                            text: userInput
-                        )
-                    )
+                    .case1(userInput)
                 )
             )
         )
@@ -88,6 +88,81 @@ for await chunk in try await inference.chatCompletion(
             break
         }
     }
+```
+
+### Image Inference
+
+Using model "meta-llama/Llama-3.2-11B-Vision-Instruct", you can compose UserMessage with an image URL or an image URL plus a user input text as follows:
+
+```swift
+private func userMessageToDescribeAnImage(_ imageURL: String) -> Components.Schemas.UserMessage {
+return Components.Schemas.UserMessage(
+    role: .user,
+    content:
+    .InterleavedContentItem(
+        .image(Components.Schemas.ImageContentItem(
+        _type: .image,
+        image: Components.Schemas.ImageContentItem.imagePayload( url: Components.Schemas.URL(uri: imageURL))
+        )
+        )
+    )
+)
+}
+
+private func userMessageWithTextAndImage(_ imageURL: String, _ text: String) -> Components.Schemas.UserMessage {
+return Components.Schemas.UserMessage(
+    role: .user,
+    content:
+    .case3([
+        Components.Schemas.InterleavedContentItem.text(
+        Components.Schemas.TextContentItem(
+            _type: .text,
+            text: text
+        )
+        ),
+        Components.Schemas.InterleavedContentItem.image(
+        Components.Schemas.ImageContentItem(
+            _type: .image,
+            image: Components.Schemas.ImageContentItem.imagePayload( url: Components.Schemas.URL(uri: imageURL))
+            )
+        )
+        ])
+    )
+}
+```
+
+To use a local image on iOS, convert the image to `Base64EncodedData` then compose the user image using `data` instead of `url`:
+
+```swift
+func base64EncodedImage(named imageName: String, withExtension ext: String) -> Base64EncodedData? {
+  guard let imageUrl = Bundle.main.url(forResource: imageName, withExtension: ext) else {
+      print("Image not found in bundle")
+      return nil
+  }
+  
+  guard let imageData = try? Data(contentsOf: imageUrl) else {
+      print("Unable to load image data")
+      return nil
+  }
+
+  let base64Data = imageData.base64EncodedData()
+    
+  return Base64EncodedData(base64Data)
+}
+
+private func userMessageToDescribeALocalImage() -> Components.Schemas.UserMessage {
+return Components.Schemas.UserMessage(
+    role: .user,
+    content:
+    .InterleavedContentItem(
+        .image(Components.Schemas.ImageContentItem(
+        _type: .image,
+        image: Components.Schemas.ImageContentItem.imagePayload( data: base64EncodedImage(named: "Llama_Repo", withExtension: "jpeg"))
+        )
+        )
+    )
+)
+}
 ```
 
 For a more advanced demo using the Llama Stack Agent API and custom tool calling feature, see the [iOS Calendar Assistant demo](https://github.com/meta-llama/llama-stack-apps/tree/main/examples/ios_calendar_assistant).
