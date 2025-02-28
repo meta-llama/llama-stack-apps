@@ -4,6 +4,7 @@
 # This source code is licensed under the terms described in the LICENSE file in
 # the root directory of this source tree.
 import uuid
+import os
 
 import fire
 
@@ -38,6 +39,7 @@ def torchtune(query: str = "torchtune"):
 def main(host: str, port: int):
     client = LlamaStackClient(
         base_url=f"http://{host}:{port}",
+        provider_data={"tavily_search_api_key": os.getenv("TAVILY_SEARCH_API_KEY")},
     )
 
     model = "meta-llama/Llama-3.3-70B-Instruct"
