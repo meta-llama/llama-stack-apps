@@ -119,21 +119,21 @@ struct ContentView: View {
     return Components.Schemas.UserMessage(
       role: .user,
       content:
-          .case3([
-            Components.Schemas.InterleavedContentItem.text(
-              Components.Schemas.TextContentItem(
-                _type: .text,
-                text: text
+        .case3([
+          Components.Schemas.InterleavedContentItem.text(
+            Components.Schemas.TextContentItem(
+              _type: .text,
+              text: text
+            )
+          ),
+          Components.Schemas.InterleavedContentItem.image(
+            Components.Schemas.ImageContentItem(
+              _type: .image,
+              image: Components.Schemas.ImageContentItem.imagePayload( url: Components.Schemas.URL(uri: imageURL))
               )
-            ),
-            Components.Schemas.InterleavedContentItem.image(
-              Components.Schemas.ImageContentItem(
-                _type: .image,
-                image: Components.Schemas.ImageContentItem.imagePayload( url: Components.Schemas.URL(uri: imageURL))
-                )
-              )
-            ])
-          )
+            )
+          ])
+        )
   }
   
   private func handleButtonClick(buttonName: String) {
