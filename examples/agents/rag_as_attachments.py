@@ -47,7 +47,7 @@ def run_main(host: str, port: int, disable_safety: bool = False):
         print(colored("No available models. Exiting.", "red"))
         return
 
-    selected_model = available_models[0]
+    selected_model = "meta-llama/Llama-3.2-3B-Instruct"
     print(f"Using model: {selected_model}")
 
     agent_config = AgentConfig(
@@ -56,9 +56,8 @@ def run_main(host: str, port: int, disable_safety: bool = False):
         sampling_params={
             "strategy": {"type": "top_p", "temperature": 1.0, "top_p": 0.9},
         },
-        toolgroups=["builtin::rag"],
+        toolgroups=["builtin::rag/knowledge_search"],
         tool_choice="auto",
-        tool_prompt_format="json",
         input_shields=available_shields if available_shields else [],
         output_shields=available_shields if available_shields else [],
         enable_session_persistence=False,
@@ -70,7 +69,7 @@ def run_main(host: str, port: int, disable_safety: bool = False):
 
     user_prompts = [
         (
-            "I am attaching some documentation for Torchtune. Help me answer questions I will ask next.",
+            "I am attaching some documentation for Torchtune. Help me answer questions I will ask next by using the knowledge_search tool.",
             attachments,
         ),
         (
@@ -102,6 +101,7 @@ def run_main(host: str, port: int, disable_safety: bool = False):
             documents=prompt[1],
             session_id=session_id,
         )
+        print(f"User> {prompt[0]}")
 
         for log in EventLogger().log(response):
             log.print()
