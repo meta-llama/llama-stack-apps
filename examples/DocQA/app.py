@@ -20,7 +20,6 @@ from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.lib.agents.event_logger import EventLogger
 from llama_stack_client.lib.inference.utils import MessageAttachment
 from llama_stack_client.types import Document
-from llama_stack_client.types.agent_create_params import AgentConfig
 
 ctk.set_appearance_mode("light")
 ctk.set_default_color_theme("blue")
@@ -130,18 +129,17 @@ class LlamaChatInterface:
             print(f"Loaded {len(documents)} documents from {self.docs_dir}")
 
     def initialize_agent(self):
-        agent_config = AgentConfig(
+        self.agent = Agent(
+            self.client,
             model=self.model_name,
             instructions="You are a helpful assistant that can answer questions based on provided documents. Return your answer short and concise, less than 50 words.",
-            toolgroups=[
+            tools=[
                 {
                     "name": "builtin::rag",
                     "args": {"vector_db_ids": [self.vector_db_id]},
                 }
             ],
-            enable_session_persistence=False,
         )
-        self.agent = Agent(self.client, agent_config)
         self.session_id = self.agent.create_session(
             "session-" + str(random.randint(0, 10000))
         )
@@ -326,7 +324,7 @@ class App(ctk.CTk):
         )
         self.exit_button.pack(side="left", padx=10)
 
-    def provider_modified(self,choice):
+    def provider_modified(self, choice):
         print("Provider modified:", self.provider_combobox.get())
         provider = self.provider_combobox.get()
         if provider == "ollama":
