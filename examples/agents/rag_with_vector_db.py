@@ -77,7 +77,7 @@ def run_main(host: str, port: int, disable_safety: bool = False):
 
     agent_config = AgentConfig(
         model=selected_model,
-        instructions="You are a helpful assistant",
+        instructions="You are a helpful assistant. Use knowledge_search tool to gather information needed to answer questions. Answer succintly.",
         sampling_params={
             "strategy": {"type": "top_p", "temperature": 1.0, "top_p": 0.9},
         },
@@ -87,8 +87,6 @@ def run_main(host: str, port: int, disable_safety: bool = False):
                 "args": {"vector_db_ids": [vector_db_id]},
             }
         ],
-        tool_choice="auto",
-        tool_prompt_format="json",
         input_shields=available_shields if available_shields else [],
         output_shields=available_shields if available_shields else [],
         enable_session_persistence=False,
@@ -99,7 +97,6 @@ def run_main(host: str, port: int, disable_safety: bool = False):
     print(f"Created session_id={session_id} for Agent({agent.agent_id})")
 
     user_prompts = [
-        "What are the top 5 topics that were explained in the documentation? Only list succinct bullet points.",
         "Was anything related to 'Llama3' discussed, if so what?",
         "Tell me how to use LoRA",
         "What about Quantization?",
@@ -115,7 +112,7 @@ def run_main(host: str, port: int, disable_safety: bool = False):
             ],
             session_id=session_id,
         )
-
+        print(f"User> {prompt}")
         for log in EventLogger().log(response):
             log.print()
 

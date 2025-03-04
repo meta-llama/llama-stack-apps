@@ -132,7 +132,7 @@ class LlamaChatInterface:
     def initialize_agent(self):
         agent_config = AgentConfig(
             model=self.model_name,
-            instructions="You are a helpful assistant that can answer questions based on provided documents. Return your answer short and concise, less than 50 words.",
+            instructions="You are a helpful assistant that can answer questions based on provided documents, searchable through the knowledge_search tool. Return your answer short and concise, less than 50 words.",
             toolgroups=[
                 {
                     "name": "builtin::rag/knowledge_search",
