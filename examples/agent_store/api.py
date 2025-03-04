@@ -96,7 +96,7 @@ class AgentStore:
             toolgroups = [
                 "builtin::websearch",
                 {
-                    "name": "builtin::rag",
+                    "name": "builtin::rag/knowledge_search",
                     "args": {
                         "query_config": QueryConfig(
                             max_chunks=5,
@@ -134,7 +134,7 @@ class AgentStore:
             vector_db_ids = agent_params.get("vector_db_ids", [])
             toolgroups = [
                 {
-                    "name": "builtin::rag",
+                    "name": "builtin::rag/knowledge_search",
                     "args": {
                         "vector_db_ids": vector_db_ids,
                         "query_config": QueryConfig(
@@ -206,9 +206,9 @@ class AgentStore:
         return "memory_bank"
 
     async def chat(self, agent_choice, message, attachments) -> str:
-        assert (
-            agent_choice in self.agents
-        ), f"Agent of type {agent_choice} not initialized"
+        assert agent_choice in self.agents, (
+            f"Agent of type {agent_choice} not initialized"
+        )
         agent_id = self.agents[agent_choice]
 
         messages = []

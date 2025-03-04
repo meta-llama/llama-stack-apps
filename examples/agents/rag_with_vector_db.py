@@ -83,7 +83,7 @@ def run_main(host: str, port: int, disable_safety: bool = False):
         },
         toolgroups=[
             {
-                "name": "builtin::rag",
+                "name": "builtin::rag/knowledge_search",
                 "args": {"vector_db_ids": [vector_db_id]},
             }
         ],
