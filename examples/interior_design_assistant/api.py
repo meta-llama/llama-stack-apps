@@ -57,9 +57,9 @@ class InterioAgent:
         Analyze the image using multimodal llm
         and return a list of items that are present in the image.
         """
-        assert (
-            self.agent_id is not None
-        ), "Agent not initialized, call initialize() first"
+        assert self.agent_id is not None, (
+            "Agent not initialized, call initialize() first"
+        )
         text = textwrap.dedent(
             """
             Analyze the image to provide a 4 sentence description of the architecture and furniture items present in it.
@@ -186,9 +186,9 @@ class InterioAgent:
         """
         Retrieve images from the memory bank that match the description
         """
-        assert (
-            self.bank_id is not None
-        ), "Setup bank before calling this method via initialize()"
+        assert self.bank_id is not None, (
+            "Setup bank before calling this method via initialize()"
+        )
 
         agent_config = AgentConfig(
             enable_session_persistence=False,
@@ -198,7 +198,7 @@ class InterioAgent:
             toolgroups=[
                 # Enable memory as a tool for RAG
                 {
-                    "name": "builtin::rag",
+                    "name": "builtin::rag/knowledge_search",
                     "args": {
                         "vector_db_ids": [self.bank_id],
                         "query_config": QueryConfig(

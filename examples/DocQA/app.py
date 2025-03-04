@@ -135,7 +135,7 @@ class LlamaChatInterface:
             instructions="You are a helpful assistant that can answer questions based on provided documents. Return your answer short and concise, less than 50 words.",
             toolgroups=[
                 {
-                    "name": "builtin::rag",
+                    "name": "builtin::rag/knowledge_search",
                     "args": {"vector_db_ids": [self.vector_db_id]},
                 }
             ],
@@ -326,7 +326,7 @@ class App(ctk.CTk):
         )
         self.exit_button.pack(side="left", padx=10)
 
-    def provider_modified(self,choice):
+    def provider_modified(self, choice):
         print("Provider modified:", self.provider_combobox.get())
         provider = self.provider_combobox.get()
         if provider == "ollama":
