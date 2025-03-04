@@ -2,6 +2,7 @@ package com.example.llamastackandroiddemo
 
 import android.content.ContentResolver
 import android.content.Context
+import android.database.Cursor
 import android.net.Uri
 import android.provider.MediaStore
 import android.util.Base64
@@ -317,7 +318,7 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
         //If no System prompt configured by the user, use default tool call system prompt
         if (instruction == "") {
             clientTools.add(CustomTools.getCreateCalendarEventTool())
-            instruction = "You are a helpful assistant. For your reference, Today Date is $formattedZdt"
+            instruction = "Think step by step to decide if you need to generate a tool call based on tools available to you. If not, just answer the question. If you decide to generate function, reply with the function you only. For your reference, Today Date is $formattedZdt."
         }
         //Llama 1B/3B text model only support PYTHON_LIST at the moment. Whereas Vision instruction models only support JSON format.
         var toolPromptFormat = AgentConfig.ToolPromptFormat.PYTHON_LIST
@@ -430,24 +431,15 @@ class ExampleLlamaStackRemoteInference(remoteURL: String) {
     }
 
     private fun getFilePathFromUri(contentResolver: ContentResolver, uri: Uri): String? {
-        val id = uri.lastPathSegment
+        var filePath: String? = null
         val projection = arrayOf(MediaStore.Images.Media.DATA)
-        val selection = "${MediaStore.Images.Media._ID} = ?"
-        val selectionArgs = arrayOf(id)
-        val cursor = contentResolver.query(
-            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-            projection,
-            selection,
-            selectionArgs,
-            null
-        )
-        if (cursor != null) {
-            if (cursor.moveToFirst()) {
-                val columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
-                return cursor.getString(columnIndex)
+        val cursor: Cursor? = contentResolver.query(uri, projection, null, null, null)
+        cursor?.use {
+            if (it.moveToFirst()) {
+                val columnIndex = it.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
+                filePath = it.getString(columnIndex)
             }
-            cursor.close()
         }
-        return null
+        return filePath
     }
 }

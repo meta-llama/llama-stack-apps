@@ -1,51 +1,59 @@
-## DocQA
+# DocQA
 
-This is an end-to-end Retrieval Augmented Generation (RAG) App leveraging llama-stack that handles the logic for ingesting documents, storing them in a vector database and providing an inference interface.
+This is an end-to-end Retrieval Augmented Generation (RAG) app example, leveraging llama-stack that handles the logic for ingesting documents, storing them in a vector database and providing an inference interface.
 
-We share the details of how to run first and then an outline of how it works:
+`DocQA` app is only build for MacOS arm64 platform where you can install the app to your Application folder from the dmg file.
+
 
 ### Prerequisite:
 
-Install docker: Check [this doc for Mac](https://docs.docker.com/desktop/setup/install/mac-install/), [this doc for Windows](https://docs.docker.com/desktop/setup/install/windows-install/) and this [instruction for Linux](https://docs.docker.com/engine/install/).
+You can either do local inference with Ollama or choose a cloud provider:
 
-For Mac and Windows users, you need to start the Docker app manually after installation.
+**Local Inference**:
 
-### How to run the pipeline:
+If you want to use Ollama to run inference, please follow [Ollama's download instruction](https://ollama.com/download) to install Ollama.  Before running the app, please open Ollama software and download the model you want to use, eg. use the command `ollama pull llama3.2:1b-instruct-fp16` in terminal. Only 1B, 3B and 8B model are supported as most machine can not run models bigger than 8B locally.
 
-![RAG_workflow](./data/assets/DocQA.png)
+**Cloud Provider**:
 
-The above is the workflow diagram for this RAG app. To run the app, please read the following instructions:
+Register an account in [TogetherAI](https://www.together.ai/) or [FireworksAI](https://fireworks.ai/) to get an API key.
 
-1. Copy the template configuration file `docqa_env_template` to create your own `docqv_env` inside the docker folder:
+### How to run DocQA app:
 
-```bash
-cd docker
-cp docqa_env_template docqv_env
-```
+1. To get the dmg file, you can just download raw file from [here](https://github.com/meta-llama/llama-stack-apps/blob/docqav2/examples/DocQA/DocQA.dmg) or use git clone by first following instructions [here](https://docs.github.com/en/repositories/working-with-files/managing-large-files/installing-git-large-file-storage) to enable git lfs and do another `git pull`.
 
-2. Then update `model_name` and `document_path` accordingly in your `docqv_env`, for example:
+2. Open the `DocQA.dmg` in the folder and move `DocQA.app` to Application folder to have it installed.
+(If you see this warning pops up and stops you from installing the app:
 
-```
-DOC_PATH=/path/to/your/llama-stack-apps/examples/DocQA/example_data
-MODEL_NAME=llama3.2:1b-instruct-fp16
-HOST=localhost
-LLAMA_STACK_PORT=5000
-CHROMA_PORT=6000
-GRADIO_SERVER_PORT=7860
-USE_GPU_FOR_DOC_INGESTION=false
-```
+![open-app-anyway](./assets/warning.png)
 
-3. In the `docker` folder, run following code:
+You need to open `System Settings` -> `Privacy & Security` -> Choose `Open Anyway`, shown here: ![open-app-anyway](./assets/open-app-anyway.png)
 
-```bash
-bash run_RAG.sh
-```
+Please check [this documentation](https://support.apple.com/en-us/102445) for more details on how to bypass this warning and install.)
 
-4.  Once the service is ready, open the link http://localhost:7861/ in your browser to chat with your documents.
+3. Double click `DocQA.app` in the Application folder.
 
-### Overview of how the RAG app works:
+4. Choose your data folder then select the models and providers. Put your API key if you choose to use TogetherAI or FireworksAI, as shown below:
 
-1. We use [docling](https://github.com/DS4SD/docling) framework for handling multiple file input formats (PDF, PPTX, DOCX)
-2. If you are using a GPU, we have an option to use `Llama-3.2-11B-Vision` to caption images in the documents. On a CPU-only machine this step is skipped.
-3. Once ingested, we use a llama-stack distribution running chroma-db and `Llama-3.2-3B-Instruct` to ingest chunks into a memory_bank
-4. Once the vectordb is created, we then use llama-stack with the `Llama-3.2-3B-Instruct` to chat with the model.
+![Setup](./assets/DocQA_setup.png)
+
+5. Wait for the setup to be ready and click `Chat` tab to start chating to this app, as shown below:
+
+![Chat](./assets/DocQA_chat.png)
+
+6. Click `exit` button to quit the app.
+
+### How to build the DocQA app:
+
+1. Create a new python venv, eg. `conda create -n build_app python=3.10` and then `conda activate build_app` to use it.
+2. Run `pip install -r build_app_env.txt` to install required pypi packages.
+3. Run `python app.py` make sure everything works.
+4. UPX is a executable packer to reduce the size of our App, we need to download UPX zip corresponding to your machine platform from [UPX website](https://github.com/upx/upx/releases/) to this folder and unzip it.
+5. We will use Pyinstaller to build the app from `app.py` file. Please use it with correct upx path, eg. `pyinstaller --upx-dir ./upx-4.2.4-arm64_linux DocQA.spec`, the one-clickable app should be in `./dist/DocQA.app` (This step may take ~10 mins).
+6. Optionally, you can move the DocQA.app to Application folder now to have it locally installed.
+7. Alternatively, if you want to create a .dmg file for easier distribution. You can follow those steps:
+
+ - Copy ./dist/DocQA.app to a new folder.
+ -  In your Mac, search and open Disk Utility -> File -> New Image -> Image From Folder.
+ - Select the folder where you have placed the App. Give a name for the DMG and save. This creates a distributable image for you.
+
+The current `DocQA` app is built for MacOS arm64 platform. To build the app for other platform, you can follow the [Pyinstaller documentation](https://pyinstaller.org/en/stable/usage.html#) to make modifications on `DocQA.spec` and rebuild.

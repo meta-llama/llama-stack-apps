@@ -1,6 +1,6 @@
 fire
 python-dotenv
 setuptools
-yfinance
+yfinance>=0.2.54
 gradio
 llama-stack-client>=0.1.0

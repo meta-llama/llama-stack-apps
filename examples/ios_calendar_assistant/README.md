@@ -19,18 +19,18 @@ You need to set up a remote Llama Stack distributions to run this demo. Assuming
 ```
 conda create -n llama-stack python=3.10
 conda activate llama-stack
-pip install --no-cache llama-stack==0.1.0 llama-models==0.1.0 llama-stack-client==0.1.0
+pip install --no-cache llama-stack==0.1.4 llama-models==0.1.4 llama-stack-client==0.1.4
 ```
 
 Then, either:
 ```
-PYPI_VERSION=0.1.0 llama stack build --template fireworks --image-type conda
+PYPI_VERSION=0.1.4 llama stack build --template fireworks --image-type conda
 export FIREWORKS_API_KEY="<your_fireworks_api_key>"
 llama stack run fireworks
 ```
 or
 ```
-PYPI_VERSION=0.1.0 llama stack build --template together --image-type conda
+PYPI_VERSION=0.1.4 llama stack build --template together --image-type conda
 export TOGETHER_API_KEY="<your_together_api_key>"
 llama stack run together
 ```
@@ -56,12 +56,12 @@ Also, to allow the app to add event to the Calendar app, the `Info.plist` needs 
 4. Build the run the app on an iOS simulator or your device. First you may try a simple request:
 
 ```
-Create a calendar event with a meeting title as Llama Stack update for 2-3pm February 3, 2025.
+Create a calendar event with a meeting title as Llama Stack update for 2-3pm February 19, 2025.
 ```
 
 Then, a detailed meeting note:
 ```
-Date: February 4, 2025
+Date: February 20, 2025
 Time: 10:00 AM - 11:00 AM
 Location: Zoom
 Attendees:
@@ -85,7 +85,7 @@ Sarah: Good. Jane, any updates from operations?
 Jane: Yes, logistics are sorted, and we’ve confirmed the warehouse availability. The only pending item is training customer support for the new product.
 Sarah: Let’s coordinate with the training team to expedite that. Anything else?
 Mike: Quick note—can we get feedback on the beta version by Friday?
-Sarah: Yes, let’s make that a priority. Anything else? No? Great. Thanks, everyone. Let’s meet again next week from 4-5pm on February 11, 2025 to review progress.
+Sarah: Yes, let’s make that a priority. Anything else? No? Great. Thanks, everyone. Let’s meet again next week from 4-5pm on February 27, 2025 to review progress.
 ```
 
 You'll see a summary, action items and a Calendar event created, made possible by Llama Stack's custom tool calling API support and Llama 3.1's tool calling capability.
@@ -98,24 +98,17 @@ iOSCalendarAssistantWithLocalInf is a demo app that uses Llama Stack Swift SDK's
 1. On a Mac terminal, in your top level directory, run commands:
 ```
 git clone https://github.com/meta-llama/llama-stack-apps
-cd llama-stack-apps
+git clone https://github.com/meta-llama/llama-stack-client-swift
+cd llama-stack-client-swift
 git submodule update --init --recursive
 ```
 
-2. Go back to your top level directory, run commands:
+2. Open `llama-stack-apps/examples/ios_calendar_assistant/iOSCalendarAssistantWithLocalInf.xcodeproj` in Xcode.
 
-```
-git clone https://github.com/meta-llama/llama-stack
-cd llama-stack
-git submodule update --init --recursive
-```
+3. In the `iOSCalendarAssistantWithLocalInf` project panel, remove `LocalInferenceImpl.xcodeproj` and drag and drop `LocalInferenceImpl.xcodeproj` from `llama-stack-client-swift/local_inference` into the project - in the "Choose options for adding these files" dialog, select "Reference files in place" for Action.
 
-3. Double click `llama-stack-apps/examples/ios_calendar_assistant/iOSCalendarAssistantWithLocalInf.xcodeproj` to open it in Xcode.
+4. Prepare a Llama model file named `llama3_2_spinquant_oct23.pte` by following the steps [here](https://github.com/pytorch/executorch/blob/main/examples/models/llama/README.md#step-2-prepare-model) - you'll also download the `tokenizer.model` file there. Then remove the two missing files from the the project `iOSCalendarAssistantWithLocalInf`, and drag and drop both files to the project, also selecting "Reference files in place" for Action.
 
-4. In the `iOSCalendarAssistantWithLocalInf` project panel, remove `LocalInferenceImpl.xcodeproj` and drag and drop `LocalInferenceImpl.xcodeproj` from `llama-stack/llama_stack/providers/inline/ios/inference` into the `iOSCalendarAssistantWithLocalInf` project.
-
-5. Prepare a Llama model file named `llama3_2_spinquant_oct23.pte` by following the steps [here](https://github.com/pytorch/executorch/blob/main/examples/models/llama/README.md#step-2-prepare-model) - you'll also download the `tokenizer.model` file there. Then drag and drop both files to the project `iOSCalendarAssistantWithLocalInf`.
-
-6. Build and run the app on an iOS simulator or a real device.
+5. Build and run the app on an iOS simulator or a real device.
 
 **Note** If you see a build error about cmake not found, you can install cmake by following the instruction [here](https://github.com/pytorch/executorch/blob/main/examples/demo-apps/apple_ios/LLaMA/docs/delegates/xnnpack_README.md#1-install-cmake).

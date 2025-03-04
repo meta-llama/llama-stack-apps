@@ -4,6 +4,7 @@
 # This source code is licensed under the terms described in the LICENSE file in
 # the root directory of this source tree.
 import os
+from typing import Optional
 
 import fire
 from llama_stack_client import LlamaStackClient
@@ -13,7 +14,7 @@ from llama_stack_client.types.agent_create_params import AgentConfig
 from termcolor import colored
 
 
-def main(host: str, port: int):
+def main(host: str, port: int, model_id: Optional[str] = None):
     if "TAVILY_SEARCH_API_KEY" not in os.environ:
         print(
             colored(
@@ -33,6 +34,20 @@ def main(host: str, port: int):
     else:
         print(f"Available shields found: {available_shields}")
 
+    llm_inference_provider_ids = [
+        p.provider_id
+        for p in client.providers.list()
+        if p.api == "inference" and p.provider_type != "sentence-transformers"
+    ]
+
+    if model_id is not None:
+        client.models.register(
+            model_id=model_id,
+            model_type="llm",  # model_type
+            provider_id=llm_inference_provider_ids[0],
+            provider_model_id=model_id,
+        )
+
     available_models = [
         model.identifier
         for model in client.models.list()
@@ -41,6 +56,8 @@ def main(host: str, port: int):
     if not available_models:
         print(colored("No available models. Exiting.", "red"))
         return
+    elif model_id is not None:
+        selected_model = model_id
     else:
         selected_model = available_models[0]
         print(f"Using model: {selected_model}")
@@ -58,8 +75,6 @@ def main(host: str, port: int):
             if os.getenv("TAVILY_SEARCH_API_KEY")
             else []
         ),
-        tool_choice="auto",
-        tool_prompt_format="json",
         input_shields=available_shields if available_shields else [],
         output_shields=available_shields if available_shields else [],
         enable_session_persistence=False,
@@ -67,7 +82,7 @@ def main(host: str, port: int):
     agent = Agent(client, agent_config)
     user_prompts = [
         "Hello",
-        "Which players played in the winning team of the NBA western conference semifinals of 2024, please use tools",
+        "Search web for which players played in the winning team of the NBA western conference semifinals of 2024",
     ]
 
     session_id = agent.create_session("test-session")
