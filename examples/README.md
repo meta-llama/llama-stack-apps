@@ -1,3 +1,4 @@
+hello google
 # Running Examples
 
 This folder contains some example client scripts using our Python SDK for client to connect with Llama Stack Distros. To run the example scripts:
