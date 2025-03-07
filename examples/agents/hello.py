@@ -10,7 +10,6 @@ import fire
 from llama_stack_client import LlamaStackClient
 from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.lib.agents.event_logger import EventLogger
-from llama_stack_client.types.agent_create_params import AgentConfig
 from termcolor import colored
 
 
@@ -62,13 +61,14 @@ def main(host: str, port: int, model_id: Optional[str] = None):
         selected_model = available_models[0]
         print(f"Using model: {selected_model}")
 
-    agent_config = AgentConfig(
+    agent = Agent(
+        client,
         model=selected_model,
         instructions="You are a helpful assistant",
         sampling_params={
             "strategy": {"type": "top_p", "temperature": 1.0, "top_p": 0.9},
         },
-        toolgroups=(
+        tools=(
             [
                 "builtin::websearch",
             ]
@@ -79,7 +79,6 @@ def main(host: str, port: int, model_id: Optional[str] = None):
         output_shields=available_shields if available_shields else [],
         enable_session_persistence=False,
     )
-    agent = Agent(client, agent_config)
     user_prompts = [
         "Hello",
         "Search web for which players played in the winning team of the NBA western conference semifinals of 2024",
