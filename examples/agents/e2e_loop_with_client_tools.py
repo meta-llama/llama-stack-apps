@@ -14,6 +14,7 @@ from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.lib.agents.event_logger import EventLogger
 from llama_stack_client.types.agent_create_params import AgentConfig
 
+
 async def run_main(host: str, port: int, disable_safety: bool = False):
     client = LlamaStackClient(
         base_url=f"http://{host}:{port}",
@@ -42,26 +43,21 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
         WebSearchTool(os.getenv("BRAVE_SEARCH_API_KEY")),
         calculator,
     ]
-    agent_config = AgentConfig(
+    agent = Agent(
+        client,
         model=selected_model,
         instructions="You are a helpful assistant. Use the tools you have access to for providing relevant answers.",
         sampling_params={
             "strategy": {"type": "top_p", "temperature": 1.0, "top_p": 0.9},
         },
-        toolgroups=[
+        tools=[
             "builtin::code_interpreter",
+            *client_tools,
         ],
-        client_tools=[
-            client_tool.get_tool_definition() for client_tool in client_tools
-        ],
-        tool_choice="auto",
-        tool_prompt_format="python_list",
         input_shields=available_shields if available_shields else [],
         output_shields=available_shields if available_shields else [],
         enable_session_persistence=False,
     )
-
-    agent = Agent(client, agent_config, client_tools)
     session_id = agent.create_session("test-session")
     print(f"Created session_id={session_id} for Agent({agent.agent_id})")
 

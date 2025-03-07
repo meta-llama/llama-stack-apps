@@ -8,7 +8,6 @@ import fire
 from llama_stack_client import LlamaStackClient
 from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.lib.agents.event_logger import EventLogger
-from llama_stack_client.types.agent_create_params import AgentConfig
 from llama_stack_client.types.agents.turn_create_params import Document
 from termcolor import colored
 
@@ -47,30 +46,26 @@ def run_main(host: str, port: int, disable_safety: bool = False):
         print(colored("No available models. Exiting.", "red"))
         return
 
-    selected_model = available_models[0]
+    selected_model = "meta-llama/Llama-3.2-3B-Instruct"
     print(f"Using model: {selected_model}")
 
-    agent_config = AgentConfig(
+    agent = Agent(
+        client,
         model=selected_model,
         instructions="You are a helpful assistant",
         sampling_params={
             "strategy": {"type": "top_p", "temperature": 1.0, "top_p": 0.9},
         },
-        toolgroups=["builtin::rag"],
-        tool_choice="auto",
-        tool_prompt_format="json",
+        tools=["builtin::rag/knowledge_search"],
         input_shields=available_shields if available_shields else [],
         output_shields=available_shields if available_shields else [],
-        enable_session_persistence=False,
     )
-
-    agent = Agent(client, agent_config)
     session_id = agent.create_session("test-session")
     print(f"Created session_id={session_id} for Agent({agent.agent_id})")
 
     user_prompts = [
         (
-            "I am attaching some documentation for Torchtune. Help me answer questions I will ask next.",
+            "I am attaching some documentation for Torchtune. Help me answer questions I will ask next by using the knowledge_search tool.",
             attachments,
         ),
         (
@@ -102,6 +97,7 @@ def run_main(host: str, port: int, disable_safety: bool = False):
             documents=prompt[1],
             session_id=session_id,
         )
+        print(f"User> {prompt[0]}")
 
         for log in EventLogger().log(response):
             log.print()
