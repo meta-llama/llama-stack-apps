@@ -9,7 +9,6 @@ from llama_stack_client import LlamaStackClient
 from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.lib.agents.event_logger import EventLogger
 from llama_stack_client.types import Document
-from llama_stack_client.types.agent_create_params import AgentConfig
 from termcolor import colored
 from uuid import uuid4
 
@@ -75,13 +74,14 @@ def run_main(host: str, port: int, disable_safety: bool = False):
     selected_model = available_models[0]
     print(f"Using model: {selected_model}")
 
-    agent_config = AgentConfig(
+    agent = Agent(
+        client,
         model=selected_model,
         instructions="You are a helpful assistant. Use knowledge_search tool to gather information needed to answer questions. Answer succintly.",
         sampling_params={
             "strategy": {"type": "top_p", "temperature": 1.0, "top_p": 0.9},
         },
-        toolgroups=[
+        tools=[
             {
                 "name": "builtin::rag/knowledge_search",
                 "args": {"vector_db_ids": [vector_db_id]},
@@ -89,10 +89,7 @@ def run_main(host: str, port: int, disable_safety: bool = False):
         ],
         input_shields=available_shields if available_shields else [],
         output_shields=available_shields if available_shields else [],
-        enable_session_persistence=False,
     )
-
-    agent = Agent(client, agent_config)
     session_id = agent.create_session("test-session")
     print(f"Created session_id={session_id} for Agent({agent.agent_id})")
 
