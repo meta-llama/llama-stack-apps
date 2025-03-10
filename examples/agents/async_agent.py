@@ -67,9 +67,9 @@ async def main():
         enable_session_persistence=False,
     )
     async_agent = AsyncAgent(client, agent_config, client_tools)
-    await async_agent.initialize()
 
     session_id = await async_agent.create_session("test-session")
+    print("AGENT_ID", async_agent.agent_id)
     print(f"Created session_id={session_id} for Agent({async_agent.agent_id})")
 
     turn = await async_agent.create_turn(
