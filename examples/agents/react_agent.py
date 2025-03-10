@@ -3,8 +3,8 @@
 #
 # This source code is licensed under the terms described in the LICENSE file in
 # the root directory of this source tree.
-import uuid
 import os
+import uuid
 
 import fire
 
@@ -46,12 +46,14 @@ def main(host: str, port: int):
     agent = ReActAgent(
         client=client,
         model=model,
-        builtin_toolgroups=["builtin::websearch"],
-        client_tools=[torchtune],
+        tools=[
+            "builtin::websearch",
+            torchtune,
+        ],
         json_response_format=True,
     )
 
-    session_id = agent.create_session(f"ttest-session-{uuid.uuid4().hex}")
+    session_id = agent.create_session(f"test-session-{uuid.uuid4().hex}")
 
     response = agent.create_turn(
         messages=[
