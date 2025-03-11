@@ -40,7 +40,7 @@ The default port is 5000 for `llama stack run` and you can specify a different p
 
 2. Under the iOSQuickDemo project - Package Dependencies, click the + sign, then add `https://github.com/meta-llama/llama-stack-client-swift` at the top right, set "Dependency Rule" to "Branch" and "main", then click Add Package.
 
-3. Either replace "YOUR_TOGETHER_API_KEY" in `ContentView.swift` with your key (you can get a free trial key in seconds at https://api.together.ai).
+3. Either replace "YOUR_TOGETHER_API_KEY" in `ContentView.swift` with your key (you can get a free trial key in seconds at https://api.together.ai):
 ```
 let inference = RemoteInference(url: URL(string: "https://llama-stack.together.ai")!, apiKey: "YOUR_TOGETHER_API_KEY")
 ```
