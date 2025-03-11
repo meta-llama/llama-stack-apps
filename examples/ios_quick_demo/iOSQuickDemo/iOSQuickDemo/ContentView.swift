@@ -168,7 +168,7 @@ struct ContentView: View {
       Task {
 
         // replace the URL string if you build and run your own Llama Stack distro as shown in https://github.com/meta-llama/llama-stack-apps/tree/main/examples/ios_quick_demo#optional-build-and-run-own-llama-stack-distro
-        let inference = RemoteInference(url: URL(string: "https://llama-stack.together.ai")!)
+        let inference = RemoteInference(url: URL(string: "https://llama-stack.together.ai")!, apiKey: "YOUR_TOGETHER_API_KEY") // get the key at https://api.together.ai
 
         do {
           for await chunk in try await inference.chatCompletion(
