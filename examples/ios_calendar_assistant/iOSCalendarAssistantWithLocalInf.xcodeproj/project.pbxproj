@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5C9590A42CD545F20092F7F0 /* tokenizer.model in Resources */ = {isa = PBXBuildFile; fileRef = 5C9590A22CD545F20092F7F0 /* tokenizer.model */; };
+		5C9590A62CD546230092F7F0 /* llama3_2_spinquant_oct23.pte in Resources */ = {isa = PBXBuildFile; fileRef = 5C9590A52CD546230092F7F0 /* llama3_2_spinquant_oct23.pte */; };
+		5C9644B22CCAC34500B80462 /* LlamaStackClient in Frameworks */ = {isa = PBXBuildFile; productRef = 5C9644B12CCAC34500B80462 /* LlamaStackClient */; };
 		5C9644D32CCAC6A100B80462 /* LLaMARunner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C9644D22CCAC6A100B80462 /* LLaMARunner.framework */; };
 		5C9644D42CCAC6DE00B80462 /* LLaMARunner.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 5C9644D22CCAC6A100B80462 /* LLaMARunner.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		5CADC7012CA45670007662D2 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5CADC6F72CA45670007662D2 /* Preview Assets.xcassets */; };
@@ -19,15 +22,12 @@
 		5CADC7082CA45670007662D2 /* MessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CADC6FF2CA45670007662D2 /* MessageView.swift */; };
 		5CADC71C2CA4741B007662D2 /* LocalInferenceImpl.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5CADC71B2CA4741B007662D2 /* LocalInferenceImpl.framework */; };
 		5CADC71D2CA4741B007662D2 /* LocalInferenceImpl.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 5CADC71B2CA4741B007662D2 /* LocalInferenceImpl.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		BA95DFE12D7F42AE00203D37 /* LlamaStackClient in Frameworks */ = {isa = PBXBuildFile; productRef = BA95DFE02D7F42AE00203D37 /* LlamaStackClient */; };
-		BAAE33D82D7B720600540213 /* llama3_2_spinquant_oct23.pte in Resources */ = {isa = PBXBuildFile; fileRef = BAAE33D62D7B720600540213 /* llama3_2_spinquant_oct23.pte */; };
-		BAAE33D92D7B720600540213 /* tokenizer.model in Resources */ = {isa = PBXBuildFile; fileRef = BAAE33D72D7B720600540213 /* tokenizer.model */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		BA2687EB2D7A7A5F00F7058A /* PBXContainerItemProxy */ = {
+		5C5E31D82CA48A5800A0784C /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = BA2687E42D7A7A5E00F7058A /* LocalInferenceImpl.xcodeproj */;
+			containerPortal = 5C5E31D82CA48A5800A0784C /* LocalInferenceImpl.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = 5CCBC6082CA1F04A00E958D0;
 			remoteInfo = LocalInferenceImpl;
@@ -50,6 +50,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		5C5E31D32CA48A5800A0784C /* LocalInferenceImpl.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = LocalInferenceImpl.xcodeproj; path = "iOSCalendarAssistantWithLocalInf/llama-stack/llama_stack/providers/impls/ios/inference/LocalInferenceImpl.xcodeproj"; sourceTree = "<group>"; };
+		5C9590A22CD545F20092F7F0 /* tokenizer.model */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = tokenizer.model; path = ../../../tokenizer.model; sourceTree = "<group>"; };
+		5C9590A52CD546230092F7F0 /* llama3_2_spinquant_oct23.pte */ = {isa = PBXFileReference; lastKnownFileType = file; path = llama3_2_spinquant_oct23.pte; sourceTree = "<group>"; };
 		5C9644D22CCAC6A100B80462 /* LLaMARunner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = LLaMARunner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		5CADB0012CA1345100942A87 /* iOSCalendarAssistantWithLocalInf.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iOSCalendarAssistantWithLocalInf.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5CADC6F72CA45670007662D2 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
@@ -61,9 +64,6 @@
 		5CADC6FE2CA45670007662D2 /* MessageListView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MessageListView.swift; sourceTree = "<group>"; };
 		5CADC6FF2CA45670007662D2 /* MessageView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MessageView.swift; sourceTree = "<group>"; };
 		5CADC71B2CA4741B007662D2 /* LocalInferenceImpl.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = LocalInferenceImpl.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		BA2687E42D7A7A5E00F7058A /* LocalInferenceImpl.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = LocalInferenceImpl.xcodeproj; path = "/Users/cmodi/Documents/ai/llamastack/clean/llama-stack-client-swift/local_inference/LocalInferenceImpl.xcodeproj"; sourceTree = "<absolute>"; };
-		BAAE33D62D7B720600540213 /* llama3_2_spinquant_oct23.pte */ = {isa = PBXFileReference; lastKnownFileType = file; name = llama3_2_spinquant_oct23.pte; path = /Users/cmodi/Documents/ai/clean/executorch/3b_spinquant/llama3_2_spinquant_oct23.pte; sourceTree = "<absolute>"; };
-		BAAE33D72D7B720600540213 /* tokenizer.model */ = {isa = PBXFileReference; lastKnownFileType = text; name = tokenizer.model; path = /Users/cmodi/Documents/ai/clean/executorch/3b_spinquant/tokenizer.model; sourceTree = "<absolute>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -80,15 +80,23 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		5C5E31D42CA48A5800A0784C /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				5C5E31D92CA48A5800A0784C /* LocalInferenceImpl.framework */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		5CADAFF82CA1345100942A87 = {
 			isa = PBXGroup;
 			children = (
+				5C9590A22CD545F20092F7F0 /* tokenizer.model */,
+				5C9590A52CD546230092F7F0 /* llama3_2_spinquant_oct23.pte */,
+				5C5E31D32CA48A5800A0784C /* LocalInferenceImpl.xcodeproj */,
 				5CADC7002CA45670007662D2 /* iOSCalendarAssistantWithLocalInf */,
 				5CADB0022CA1345100942A87 /* Products */,
 				5CADC7142CA467C4007662D2 /* Frameworks */,
-				BA2687E42D7A7A5E00F7058A /* LocalInferenceImpl.xcodeproj */,
-				BAAE33D62D7B720600540213 /* llama3_2_spinquant_oct23.pte */,
-				BAAE33D72D7B720600540213 /* tokenizer.model */,
 			);
 			sourceTree = "<group>";
 		};
@@ -132,10 +140,10 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		BA2687E82D7A7A5E00F7058A /* Products */ = {
+		BAFF5EF92D80E92E00E1D87B /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				BA2687EC2D7A7A5F00F7058A /* LocalInferenceImpl.framework */,
+				BAFF5EFD2D80E92E00E1D87B /* LocalInferenceImpl.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -195,8 +203,8 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
-					ProductGroup = BA2687E82D7A7A5E00F7058A /* Products */;
-					ProjectRef = BA2687E42D7A7A5E00F7058A /* LocalInferenceImpl.xcodeproj */;
+					ProductGroup = BAFF5EF92D80E92E00E1D87B /* Products */;
+					ProjectRef = BAFF5EF52D80E92E00E1D87B /* LocalInferenceImpl.xcodeproj */;
 				},
 			);
 			projectRoot = "";
@@ -207,11 +215,11 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
-		BA2687EC2D7A7A5F00F7058A /* LocalInferenceImpl.framework */ = {
+		BAFF5EFD2D80E92E00E1D87B /* LocalInferenceImpl.framework */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.framework;
 			path = LocalInferenceImpl.framework;
-			remoteRef = BA2687EB2D7A7A5F00F7058A /* PBXContainerItemProxy */;
+			remoteRef = BAFF5EFC2D80E92E00E1D87B /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
@@ -222,8 +230,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				5CADC7022CA45670007662D2 /* Assets.xcassets in Resources */,
-				BAAE33D82D7B720600540213 /* llama3_2_spinquant_oct23.pte in Resources */,
-				BAAE33D92D7B720600540213 /* tokenizer.model in Resources */,
+				5C9590A42CD545F20092F7F0 /* tokenizer.model in Resources */,
+				5C9590A62CD546230092F7F0 /* llama3_2_spinquant_oct23.pte in Resources
 				5CADC7012CA45670007662D2 /* Preview Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -448,20 +456,20 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		BA95DFDF2D7F42AE00203D37 /* XCRemoteSwiftPackageReference "llama-stack-client-swift" */ = {
+		5C5E31DA2CA48A8E00A0784C /* XCRemoteSwiftPackageReference "llama-stack-client-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/meta-llama/llama-stack-client-swift";
 			requirement = {
-				branch = "et-v0.5.0-update";
+				branch = "test-et-main";
 				kind = branch;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		BA95DFE02D7F42AE00203D37 /* LlamaStackClient */ = {
+		5C9644B12CCAC34500B80462 /* LlamaStackClient */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = BA95DFDF2D7F42AE00203D37 /* XCRemoteSwiftPackageReference "llama-stack-client-swift" */;
+			package = 5C5E31DA2CA48A8E00A0784C /* XCRemoteSwiftPackageReference "llama-stack-client-swift" */;
 			productName = LlamaStackClient;
 		};
 /* End XCSwiftPackageProductDependency section */
