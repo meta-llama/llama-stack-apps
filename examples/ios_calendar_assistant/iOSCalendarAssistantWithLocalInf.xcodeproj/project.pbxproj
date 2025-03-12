@@ -9,10 +9,8 @@
 /* Begin PBXBuildFile section */
 		5C9590A42CD545F20092F7F0 /* tokenizer.model in Resources */ = {isa = PBXBuildFile; fileRef = 5C9590A22CD545F20092F7F0 /* tokenizer.model */; };
 		5C9590A62CD546230092F7F0 /* llama3_2_spinquant_oct23.pte in Resources */ = {isa = PBXBuildFile; fileRef = 5C9590A52CD546230092F7F0 /* llama3_2_spinquant_oct23.pte */; };
-		5C9644B22CCAC34500B80462 /* LlamaStackClient in Frameworks */ = {isa = PBXBuildFile; productRef = 5C9644B12CCAC34500B80462 /* LlamaStackClient */; };
 		5C9644D32CCAC6A100B80462 /* LLaMARunner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C9644D22CCAC6A100B80462 /* LLaMARunner.framework */; };
 		5C9644D42CCAC6DE00B80462 /* LLaMARunner.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 5C9644D22CCAC6A100B80462 /* LLaMARunner.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		5CADC7012CA45670007662D2 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5CADC6F72CA45670007662D2 /* Preview Assets.xcassets */; };
 		5CADC7022CA45670007662D2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5CADC6F92CA45670007662D2 /* Assets.xcassets */; };
 		5CADC7032CA45670007662D2 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CADC6FA2CA45670007662D2 /* ContentView.swift */; };
 		5CADC7042CA45670007662D2 /* EventEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CADC6FB2CA45670007662D2 /* EventEditView.swift */; };
@@ -22,17 +20,8 @@
 		5CADC7082CA45670007662D2 /* MessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CADC6FF2CA45670007662D2 /* MessageView.swift */; };
 		5CADC71C2CA4741B007662D2 /* LocalInferenceImpl.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5CADC71B2CA4741B007662D2 /* LocalInferenceImpl.framework */; };
 		5CADC71D2CA4741B007662D2 /* LocalInferenceImpl.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 5CADC71B2CA4741B007662D2 /* LocalInferenceImpl.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		BA2967392D814ED4006AB504 /* LlamaStackClient in Frameworks */ = {isa = PBXBuildFile; productRef = BA2967382D814ED4006AB504 /* LlamaStackClient */; };
 /* End PBXBuildFile section */
-
-/* Begin PBXContainerItemProxy section */
-		5C5E31D82CA48A5800A0784C /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 5C5E31D82CA48A5800A0784C /* LocalInferenceImpl.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 5CCBC6082CA1F04A00E958D0;
-			remoteInfo = LocalInferenceImpl;
-		};
-/* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		5CADC7172CA467C4007662D2 /* Embed Frameworks */ = {
@@ -72,7 +61,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				5C9644D32CCAC6A100B80462 /* LLaMARunner.framework in Frameworks */,
-				BA95DFE12D7F42AE00203D37 /* LlamaStackClient in Frameworks */,
+				BA2967392D814ED4006AB504 /* LlamaStackClient in Frameworks */,
 				5CADC71C2CA4741B007662D2 /* LocalInferenceImpl.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -80,14 +69,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		5C5E31D42CA48A5800A0784C /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				5C5E31D92CA48A5800A0784C /* LocalInferenceImpl.framework */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
 		5CADAFF82CA1345100942A87 = {
 			isa = PBXGroup;
 			children = (
@@ -140,14 +121,6 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		BAFF5EF92D80E92E00E1D87B /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				BAFF5EFD2D80E92E00E1D87B /* LocalInferenceImpl.framework */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -166,7 +139,7 @@
 			);
 			name = iOSCalendarAssistantWithLocalInf;
 			packageProductDependencies = (
-				BA95DFE02D7F42AE00203D37 /* LlamaStackClient */,
+				BA2967382D814ED4006AB504 /* LlamaStackClient */,
 			);
 			productName = StackSummary;
 			productReference = 5CADB0012CA1345100942A87 /* iOSCalendarAssistantWithLocalInf.app */;
@@ -197,32 +170,16 @@
 			);
 			mainGroup = 5CADAFF82CA1345100942A87;
 			packageReferences = (
-				BA95DFDF2D7F42AE00203D37 /* XCRemoteSwiftPackageReference "llama-stack-client-swift" */,
+				BA2967372D814ED4006AB504 /* XCRemoteSwiftPackageReference "llama-stack-client-swift" */,
 			);
 			productRefGroup = 5CADB0022CA1345100942A87 /* Products */;
 			projectDirPath = "";
-			projectReferences = (
-				{
-					ProductGroup = BAFF5EF92D80E92E00E1D87B /* Products */;
-					ProjectRef = BAFF5EF52D80E92E00E1D87B /* LocalInferenceImpl.xcodeproj */;
-				},
-			);
 			projectRoot = "";
 			targets = (
 				5CADB0002CA1345100942A87 /* iOSCalendarAssistantWithLocalInf */,
 			);
 		};
 /* End PBXProject section */
-
-/* Begin PBXReferenceProxy section */
-		BAFF5EFD2D80E92E00E1D87B /* LocalInferenceImpl.framework */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.framework;
-			path = LocalInferenceImpl.framework;
-			remoteRef = BAFF5EFC2D80E92E00E1D87B /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-/* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
 		5CADAFFF2CA1345100942A87 /* Resources */ = {
@@ -231,8 +188,7 @@
 			files = (
 				5CADC7022CA45670007662D2 /* Assets.xcassets in Resources */,
 				5C9590A42CD545F20092F7F0 /* tokenizer.model in Resources */,
-				5C9590A62CD546230092F7F0 /* llama3_2_spinquant_oct23.pte in Resources
-				5CADC7012CA45670007662D2 /* Preview Assets.xcassets in Resources */,
+				5C9590A62CD546230092F7F0 /* llama3_2_spinquant_oct23.pte in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -456,20 +412,20 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		5C5E31DA2CA48A8E00A0784C /* XCRemoteSwiftPackageReference "llama-stack-client-swift" */ = {
+		BA2967372D814ED4006AB504 /* XCRemoteSwiftPackageReference "llama-stack-client-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/meta-llama/llama-stack-client-swift";
 			requirement = {
-				branch = "test-et-main";
+				branch = "latest-release";
 				kind = branch;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		5C9644B12CCAC34500B80462 /* LlamaStackClient */ = {
+		BA2967382D814ED4006AB504 /* LlamaStackClient */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 5C5E31DA2CA48A8E00A0784C /* XCRemoteSwiftPackageReference "llama-stack-client-swift" */;
+			package = BA2967372D814ED4006AB504 /* XCRemoteSwiftPackageReference "llama-stack-client-swift" */;
 			productName = LlamaStackClient;
 		};
 /* End XCSwiftPackageProductDependency section */
