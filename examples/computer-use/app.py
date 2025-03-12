@@ -1,10 +1,12 @@
 #!/usr/bin/env python
+import base64
 import os
 import time
 import uuid
 
-import fire
 import pyautogui
+from llama_stack.distribution.library_client import LlamaStackAsLibraryClient
+from pydantic import BaseModel
 
 # Import llama-stack client components
 from llama_stack_client import LlamaStackClient
@@ -12,10 +14,25 @@ from llama_stack_client.lib.agents.client_tool import client_tool
 from llama_stack_client.lib.agents.event_logger import EventLogger
 from llama_stack_client.lib.agents.react.agent import ReActAgent
 from llama_stack_client.lib.inference.utils import MessageAttachment
-from utils import get_element_center, run_parser
-
+from utils import (
+    convert_to_base64,
+    get_element_center,
+    parse_omni_parser_output,
+    run_parser,
+)
+class AnswerFormat(BaseModel):
+    thoughts: str
+    action: str
+    answer: str
 # Global variable to store the latest OmniParser output
 latest_omni_output = {}
+
+
+def encode_image(image_path):
+    with open(image_path, "rb") as image_file:
+        base64_string = base64.b64encode(image_file.read()).decode("utf-8")
+        base64_url = f"data:image/png;base64,{base64_string}"
+        return base64_url
 
 
 # ------------------ Tool Implementations ------------------
@@ -32,7 +49,7 @@ def left_click_tool(box_id: int = None) -> str:
     """
     global latest_omni_output
     if box_id is not None:
-        coords = get_element_center(box_id)
+        coords =get_element_center(box_id,latest_omni_output)
         if coords:
             x, y = coords
             pyautogui.click(x, y)
@@ -56,7 +73,7 @@ def right_click_tool(box_id: int = None) -> str:
     """
     global latest_omni_output
     if box_id is not None:
-        coords = get_element_center(box_id)
+        coords =get_element_center(box_id,latest_omni_output)
         if coords:
             x, y = coords
             pyautogui.rightClick(x, y)
@@ -69,19 +86,19 @@ def right_click_tool(box_id: int = None) -> str:
 
 
 @client_tool
-def double_click_tool(box_id: int = None) -> str:
+def double_click_tool(box_id: int) -> str:
     """
     Performs a double click.
     If a box_id is provided, looks up the coordinate from the global latest OmniParser output and double-clicks at the element's center.
     Otherwise, double-clicks at the current mouse position.
 
     text
-    :param box_id: The ID of the element to double-click (optional).
+    :param box_id: The ID of the element to double-click.
     :returns: A message describing the action taken.
     """
     global latest_omni_output
     if box_id is not None:
-        coords = get_element_center(box_id)
+        coords =get_element_center(box_id,latest_omni_output)
         if coords:
             x, y = coords
             pyautogui.doubleClick(x, y)
@@ -103,7 +120,7 @@ def hover_tool(box_id: int) -> str:
     :returns: A message describing the action taken.
     """
     global latest_omni_output
-    coords = get_element_center(box_id)
+    coords =get_element_center(box_id,latest_omni_output)
     if coords:
         x, y = coords
         pyautogui.moveTo(x, y, duration=0.5)
@@ -112,7 +129,7 @@ def hover_tool(box_id: int) -> str:
 
 
 @client_tool
-def mouse_move_tool(box_id: int = None) -> str:
+def mouse_move_tool(box_id: int) -> str:
     """
     Moves the mouse pointer to the given coordinates or to the center of an element if box_id is provided.
 
@@ -122,7 +139,7 @@ def mouse_move_tool(box_id: int = None) -> str:
     """
     global latest_omni_output
     if box_id is not None:
-        coords = get_element_center(box_id)
+        coords =get_element_center(box_id,latest_omni_output)
         if coords:
             x, y = coords
             pyautogui.moveTo(x, y, duration=0.5)
@@ -185,17 +202,17 @@ def wait_tool(seconds: int = 2) -> str:
 
 
 @client_tool
-def type_tool(box_id: str, words: str):
+def type_tool(box_id: int, words: str):
     """
     Given a box_id and a words string, this tool finds the coordinates from the OmniParser output,
     clicks to focus the corresponding UI element, and types the provided text.
-    :param boxid: The ID of the element to type into.
+    :param box_id: The ID of the element to type into.
     :param words: The text to type.
     :returns: A message describing the action taken.
     """
     global latest_omni_output
     if box_id is not None:
-        coords = get_element_center(box_id)
+        coords =get_element_center(box_id,latest_omni_output)
         if coords:
             x, y = coords
             # Click to focus the UI element before typing.
@@ -208,31 +225,14 @@ def type_tool(box_id: str, words: str):
         return "No OmniParser output available."
 
 
-@client_tool
-def terminal_tool():
-    """
-    Stub tool for launching or switching to a terminal.
-    """
-    print("Simulating terminal launch... (stub)")
-    # You might use os.system or other means to open/create a new terminal window.
-    return "Terminal launched (stub)."
-
-
-@client_tool
-def homepage_tool():
-    """
-    Stub tool to return to the homepage state.
-    """
-    print("Returning to homepage... (stub)")
-    return "Homepage restored (stub)."
-
-
-# ------------------ Main Browser Agent Loop ------------------
+# ------------------ Main Computer agent Loop ------------------
 class ComputerUseAgent:
     def __init__(self, max_step) -> None:
         self.action_history = []
         self.max_steps = max_step
         self.step = 0
+        # self.client = LlamaStackAsLibraryClient(provider_name)
+        self.client = None
         self.cur_output = None
         self.tools = [
             left_click_tool,
@@ -244,12 +244,10 @@ class ComputerUseAgent:
             scroll_up_tool,
             scroll_down_tool,
             wait_tool,
-            type_tool,
-            terminal_tool,
-            homepage_tool,
+            type_tool
         ]
 
-    def run_agent(self, host: str = "localhost", port: int = 8321):
+    def run_agent(self, host="localhost", port=8321):
         """
         Sets up the Llama-Stack client and ReAct agent, gets a user query,
         and then iteratively uses the OmniParser server output and agent’s decision to drive UI actions.
@@ -262,100 +260,163 @@ class ComputerUseAgent:
         5. Parse and execute the tool call.
         6. Repeat until the goal is reached or the maximum number of steps is executed.
         """
-        # Initialize Llama-Stack client and ReAct agent
-        client = LlamaStackClient(
-            base_url=f"http://{host}:{port}",
-            provider_data={"tavily_search_api_key": os.getenv("TAVILY_SEARCH_API_KEY")},
-        )
         # Replace with the model you plan to use.
         model = "meta-llama/Llama-3.2-90B-Vision-Instruct"
-
+        if host == "localhost":
+            client = LlamaStackClient(
+            base_url=f"http://{host}:{port}",
+            )
+        print('using model: ', model)
         # Register our browser action tools
         agent = ReActAgent(
             client=client,
             model=model,
             client_tools=self.tools,
-            json_response_format=True,
+            #json_response_format=True,
         )
 
-        session_id = agent.create_session(f"browser-agent-session-{uuid.uuid4().hex}")
-        user_query = input("Enter your query (e.g., 'clone llama-stack repo'): ")
-        print("Starting browser agent for query:", user_query)
+        session_id = agent.create_session(f"computer-use-session-{uuid.uuid4().hex}")
+        user_query = "Open Chrome and search Meta stock price"  #  Example query - will loop forever with this.
+        # user_query = input("Enter your query (e.g., 'clone llama-stack repo'): ")
+        print("Starting computer agent for query:", user_query)
 
         while self.step < self.max_steps:
             print(f"\n---- Step {self.step + 1} ----")
             # Take a screenshot of the current screen.
-            screenshot_path = f"temp_screenshot_{self.step}.png"
+            screenshot_path = f"/tmp/temp_screenshot_{self.step}.png"
             screen_image = pyautogui.screenshot()
             screen_image.save(screenshot_path)
             print("Screenshot taken and saved as:", screenshot_path)
 
             # Call OmniParser with the screenshot to get structured UI info.
             global latest_omni_output
-            labled_img, label_coordinates, parsed_content_list = run_parser(
-                screenshot_path
-            )
+            _, raw_parse_output = run_parser(screenshot_path)
+            parsed_content_list = parse_omni_parser_output(raw_parse_output)
             latest_omni_output = parsed_content_list
-            print("OmniParser output:", latest_omni_output)
-            parsed_content_list = "\n".join(
-                [f"icon {i}: " + str(v) for i, v in enumerate(parsed_content_list)]
-            )
-            self.cur_output = parsed_content_list
             # Prepare the prompt for the agent that includes the user query and current UI state.
-            omni_info = f"OmniParser Output: {latest_omni_output}"
+            screen_info = ""
+            for content in parsed_content_list:
+                screen_info += f"Box ID {content['id']}, type: {content['type']}, interactivity: {content['interactivity']},content: {content['content']}\n"
 
-            prompt_instruction = (
-                f"User query: {user_query}\n"
-                f"Current Screen Info: {omni_info}\n"
-                "You should look at the info above and determine next action."
-                "Look at the tool availble to you and respond with a tool-call command like 'action': {'tool_name': 'right_click_tool', 'tool_params': {'box_id': 22} or 'action': {'tool_name': 'type_tool', 'tool_params': {'box_id': 12, words: SOME_TEXT } "
-                "If the goal is reached, you should just output response like:{'thought': 'Now I reached goal and complete the task.','action': null, 'answer': 'Task completed, No more action needed'}."
-            )
-            message = {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "image",
-                        "image": {"url": {"uri": MessageAttachment.base64(labled_img)}},
-                    },
-                    {
-                        "type": "text",
-                        "text": prompt_instruction,
-                    },
-                ],
+            prompt_instruction = f"The instruction is to {user_query}\n"
+            prompt_instruction += f"Here is the list of all detected bounding boxes by IDs and their descriptions:{screen_info}"
+            
+            prompt_instruction += """
+            You should look at the info above and determine next action."
+            Keep in mind the description for Text Boxes are likely more accurate than the description for Icon Boxes.
+
+            Requirement: 
+            1. You should first give a reasonable description of the current screenshot, and give some analysis of how the user instruction can be achieved by a single click. 
+            2. Then make an educated guess of which bbox id to click in order to complete the task using both the visual information from the screenshot image and the bounding boxes descriptions. REMEMBER: the task instruction must be achieved by one single click. 
+            3. Look at the tools available to you and respond with a tool-call command.
+
+            If the goal is reached, you should output a response indicating task completion.
+
+            IMPORTANT: YOUR RESPONSE MUST BE IN VALID JSON FORMAT WITH DOUBLE QUOTES. Your response must follow this exact structure:
+
+            {
+            "thought": "Your thought process analyzing the screenshot and determining the best action",
+            "action": {
+                "tool_name": "left_click_tool",
+                "tool_params": [
+                {
+                    "name": "box_id",
+                    "value": 22
+                }
+                ]
+            },
+            "answer": null
             }
 
-            # Send the turn to the agent; stream output if desired.
+            OR if typing is needed:
+
+            {
+            "thought": "Your thought process",
+            "action": {
+                "tool_name": "type_tool",
+                "tool_params": [
+                {
+                    "name": "box_id",
+                    "value": 22
+                },
+                {
+                    "name": "words",
+                    "value": "text to type"
+                }
+                ]
+            },
+            "answer": null
+            }
+            OR if the action is completed and you want to see the next screenshot:
+
+            {
+            "thought": "Now I performed the action and need to see the next screenshot",
+            "action": null,
+            "answer": "Action completed, "
+            }
+
+            OR if the task is completed:
+
+            {
+            "thought": "Now I reached goal and completed the task.",
+            "action": null,
+            "answer": "Task completed, No more action needed"
+            }
+
+            REMEMBER: Use proper JSON format with double quotes for all keys and string values. Do not use single quotes in your JSON output.
+            """
             response = agent.create_turn(
-                messages=[message],
+                messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image",
+                            "image": {
+                                "url": {
+                                    "uri": encode_image(screenshot_path)
+                                }
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": prompt_instruction,
+                        }
+                    ]
+                }
+            ],
+            session_id=session_id,
+            stream=True,
+            )
+    
+            for log in EventLogger().log(response):
+                log.print()
+            exit()
+        # Send the turn to the agent; stream output if desired.
+        response = agent.create_turn(
+                messages=messages,
                 session_id=session_id,
                 stream=True,
-            )
+        )
+        final_command = ""
+        current_response = ""
+        for log in EventLogger().log(response):
+            if hasattr(log, "content"):
+                # print(f"Debug Response: {log.content}")
+                if "tool_execution>" in str(log):
+                    current_response += (
+                        " <tool-begin> " + log.content + " <tool-end> "
+                    )
+                else:
+                    final_command += log.content
+                    current_response += log.content
+        print(f"current_response: {current_response}")
 
-            final_command = ""
-            current_response = ""
-            for log in EventLogger().log(response):
-                if hasattr(log, "content"):
-                    # print(f"Debug Response: {log.content}")
-                    if "tool_execution>" in str(log):
-                        current_response += (
-                            " <tool-begin> " + log.content + " <tool-end> "
-                        )
-                    else:
-                        final_command += log.content
-                        current_response += log.content
-
-            # Check if the agent has signaled that the goal is reached.
-            if "Goal reached" in final_command:
-                print("Goal reached. Ending session.")
-                break
-
-            # Optional: wait a short duration for UI to update after the tool call.
-            time.sleep(2)
-            self.step += 1
+        # Optional: wait a short duration for UI to update after the tool call.
+        time.sleep(2)
+        self.step += 1
 
 
 if __name__ == "__main__":
     agent = ComputerUseAgent(max_step=10)
-
-    fire.Fire(agent.run_agent())
+    agent.run_agent()
