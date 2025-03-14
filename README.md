@@ -54,7 +54,7 @@ This will install all dependencies required to (1) Build and start a Llama Stack
 ### 2. Starting a Llama Stack Server
 - Please see our [llama-stack](https://github.com/meta-llama/llama-stack) repo's [Getting Started Guide](https://llama-stack.readthedocs.io/en/latest/getting_started/index.html) for setting up a Llama Stack distribution and running server to serve API endpoints. You should have a server endpoint for building your client apps.
 
-Once your your server started, you should have see outputs --
+Once your server is started, you should have seen outputs --
 ```
 ...
 Serving POST /agentic_system/session/delete
@@ -114,7 +114,7 @@ Start an app (local) and interact with it by running the following command:
 ```bash
 PYTHONPATH=. python examples/agent_store/app.py localhost 8321
 ```
-This will start a mesop app and you can go to `localhost:7860` to play with the chat interface.
+This will start a Mesop app and you can go to `localhost:7860` to play with the chat interface.
 
 <img src="demo.png" alt="Chat App" width="600"/>
 
@@ -192,7 +192,7 @@ venv\Scripts\activate  # For Command Prompt
 # or
 .\venv\Scripts\Activate.ps1  # For PowerShell
 # or
-source venv\Scripts\activate  # For Git
+source venv/Scripts/activate  # For Git Bash
 ```
 
 The instructions thereafter (including `pip install -r requirements.txt` for installing the dependencies) remain the same.
