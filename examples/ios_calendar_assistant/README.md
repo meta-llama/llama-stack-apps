@@ -19,18 +19,18 @@ You need to set up a remote Llama Stack distributions to run this demo. Assuming
 ```
 conda create -n llama-stack python=3.10
 conda activate llama-stack
-pip install --no-cache llama-stack==0.1.6 llama-models==0.1.6 llama-stack-client==0.1.6
+pip install --no-cache llama-stack==0.1.4 llama-models==0.1.4 llama-stack-client==0.1.4
 ```
 
 Then, either:
 ```
-PYPI_VERSION=0.1.6 llama stack build --template together --image-type conda
+PYPI_VERSION=0.1.4 llama stack build --template together --image-type conda
 export TOGETHER_API_KEY="<your_together_api_key>"
 llama stack run together
 ```
 or
 ```
-PYPI_VERSION=0.1.6 llama stack build --template fireworks --image-type conda
+PYPI_VERSION=0.1.4 llama stack build --template fireworks --image-type conda
 export FIREWORKS_API_KEY="<your_fireworks_api_key>"
 llama stack run fireworks
 ```

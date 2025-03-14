@@ -15,6 +15,7 @@
 		5C200C202CA3CC3C0026EA40 /* MessageListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C200C172CA3CC3C0026EA40 /* MessageListView.swift */; };
 		5C200C212CA3CC3C0026EA40 /* MessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C200C182CA3CC3C0026EA40 /* MessageView.swift */; };
 		5C200C222CA3CC3C0026EA40 /* iOSCalendarAssistantApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C200C192CA3CC3C0026EA40 /* iOSCalendarAssistantApp.swift */; };
+		BAA3582A2D83B501006682D1 /* LlamaStackClient in Frameworks */ = {isa = PBXBuildFile; productRef = BAA358292D83B501006682D1 /* LlamaStackClient */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -35,6 +36,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BAA3582A2D83B501006682D1 /* LlamaStackClient in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -106,6 +108,7 @@
 			);
 			name = iOSCalendarAssistant;
 			packageProductDependencies = (
+				BAA358292D83B501006682D1 /* LlamaStackClient */,
 			);
 			productName = StackSummary;
 			productReference = 5CADB0012CA1345100942A87 /* iOSCalendarAssistant.app */;
@@ -136,6 +139,7 @@
 			);
 			mainGroup = 5CADAFF82CA1345100942A87;
 			packageReferences = (
+				BAA358282D83B501006682D1 /* XCRemoteSwiftPackageReference "llama-stack-client-swift" */,
 			);
 			productRefGroup = 5CADB0022CA1345100942A87 /* Products */;
 			projectDirPath = "";
@@ -374,6 +378,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		BAA358282D83B501006682D1 /* XCRemoteSwiftPackageReference "llama-stack-client-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/meta-llama/llama-stack-client-swift";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		BAA358292D83B501006682D1 /* LlamaStackClient */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BAA358282D83B501006682D1 /* XCRemoteSwiftPackageReference "llama-stack-client-swift" */;
+			productName = LlamaStackClient;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 5CADAFF92CA1345100942A87 /* Project object */;
 }
