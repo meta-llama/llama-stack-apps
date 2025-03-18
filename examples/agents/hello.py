@@ -4,16 +4,13 @@
 # This source code is licensed under the terms described in the LICENSE file in
 # the root directory of this source tree.
 import os
-from typing import Optional
 
 import fire
-from llama_stack_client import LlamaStackClient
-from llama_stack_client.lib.agents.agent import Agent
-from llama_stack_client.lib.agents.event_logger import EventLogger
+from llama_stack_client import LlamaStackClient, Agent, EventLogger
 from termcolor import colored
 
 
-def main(host: str, port: int, model_id: Optional[str] = None):
+def main(host: str, port: int, model_id: str | None = None):
     if "TAVILY_SEARCH_API_KEY" not in os.environ:
         print(
             colored(

@@ -5,10 +5,7 @@
 # the root directory of this source tree.
 
 import fire
-from llama_stack_client import LlamaStackClient
-from llama_stack_client.lib.agents.agent import Agent
-from llama_stack_client.lib.agents.event_logger import EventLogger
-from llama_stack_client.types.agents.turn_create_params import Document
+from llama_stack_client import LlamaStackClient, Agent, EventLogger, Document
 from termcolor import colored
 
 
