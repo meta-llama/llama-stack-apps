@@ -9,10 +9,7 @@ import fire
 from examples.client_tools.ticker_data import get_ticker_data
 from examples.client_tools.web_search import WebSearchTool
 from examples.client_tools.calculator import calculator
-from llama_stack_client import LlamaStackClient
-from llama_stack_client.lib.agents.agent import Agent
-from llama_stack_client.lib.agents.event_logger import EventLogger
-from llama_stack_client.types.agent_create_params import AgentConfig
+from llama_stack_client import LlamaStackClient, Agent, AgentEventLogger
 
 
 async def run_main(host: str, port: int, disable_safety: bool = False):
@@ -77,7 +74,7 @@ async def run_main(host: str, port: int, disable_safety: bool = False):
             session_id=session_id,
         )
 
-        for log in EventLogger().log(response):
+        for log in AgentEventLogger().log(response):
             log.print()
 
 
