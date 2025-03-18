@@ -7,11 +7,7 @@
 import os
 
 import fire
-from llama_stack_client import LlamaStackClient
-from llama_stack_client.lib.agents.agent import Agent
-from llama_stack_client.lib.agents.event_logger import EventLogger
-from llama_stack_client.types.agent_create_params import AgentConfig
-from llama_stack_client.types.agents.turn_create_params import Document
+from llama_stack_client import LlamaStackClient, Agent, AgentEventLogger, Document
 from termcolor import colored
 
 
@@ -45,7 +41,8 @@ def run_main(host: str, port: int, disable_safety: bool = False):
 
     agent = Agent(
         client,
-        model=selected_model,
+        # model=selected_model,
+        model_id="accounts/fireworks/models/llama-v3p3-70b-instruct",
         sampling_params={
             "strategy": {"type": "top_p", "temperature": 1.0, "top_p": 0.9},
         },
@@ -91,7 +88,7 @@ def run_main(host: str, port: int, disable_safety: bool = False):
             session_id=session_id,
         )
 
-        for log in EventLogger().log(response):
+        for log in AgentEventLogger().log(response):
             log.print()
 
 
