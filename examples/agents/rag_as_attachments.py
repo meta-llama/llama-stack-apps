@@ -5,10 +5,7 @@
 # the root directory of this source tree.
 
 import fire
-from llama_stack_client import LlamaStackClient
-from llama_stack_client.lib.agents.agent import Agent
-from llama_stack_client.lib.agents.event_logger import EventLogger
-from llama_stack_client.types.agents.turn_create_params import Document
+from llama_stack_client import LlamaStackClient, Agent, AgentEventLogger, Document
 from termcolor import colored
 
 
@@ -99,7 +96,7 @@ def run_main(host: str, port: int, disable_safety: bool = False):
         )
         print(f"User> {prompt[0]}")
 
-        for log in EventLogger().log(response):
+        for log in AgentEventLogger().log(response):
             log.print()
 
 

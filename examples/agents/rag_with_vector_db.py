@@ -5,10 +5,7 @@
 # the root directory of this source tree.
 
 import fire
-from llama_stack_client import LlamaStackClient
-from llama_stack_client.lib.agents.agent import Agent
-from llama_stack_client.lib.agents.event_logger import EventLogger
-from llama_stack_client.types import Document
+from llama_stack_client import LlamaStackClient, Agent, AgentEventLogger, RAGDocument
 from termcolor import colored
 from uuid import uuid4
 
@@ -23,7 +20,7 @@ def run_main(host: str, port: int, disable_safety: bool = False):
         "lora_finetune.rst",
     ]
     documents = [
-        Document(
+        RAGDocument(
             document_id=f"num-{i}",
             content=f"https://raw.githubusercontent.com/pytorch/torchtune/main/docs/source/tutorials/{url}",
             mime_type="text/plain",
@@ -110,7 +107,7 @@ def run_main(host: str, port: int, disable_safety: bool = False):
             session_id=session_id,
         )
         print(f"User> {prompt}")
-        for log in EventLogger().log(response):
+        for log in AgentEventLogger().log(response):
             log.print()
 
 
