@@ -24,10 +24,12 @@ def run_main(host: str, port: int, disable_safety: bool = False):
 
     attachments = [
         Document(
-            content=f"https://raw.githubusercontent.com/pytorch/torchtune/main/docs/source/tutorials/{url}",
+            content={
+                "uri": f"https://raw.githubusercontent.com/pytorch/torchtune/main/docs/source/tutorials/{url}",
+            },
             mime_type="text/plain",
         )
-        for i, url in enumerate(urls)
+        for _, url in enumerate(urls)
     ]
 
     client = LlamaStackClient(
@@ -56,7 +58,7 @@ def run_main(host: str, port: int, disable_safety: bool = False):
         sampling_params={
             "strategy": {"type": "top_p", "temperature": 1.0, "top_p": 0.9},
         },
-        tools=["builtin::rag/knowledge_search"],
+        tools=[],
         input_shields=available_shields if available_shields else [],
         output_shields=available_shields if available_shields else [],
     )
@@ -65,7 +67,7 @@ def run_main(host: str, port: int, disable_safety: bool = False):
 
     user_prompts = [
         (
-            "I am attaching some documentation for Torchtune. Help me answer questions I will ask next by using the knowledge_search tool.",
+            "I am attaching some documentation for Torchtune.",
             attachments,
         ),
         (
