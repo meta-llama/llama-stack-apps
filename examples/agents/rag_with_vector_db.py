@@ -4,13 +4,14 @@
 # This source code is licensed under the terms described in the LICENSE file in
 # the root directory of this source tree.
 
-import fire
-from llama_stack_client import LlamaStackClient, Agent, AgentEventLogger, RAGDocument
-from termcolor import colored
 from uuid import uuid4
 
+import fire
+from llama_stack_client import Agent, AgentEventLogger, LlamaStackClient, RAGDocument
+from termcolor import colored
 
-def run_main(host: str, port: int, disable_safety: bool = False):
+
+def main(host: str, port: int, model_id: str, disable_safety: bool = False):
     urls = [
         "memory_optimizations.rst",
         "chat.rst",
@@ -30,6 +31,19 @@ def run_main(host: str, port: int, disable_safety: bool = False):
     ]
 
     client = LlamaStackClient(base_url=f"http://{host}:{port}")
+    available_models = [
+        model.identifier for model in client.models.list() if model.model_type == "llm"
+    ]
+    if not available_models:
+        print(colored("No available models. Exiting.", "red"))
+        return
+    if model_id not in available_models:
+        available_models_str = "\n".join(available_models)
+        print(
+            f"Model `{model_id}` not found. Available models:\n\n{available_models_str}\n"
+        )
+        print(colored("Exiting.", "red"))
+        return
 
     vector_providers = [
         provider for provider in client.providers.list() if provider.api == "vector_io"
@@ -61,19 +75,11 @@ def run_main(host: str, port: int, disable_safety: bool = False):
         chunk_size_in_tokens=512,
     )
 
-    available_models = [
-        model.identifier for model in client.models.list() if model.model_type == "llm"
-    ]
-    if not available_models:
-        print(colored("No available models. Exiting.", "red"))
-        return
-
-    selected_model = available_models[0]
-    print(f"Using model: {selected_model}")
+    print(f"Using model: {model_id}")
 
     agent = Agent(
         client,
-        model=selected_model,
+        model=model_id,
         instructions="You are a helpful assistant. Use knowledge_search tool to gather information needed to answer questions. Answer succintly.",
         sampling_params={
             "strategy": {"type": "top_p", "temperature": 1.0, "top_p": 0.9},
@@ -109,10 +115,6 @@ def run_main(host: str, port: int, disable_safety: bool = False):
         print(f"User> {prompt}")
         for log in AgentEventLogger().log(response):
             log.print()
-
-
-def main(host: str, port: int):
-    run_main(host, port)
 
 
 if __name__ == "__main__":

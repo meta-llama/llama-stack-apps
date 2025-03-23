@@ -7,11 +7,11 @@ import os
 import uuid
 
 import fire
-
 from llama_stack_client import LlamaStackClient
 from llama_stack_client.lib.agents.client_tool import client_tool
 from llama_stack_client.lib.agents.event_logger import EventLogger
 from llama_stack_client.lib.agents.react.agent import ReActAgent
+from termcolor import colored
 
 
 @client_tool
@@ -43,6 +43,19 @@ def main(host: str, port: int):
     )
 
     model = "meta-llama/Llama-3.3-70B-Instruct"
+    available_models = [
+        model.identifier for model in client.models.list() if model.model_type == "llm"
+    ]
+    if model not in available_models:
+        available_models_str = "\n".join(available_models)
+        print(
+            colored(
+                f"Model `{model}` not found. Available models:\n\n{available_models_str}\n",
+                "red",
+            )
+        )
+        return
+
     agent = ReActAgent(
         client=client,
         model=model,

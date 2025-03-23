@@ -5,11 +5,11 @@
 # the root directory of this source tree.
 
 import fire
-from llama_stack_client import LlamaStackClient, Agent, AgentEventLogger, Document
+from llama_stack_client import Agent, AgentEventLogger, Document, LlamaStackClient
 from termcolor import colored
 
 
-def run_main(host: str, port: int, disable_safety: bool = False):
+def main(host: str, port: int, model_id: str, disable_safety: bool = False):
     urls = [
         "memory_optimizations.rst",
         "chat.rst",
@@ -31,11 +31,6 @@ def run_main(host: str, port: int, disable_safety: bool = False):
         base_url=f"http://{host}:{port}",
     )
 
-    available_shields = [shield.identifier for shield in client.shields.list()]
-    if not available_shields:
-        print(colored("No available shields. Disabling safety.", "yellow"))
-    else:
-        print(f"Available shields found: {available_shields}")
     available_models = [
         model.identifier for model in client.models.list() if model.model_type == "llm"
     ]
@@ -43,7 +38,21 @@ def run_main(host: str, port: int, disable_safety: bool = False):
         print(colored("No available models. Exiting.", "red"))
         return
 
-    selected_model = "meta-llama/Llama-3.2-3B-Instruct"
+    if model_id not in available_models:
+        available_models_str = "\n".join(available_models)
+        print(
+            f"Model `{model_id}` not found. Available models:\n\n{available_models_str}\n"
+        )
+        print(colored("Exiting.", "red"))
+        return
+
+    available_shields = [shield.identifier for shield in client.shields.list()]
+    if not available_shields:
+        print(colored("No available shields. Disabling safety.", "yellow"))
+    else:
+        print(f"Available shields found: {available_shields}")
+
+    selected_model = model_id
     print(f"Using model: {selected_model}")
 
     agent = Agent(
@@ -98,10 +107,6 @@ def run_main(host: str, port: int, disable_safety: bool = False):
 
         for log in AgentEventLogger().log(response):
             log.print()
-
-
-def main(host: str, port: int):
-    run_main(host, port)
 
 
 if __name__ == "__main__":
