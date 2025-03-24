@@ -135,7 +135,7 @@ class LlamaChatInterface:
             instructions="You are a helpful assistant that can answer questions based on provided documents. Return your answer short and concise, less than 50 words.",
             tools=[
                 {
-                    "name": "builtin::rag",
+                    "name": "builtin::rag/knowledge_search",
                     "args": {"vector_db_ids": [self.vector_db_id]},
                 }
             ],
