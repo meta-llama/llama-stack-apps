@@ -470,7 +470,7 @@ class App(ctk.CTk):
         except Exception as e:
             print(e)
             print("".join(traceback.format_tb(e.__traceback__)))
-            self.after(0, lambda: self.append_chat(f"\nError: {e}\n"))
+            self.after(0, lambda e=e: self.append_chat(f"\nError: {e}\n"))
         finally:
             self.after(0, self.reset_input_state)
 
@@ -523,7 +523,7 @@ class App(ctk.CTk):
     def clear_chat(self):
         self.chat_history = []
         self.update_chat_display()
-        self.session_id = self.agent.create_session(
+        self.session_id = self.chat_interface.agent.create_session(
             "session-" + str(random.randint(0, 10000))
         )
 
