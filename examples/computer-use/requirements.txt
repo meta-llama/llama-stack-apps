@@ -1,2 +1,3 @@
 gradio
 pyautogui
+llama-stack==0.1.8

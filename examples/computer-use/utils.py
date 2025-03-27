@@ -6,6 +6,7 @@ import requests
 from gradio_client import Client, handle_file
 
 # Initialize clients OUTSIDE the functions
+# launch the OmniParser server locally and pass the URL here
 OMNIPARSER_API_URL = ""
 
 omni_client = Client(OMNIPARSER_API_URL)
@@ -140,6 +141,7 @@ def get_element_center(
         A tuple containing the (x, y) coordinates of the center of the element,
         or None if the element is not found.
     """
+    box_id = int(box_id)
     print(f"Searching for Box ID: {box_id}")  # Debug print 1
     # print(f"Available Box IDs: {[element['id'] for element in parsed_output]}")  # Debug print 2
 
