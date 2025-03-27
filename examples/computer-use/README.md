@@ -39,7 +39,7 @@ The gradio api will start at `localhost:<port>` and live sharaing link will be g
 ### Run the agent
 Please read [this doc](https://llama-stack.readthedocs.io/en/latest/distributions/index.html) and launch a local llama-stack server at `localhost:8321`.
 
-```bash
+
 change the `user_query` in the `app.py` file to your query and run the following command:
 
 ```bash
