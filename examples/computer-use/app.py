@@ -34,8 +34,6 @@ def encode_image(image_path):
     with open(image_path, "rb") as image_file:
         base64_string = base64.b64encode(image_file.read()).decode("utf-8")
         base64_url = f"data:image/png;base64,{base64_string}"
-        with open("encoded_image.txt", "w") as f:
-            f.write(base64_url)
         return base64_url
 
 def encode_image_str(image_path):
