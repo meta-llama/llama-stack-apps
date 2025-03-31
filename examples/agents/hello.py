@@ -14,10 +14,11 @@ def main(host: str, port: int, model_id: str | None = None):
     if "TAVILY_SEARCH_API_KEY" not in os.environ:
         print(
             colored(
-                "Warning: TAVILY_SEARCH_API_KEY is not set; will not use websearch tool.",
+                "Warning: TAVILY_SEARCH_API_KEY is not set; please set it for this script.",
                 "yellow",
             )
         )
+        exit()
 
     client = LlamaStackClient(
         base_url=f"http://{host}:{port}",
@@ -47,7 +48,10 @@ def main(host: str, port: int, model_id: str | None = None):
     available_models = [
         model.identifier
         for model in client.models.list()
-        if model.model_type == "llm" and "405B" not in model.identifier
+        if model.model_type == "llm"
+        and "405B" not in model.identifier
+        and "405b" not in model.identifier
+        and "guard" not in model.identifier
     ]
     if not available_models:
         print(colored("No available models. Exiting.", "red"))
@@ -56,22 +60,13 @@ def main(host: str, port: int, model_id: str | None = None):
         selected_model = model_id
     else:
         selected_model = available_models[0]
-        print(f"Using model: {selected_model}")
+    print(f"Using model: {selected_model}")
 
     agent = Agent(
         client,
         model=selected_model,
-        instructions="You are a helpful assistant",
-        sampling_params={
-            "strategy": {"type": "top_p", "temperature": 1.0, "top_p": 0.9},
-        },
-        tools=(
-            [
-                "builtin::websearch",
-            ]
-            if os.getenv("TAVILY_SEARCH_API_KEY")
-            else []
-        ),
+        instructions="",
+        tools=["builtin::websearch"],
         input_shields=available_shields if available_shields else [],
         output_shields=available_shields if available_shields else [],
         enable_session_persistence=False,
@@ -82,8 +77,8 @@ def main(host: str, port: int, model_id: str | None = None):
     ]
 
     session_id = agent.create_session("test-session")
-
     for prompt in user_prompts:
+        print(f"User> {prompt}")
         response = agent.create_turn(
             messages=[
                 {
