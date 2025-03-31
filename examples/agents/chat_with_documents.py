@@ -8,8 +8,10 @@ import fire
 from llama_stack_client import Agent, AgentEventLogger, Document, LlamaStackClient
 from termcolor import colored
 
+from .utils import check_model_is_available, get_any_available_model
 
-def main(host: str, port: int, model_id: str, disable_safety: bool = False):
+
+def main(host: str, port: int, model_id: str | None = None):
     urls = [
         "memory_optimizations.rst",
         "chat.rst",
@@ -19,7 +21,7 @@ def main(host: str, port: int, model_id: str, disable_safety: bool = False):
         "lora_finetune.rst",
     ]
 
-    attachments = [
+    documents = [
         Document(
             content={
                 "uri": f"https://raw.githubusercontent.com/pytorch/torchtune/main/docs/source/tutorials/{url}",
@@ -33,26 +35,15 @@ def main(host: str, port: int, model_id: str, disable_safety: bool = False):
         base_url=f"http://{host}:{port}",
     )
 
-    available_models = [
-        model.identifier for model in client.models.list() if model.model_type == "llm"
-    ]
-    if not available_models:
-        print(colored("No available models. Exiting.", "red"))
-        return
-
-    if model_id not in available_models:
-        available_models_str = "\n".join(available_models)
-        print(
-            f"Model `{model_id}` not found. Available models:\n\n{available_models_str}\n"
-        )
-        print(colored("Exiting.", "red"))
-        return
-
-    available_shields = [shield.identifier for shield in client.shields.list()]
-    if not available_shields:
-        print(colored("No available shields. Disabling safety.", "yellow"))
+    if model_id is None:
+        model_id = get_any_available_model(client)
+        if model_id is None:
+            return
     else:
-        print(f"Available shields found: {available_shields}")
+        if not check_model_is_available(client, model_id):
+            return
+
+    print(f"Using model: {model_id}")
 
     selected_model = model_id
     print(f"Using model: {selected_model}")
@@ -61,20 +52,14 @@ def main(host: str, port: int, model_id: str, disable_safety: bool = False):
         client,
         model=selected_model,
         instructions="You are a helpful assistant",
-        sampling_params={
-            "strategy": {"type": "top_p", "temperature": 1.0, "top_p": 0.9},
-        },
-        tools=[],
-        input_shields=available_shields if available_shields else [],
-        output_shields=available_shields if available_shields else [],
     )
     session_id = agent.create_session("test-session")
     print(f"Created session_id={session_id} for Agent({agent.agent_id})")
 
     user_prompts = [
         (
-            "I am attaching some documentation for Torchtune.",
-            attachments,
+            "I am attaching some documentation for Torchtune to ask some questions.",
+            documents,
         ),
         (
             "What are the top 5 topics that were explained? Only list succinct bullet points.",
@@ -94,19 +79,18 @@ def main(host: str, port: int, model_id: str, disable_safety: bool = False):
         ),
     ]
 
-    for prompt in user_prompts:
+    for prompt, documents in user_prompts:
         response = agent.create_turn(
             messages=[
                 {
                     "role": "user",
-                    "content": prompt[0],
+                    "content": prompt,
                 }
             ],
-            documents=prompt[1],
+            documents=documents,
             session_id=session_id,
         )
-        print(f"User> {prompt[0]}")
-
+        print(colored(f"User> {prompt}", "blue"))
         for log in AgentEventLogger().log(response):
             log.print()
 
