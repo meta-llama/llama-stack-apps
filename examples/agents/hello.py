@@ -9,6 +9,8 @@ import fire
 from llama_stack_client import LlamaStackClient, Agent, AgentEventLogger
 from termcolor import colored
 
+from .utils import check_model_is_available, get_any_available_model
+
 
 def main(host: str, port: int, model_id: str | None = None):
     if "TAVILY_SEARCH_API_KEY" not in os.environ:
@@ -18,7 +20,7 @@ def main(host: str, port: int, model_id: str | None = None):
                 "yellow",
             )
         )
-        exit()
+        return
 
     client = LlamaStackClient(
         base_url=f"http://{host}:{port}",
@@ -31,44 +33,23 @@ def main(host: str, port: int, model_id: str | None = None):
     else:
         print(f"Available shields found: {available_shields}")
 
-    llm_inference_provider_ids = [
-        p.provider_id
-        for p in client.providers.list()
-        if p.api == "inference" and p.provider_type != "sentence-transformers"
-    ]
-
-    if model_id is not None:
-        client.models.register(
-            model_id=model_id,
-            model_type="llm",  # model_type
-            provider_id=llm_inference_provider_ids[0],
-            provider_model_id=model_id,
-        )
-
-    available_models = [
-        model.identifier
-        for model in client.models.list()
-        if model.model_type == "llm"
-        and "405B" not in model.identifier
-        and "405b" not in model.identifier
-        and "guard" not in model.identifier
-    ]
-    if not available_models:
-        print(colored("No available models. Exiting.", "red"))
-        return
-    elif model_id is not None:
-        selected_model = model_id
+    if model_id is None:
+        model_id = get_any_available_model(client)
+        if model_id is None:
+            return
     else:
-        selected_model = available_models[0]
-    print(f"Using model: {selected_model}")
+        if not check_model_is_available(client, model_id):
+            return
+
+    print(f"Using model: {model_id}")
 
     agent = Agent(
         client,
-        model=selected_model,
+        model=model_id,
         instructions="",
         tools=["builtin::websearch"],
-        input_shields=available_shields if available_shields else [],
-        output_shields=available_shields if available_shields else [],
+        input_shields=available_shields,
+        output_shields=available_shields,
         enable_session_persistence=False,
     )
     user_prompts = [
@@ -80,12 +61,7 @@ def main(host: str, port: int, model_id: str | None = None):
     for prompt in user_prompts:
         print(f"User> {prompt}")
         response = agent.create_turn(
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt,
-                }
-            ],
+            messages=[{"role": "user", "content": prompt}],
             session_id=session_id,
         )
 

@@ -13,6 +13,8 @@ from llama_stack_client.lib.agents.react.agent import ReActAgent
 from llama_stack_client.lib.agents.react.tool_parser import ReActOutput
 from termcolor import colored
 
+from .utils import check_model_is_available, get_any_available_model
+
 
 def torchtune(query: str = "torchtune"):
     """
@@ -35,28 +37,24 @@ def torchtune(query: str = "torchtune"):
     return dummy_response
 
 
-def get_model(client: LlamaStackClient):
-    available_models = [
-        model.identifier
-        for model in client.models.list()
-        if model.model_type == "llm" and "guard" not in model.identifier
-    ]
-    return available_models[0]
-
-
-def main(host: str, port: int, model: str | None = None):
+def main(host: str, port: int, model_id: str | None = None):
     client = LlamaStackClient(
         base_url=f"http://{host}:{port}",
         provider_data={"tavily_search_api_key": os.getenv("TAVILY_SEARCH_API_KEY")},
     )
 
-    if model is None:
-        model = get_model(client)
+    if model_id is None:
+        model_id = get_any_available_model(client)
+        if model_id is None:
+            return
+    else:
+        if not check_model_is_available(client, model_id):
+            return
 
-    print(colored(f"Using model: {model}", "green"))
+    print(colored(f"Using model: {model_id}", "green"))
     agent = ReActAgent(
         client=client,
-        model=model,
+        model=model_id,
         tools=["builtin::websearch", torchtune],
         response_format={
             "type": "json_schema",
