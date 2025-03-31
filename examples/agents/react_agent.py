@@ -8,13 +8,12 @@ import uuid
 
 import fire
 from llama_stack_client import LlamaStackClient
-from llama_stack_client.lib.agents.client_tool import client_tool
 from llama_stack_client.lib.agents.event_logger import EventLogger
 from llama_stack_client.lib.agents.react.agent import ReActAgent
+from llama_stack_client.lib.agents.react.tool_parser import ReActOutput
 from termcolor import colored
 
 
-@client_tool
 def torchtune(query: str = "torchtune"):
     """
     Answer information about torchtune.
@@ -23,71 +22,63 @@ def torchtune(query: str = "torchtune"):
     :returns: Information about torchtune
     """
     dummy_response = """
-            torchtune is a PyTorch library for easily authoring, finetuning and experimenting with LLMs.
+    torchtune is a PyTorch library for easily authoring, finetuning and experimenting with LLMs.
 
-            torchtune provides:
+    torchtune provides:
 
-            PyTorch implementations of popular LLMs from Llama, Gemma, Mistral, Phi, and Qwen model families
-            Hackable training recipes for full finetuning, LoRA, QLoRA, DPO, PPO, QAT, knowledge distillation, and more
-            Out-of-the-box memory efficiency, performance improvements, and scaling with the latest PyTorch APIs
-            YAML configs for easily configuring training, evaluation, quantization or inference recipes
-            Built-in support for many popular dataset formats and prompt templates
+    PyTorch implementations of popular LLMs from Llama, Gemma, Mistral, Phi, and Qwen model families
+    Hackable training recipes for full finetuning, LoRA, QLoRA, DPO, PPO, QAT, knowledge distillation, and more
+    Out-of-the-box memory efficiency, performance improvements, and scaling with the latest PyTorch APIs
+    YAML configs for easily configuring training, evaluation, quantization or inference recipes
+    Built-in support for many popular dataset formats and prompt templates
     """
     return dummy_response
 
 
-def main(host: str, port: int):
+def get_model(client: LlamaStackClient):
+    available_models = [
+        model.identifier
+        for model in client.models.list()
+        if model.model_type == "llm" and "guard" not in model.identifier
+    ]
+    return available_models[0]
+
+
+def main(host: str, port: int, model: str | None = None):
     client = LlamaStackClient(
         base_url=f"http://{host}:{port}",
         provider_data={"tavily_search_api_key": os.getenv("TAVILY_SEARCH_API_KEY")},
     )
 
-    model = "meta-llama/Llama-3.3-70B-Instruct"
-    available_models = [
-        model.identifier for model in client.models.list() if model.model_type == "llm"
-    ]
-    if model not in available_models:
-        available_models_str = "\n".join(available_models)
-        print(
-            colored(
-                f"Model `{model}` not found. Available models:\n\n{available_models_str}\n",
-                "red",
-            )
-        )
-        return
+    if model is None:
+        model = get_model(client)
 
+    print(colored(f"Using model: {model}", "green"))
     agent = ReActAgent(
         client=client,
         model=model,
-        tools=[
-            "builtin::websearch",
-            torchtune,
-        ],
-        json_response_format=True,
+        tools=["builtin::websearch", torchtune],
+        response_format={
+            "type": "json_schema",
+            "json_schema": ReActOutput.model_json_schema(),
+        },
     )
 
     session_id = agent.create_session(f"test-session-{uuid.uuid4().hex}")
-
+    user_prompt = "Whats the best place in new york for a pizza slice at 2am ?"
+    print(colored(f"User> {user_prompt}", "blue"))
     response = agent.create_turn(
-        messages=[
-            {
-                "role": "user",
-                "content": "Whats the best place in new york for a pizza slice at 2am ?",
-            }
-        ],
+        messages=[{"role": "user", "content": user_prompt}],
         session_id=session_id,
         stream=True,
     )
     for log in EventLogger().log(response):
         log.print()
 
+    user_prompt2 = "What are the popular llms supported in torchtune?"
+    print(colored(f"User> {user_prompt2}", "blue"))
     response2 = agent.create_turn(
-        messages=[
-            {
-                "role": "user",
-                "content": "What are the popular llms supported in torchtune?",
-            }
-        ],
+        messages=[{"role": "user", "content": user_prompt2}],
         session_id=session_id,
         stream=True,
     )
