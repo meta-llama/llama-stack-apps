@@ -1,8 +1,10 @@
 import logging
 from llama_stack_client.lib.agents.client_tool import client_tool
+
 # Set up logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
+
 
 @client_tool
 def calculator(x: float, y: float, operation: str) -> dict:
