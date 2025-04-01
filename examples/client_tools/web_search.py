@@ -4,9 +4,11 @@
 # This source code is licensed under the terms described in the LICENSE file in
 # the root directory of this source tree.
 
+import asyncio
 import json
 from typing import Dict
 
+import httpx
 import requests
 
 from llama_stack_client.lib.agents.client_tool import ClientTool
@@ -126,12 +128,42 @@ class BraveSearch:
         return {"query": query, "top_k": clean_response}
 
 
+class TavilySearch:
+    def __init__(self, api_key: str) -> None:
+        self.api_key = api_key
+
+    def search(self, query: str) -> str:
+        return asyncio.run(self.asearch(query))
+
+    async def asearch(self, query: str) -> str:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "https://api.tavily.com/search",
+                json={"api_key": self.api_key, "query": query},
+            )
+            response.raise_for_status()
+
+        return json.dumps(self._cleanup_response(response.json()))
+
+    def _cleanup_response(self, search_response, top_k=3):
+        return {
+            "query": search_response["query"],
+            "top_k": search_response["results"][:top_k],
+        }
+
+
 class WebSearchTool(ClientTool):
     """Tool to search web for queries"""
 
-    def __init__(self, api_key: str):
+    def __init__(self, engine: str, api_key: str):
         self.api_key = api_key
-        self.engine = BraveSearch(api_key)
+        assert engine in ["brave", "tavily"], (
+            "Invalid engine, use one of brave or tavily"
+        )
+        if engine == "brave":
+            self.engine = BraveSearch(api_key)
+        else:
+            self.engine = TavilySearch(api_key)
 
     def get_name(self) -> str:
         return "web_search"

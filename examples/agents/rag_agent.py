@@ -7,11 +7,18 @@
 from uuid import uuid4
 
 import fire
+import time
 from llama_stack_client import Agent, AgentEventLogger, LlamaStackClient, RAGDocument
 from termcolor import colored
 
+from .utils import check_model_is_available, get_any_available_model
 
-def main(host: str, port: int, model_id: str, disable_safety: bool = False):
+
+def main(
+    host: str,
+    port: int,
+    model_id: str | None = None,
+):
     urls = [
         "memory_optimizations.rst",
         "chat.rst",
@@ -31,19 +38,16 @@ def main(host: str, port: int, model_id: str, disable_safety: bool = False):
     ]
 
     client = LlamaStackClient(base_url=f"http://{host}:{port}")
-    available_models = [
-        model.identifier for model in client.models.list() if model.model_type == "llm"
-    ]
-    if not available_models:
-        print(colored("No available models. Exiting.", "red"))
-        return
-    if model_id not in available_models:
-        available_models_str = "\n".join(available_models)
-        print(
-            f"Model `{model_id}` not found. Available models:\n\n{available_models_str}\n"
-        )
-        print(colored("Exiting.", "red"))
-        return
+
+    if model_id is None:
+        model_id = get_any_available_model(client)
+        if model_id is None:
+            return
+    else:
+        if not check_model_is_available(client, model_id):
+            return
+
+    print(f"Using model: {model_id}")
 
     vector_providers = [
         provider for provider in client.providers.list() if provider.api == "vector_io"
@@ -53,13 +57,8 @@ def main(host: str, port: int, model_id: str, disable_safety: bool = False):
         return
 
     selected_vector_provider = vector_providers[0]
-    available_shields = [shield.identifier for shield in client.shields.list()]
-    if not available_shields:
-        print(colored("No available shields. Disabling safety.", "yellow"))
-    else:
-        print(f"Available shields found: {available_shields}")
 
-    # Create a vector database instead of memory bank
+    # Create a vector database
     vector_db_id = f"test_vector_db_{uuid4()}"
     client.vector_dbs.register(
         vector_db_id=vector_db_id,
@@ -69,50 +68,45 @@ def main(host: str, port: int, model_id: str, disable_safety: bool = False):
     )
 
     # Insert documents using the RAG tool
+    start_time = time.time()
     client.tool_runtime.rag_tool.insert(
         documents=documents,
         vector_db_id=vector_db_id,
         chunk_size_in_tokens=512,
     )
-
-    print(f"Using model: {model_id}")
+    end_time = time.time()
+    print(colored(f"Inserted documents in {end_time - start_time:.2f}s", "cyan"))
 
     agent = Agent(
         client,
         model=model_id,
         instructions="You are a helpful assistant. Use knowledge_search tool to gather information needed to answer questions. Answer succintly.",
-        sampling_params={
-            "strategy": {"type": "top_p", "temperature": 1.0, "top_p": 0.9},
-        },
         tools=[
             {
                 "name": "builtin::rag/knowledge_search",
                 "args": {"vector_db_ids": [vector_db_id]},
             }
         ],
-        input_shields=available_shields if available_shields else [],
-        output_shields=available_shields if available_shields else [],
+        # Optionally can set sampling params
+        sampling_params={
+            "strategy": {"type": "top_p", "temperature": 1.0, "top_p": 0.9},
+        },
     )
     session_id = agent.create_session("test-session")
     print(f"Created session_id={session_id} for Agent({agent.agent_id})")
 
     user_prompts = [
-        "Was anything related to 'Llama3' discussed, if so what?",
+        "Is anything related to 'Llama3' mentioned, if so what?",
         "Tell me how to use LoRA",
         "What about Quantization?",
     ]
 
     for prompt in user_prompts:
         response = agent.create_turn(
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt,
-                }
-            ],
+            messages=[{"role": "user", "content": prompt}],
             session_id=session_id,
         )
-        print(f"User> {prompt}")
+        print(colored(f"User> {prompt}", "blue"))
         for log in AgentEventLogger().log(response):
             log.print()
 
