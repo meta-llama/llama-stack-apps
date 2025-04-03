@@ -40,6 +40,13 @@ A basic chatbot with web search capabilities. Shows how to create a simple agent
 ```bash
 python -m examples.agents.simple_chat --host localhost --port 8321 --model_id meta-llama/Llama-3.3-70B-Instruct
 ```
+### Multimodal Chat (`chat_multimodal.py`)
+
+Demonstrates how to create an agent with multimodal capabilities
+
+```bash
+python -m examples.agents.chat_multimodal --host localhost --port 8321 --model_id meta-llama/Llama-3.3-70B-Instruct
+```
 
 ### Chat with Documents (`chat_with_documents.py`)
 
