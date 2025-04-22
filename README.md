@@ -55,12 +55,6 @@ This will install all dependencies required to (1) Build and start a Llama Stack
 Once your server is started, you should have seen outputs --
 ```
 ...
-Serving POST /agentic_system/session/delete
-Serving POST /agentic_system/session/get
-Serving POST /agentic_system/step/get
-Serving POST /agentic_system/turn/get
-Serving GET /telemetry/get_trace
-Serving POST /telemetry/log_event
 Listening on :::8321
 INFO:     Started server process [587053]
 INFO:     Waiting for application startup.
@@ -112,7 +106,6 @@ Start an app (local) and interact with it by running the following command:
 ```bash
 PYTHONPATH=. python examples/agent_store/app.py localhost 8321
 ```
-This will start a Mesop app and you can go to `localhost:7860` to play with the chat interface.
 
 <img src="demo.png" alt="Chat App" width="600"/>
 
