@@ -10,8 +10,6 @@ This repo shows examples of applications built on top of [Llama Stack](https://g
   - zero-shot: the model can learn to call tools using previously unseen, in-context tool definitions
 - providing system level safety protections using models like Llama Guard.
 
-> [!NOTE]
-> The Llama Stack API is still evolving and may change. Feel free to build and experiment, but please don't rely on its stability just yet!
 
 
 An agentic app requires a few components:
