@@ -13,6 +13,9 @@ from llama_stack_client import LlamaStackClient
 from llama_stack_client.lib.agents.client_tool import client_tool
 from llama_stack_client.lib.agents.event_logger import EventLogger
 from llama_stack_client.lib.agents.agent import Agent
+import mss 
+from gradio_client import Client, handle_file
+import shutil
 
 from llama_stack_client.lib.agents.react.agent import ReActAgent
 from llama_stack_client.lib.inference.utils import MessageAttachment
@@ -21,6 +24,7 @@ from utils import (
     get_element_center,
     parse_omni_parser_output,
     run_parser,
+    ComputerToolParser,
 )
 class AnswerFormat(BaseModel):
     thoughts: str
@@ -34,22 +38,18 @@ def encode_image(image_path):
     with open(image_path, "rb") as image_file:
         base64_string = base64.b64encode(image_file.read()).decode("utf-8")
         base64_url = f"data:image/png;base64,{base64_string}"
+
         return base64_url
 
-def encode_image_str(image_path):
-    with open(image_path, "rb") as image_file:
-        base64_string = base64.b64encode(image_file.read()).decode("utf-8")
-        return base64_string
 # ------------------ Tool Implementations ------------------
 @client_tool
-def left_click_tool(box_id: int = None) -> str:
+def left_click_tool(box_id: int) -> str:
     """
     Performs a left click.
     If a box_id is provided, this tool looks up the coordinate from the global latest OmniParser output
     and clicks at the center of the identified element. Otherwise, it performs a left click at the current mouse position.
 
-    text
-    :param box_id: The ID of the element to click (optional).
+    :param box_id: The ID of the element to click. Must be a int value. Can not be None.
     :returns: A message describing the action taken.
     """
     global latest_omni_output
@@ -67,13 +67,13 @@ def left_click_tool(box_id: int = None) -> str:
 
 
 @client_tool
-def right_click_tool(box_id: int = None) -> str:
+def right_click_tool(box_id: int) -> str:
     """
     Given a box_id, this tool looks up the coordinate from the global latest OmniParser output
     and simulates a right click.
 
     text
-    :param box_id: The ID of the element to click.
+    :param box_id: The ID of the element to click. Must be a int value. Can not be None.
     :returns: A message describing the action taken.
     """
     global latest_omni_output
@@ -98,7 +98,7 @@ def double_click_tool(box_id: int) -> str:
     Otherwise, double-clicks at the current mouse position.
 
     text
-    :param box_id: The ID of the element to double-click.
+    :param box_id: The ID of the element to double-click. Must be a int value. Can not be None.
     :returns: A message describing the action taken.
     """
     global latest_omni_output
@@ -121,7 +121,7 @@ def hover_tool(box_id: int) -> str:
     Moves the mouse pointer to the center of an element identified by box_id to simulate hovering.
 
     text
-    :param box_id: The ID of the element to hover over.
+    :param box_id: The ID of the element to hover over. Must be a int value. Can not be None.
     :returns: A message describing the action taken.
     """
     global latest_omni_output
@@ -139,7 +139,7 @@ def mouse_move_tool(box_id: int) -> str:
     Moves the mouse pointer to the given coordinates or to the center of an element if box_id is provided.
 
     text
-    :param box_id: The ID of the element to move to.
+    :param box_id: The ID of the element to move to. Must be a int value. Can not be None.
     :returns: A message describing the action taken.
     """
     global latest_omni_output
@@ -164,6 +164,11 @@ def key_tool(key_name: str) -> str:
     :param key_name: The key to press.
     :returns: A message describing the action taken.
     """
+    if '+' in key_name:
+        key_names = key_name.split('+')
+        for key in key_names:
+            pyautogui.press(key)
+        return f"Pressed the keys: {key_names}."
     if key_name:
         pyautogui.press(key_name)
         return f"Pressed the key: '{key_name}'."
@@ -274,12 +279,21 @@ class ComputerUseAgent:
         1. Screenshot the current UI.
         2. Feed screenshot to OmniParser server via run_parser().
         3. Compose a conversation prompt with user query and the OmniParser output.
-        4. ReAct agent will use prompt + screenshot to do tool_call.
-        5. Repeat until the goal is reached or the maximum number of steps is executed.
+        4. Get a command from the ReAct agent (e.g., "click Box 1" or "type Box 2: clone llama-stack repo").
+        5. Parse and execute the tool call.
+        6. Repeat until the goal is reached or the maximum number of steps is executed.
         """
         # Replace with the model you plan to use.
-        model = "meta-llama/Llama-3.2-90B-Vision-Instruct"
-       
+        #model = "meta-llama/Llama-3.2-90B-Vision-Instruct"
+        model = "meta-llama/Llama-4-Maverick-17B-128E-Instruct"
+        #user_query = "Use the Apple Map app to get the time needed to drive to SFO now"
+        #user_query = "Open the launch pad and create a new Zoom meeting for me"
+        #user_query = "Open safari, search 'current Meta stock price' and return that price"  #  Example query - will loop forever with this.
+        
+        user_query = input("Enter your query (e.g., 'clone llama-stack repo'): ")
+        print("Starting computer agent for query:", user_query)
+        print("Using model:", model)
+        print('Connecting to host: ', host, 'port: ', port)
         if host == "localhost":
             client = LlamaStackClient(
             base_url=f"http://{host}:{port}",
@@ -288,37 +302,46 @@ class ComputerUseAgent:
         agent = ReActAgent(
             client=client,
             model=model,
-            client_tools=self.tools,
-            #json_response_format=True,
-            sampling_params={"top_p": 1.0, "temperature": 0.0},
+            tools=self.tools,
+            tool_parser=ComputerToolParser(),
+            max_infer_iters=1,
+            
         )
-        
-
-        user_query = "Open Safari, use Google to search 'current Meta stock price' and return that price"  #  Example query - will loop forever with this.
-        # user_query = input("Enter your query (e.g., 'clone llama-stack repo'): ")
-        print("Starting computer agent for query:", user_query)
-
+        OMNIPARSER_API_URL = "https://9dffc16f05cc82b428.gradio.live"
+        omni_client = Client(OMNIPARSER_API_URL)
+        test_id = "test" + str(uuid.uuid4())
+        log_dir = f"/tmp/{test_id}"
+        os.makedirs(log_dir, exist_ok=True)
         while self.step < self.max_steps:
             print(f"\n---- Step {self.step + 1} ----")
             # Create a new session for each step because the context is too long for the agent to remember.
-            session_id = agent.create_session(f"computer-use-session-{uuid.uuid4().hex}-step-{self.step}")
+            session_id = agent.create_session(f"computer-use-session-{test_id}-step-{self.step}")
             # Take a screenshot of the current screen.
-            screenshot_path = f"/tmp/temp_screenshot_{self.step}.png"
-            screen_image = pyautogui.screenshot()
+            screenshot_path = f"/tmp/{test_id_}screenshot_{self.step}.png"
+            #screen_image = pyautogui.screenshot()
+            with mss.mss() as sct:
+                filename = sct.shot(output=screenshot_path)
             # Resize to 640x400 to save space and reduce latency in sending the image to the server.
-            resized_image = screen_image.resize((640, 400))
+            #resized_image = screen_image.resize((640, 400))
             # Save the resized image
-            resized_image.save(screenshot_path)
+            #resized_image.save(screenshot_path)
             #screen_image.save(screenshot_path)
             print("Screenshot taken and saved as:", screenshot_path)
-
+            
             # Call OmniParser with the screenshot to get structured UI info.
             global latest_omni_output
-            _, raw_parse_output = run_parser(screenshot_path)
+            annotated_image_path, raw_parse_output = run_parser(omni_client,screenshot_path)
+            shutil.copyfile(annotated_image_path, f"/tmp/{test_id}_screenshot_{self.step}_annotated.png")
+            # Save the annotated image
+            #print('annotated_image',annotated_image)
+            # annotated_image_path = f"/tmp/temp_annotated_image_{self.step}.png"
+            # annotated_image.save(annotated_image_path)
+            # Parse the output from the OmniParser server.
             parsed_content_list = parse_omni_parser_output(raw_parse_output)
             latest_omni_output = parsed_content_list
             # Prepare the prompt for the agent that includes the user query and current UI state.
             screen_info = ""
+            num_content = len(parsed_content_list)
             for content in parsed_content_list:
                 screen_info += f"Box ID {content['id']}, type: {content['type']}, interactivity: {content['interactivity']},content: {content['content']}\n"
             action_history = "\n".join([f'Step {step}: {history}' for step, history in enumerate(self.action_history)])
@@ -327,7 +350,7 @@ class ComputerUseAgent:
 
             Current State:
             - Action History: {action_history}
-            - Screen Elements: {len(screen_info.split('ID:'))-1} interactive elements detected
+            - Screen Elements: {num_content} elements detected
 
             Element Details:
             {screen_info}
@@ -350,60 +373,60 @@ class ComputerUseAgent:
             - Ignoring previous failed attempts
 
             IMPORTANT: YOUR RESPONSE MUST BE IN VALID JSON FORMAT WITH DOUBLE QUOTES. Your response must follow this exact structure:
-
+            if you need to click on an element:
             {
-            'thought': 'Your thought process analyzing the screenshot and determining the best action',
-            'action': {
-                'tool_name': 'left_click_tool',
-                'tool_params': [
+            "thought": "Your step-by-step thinking process on analyzing the screenshot and determining the best action",
+            "action": {
+                "tool_name": "left_click_tool",
+                "tool_params": [
                 {
-                    'name': 'box_id',
-                    'value': 22
+                    "name": "box_id",
+                    "value": 22
                 }
                 ]
             },
-            'answer': 'Description of the action taken, the name of the element () you interacted with, and the next step as detailed as possible'
+            "answer": "Description of the action taken, the name of the element you interacted with, and the next step as detailed as possible"
             }
 
             OR if typing is needed for search:
 
             {
-            'thought': 'Your thought process',
-            'action': {
-                'tool_name': 'type_tool',
-                'tool_params': [
+            "thought": "Your step-by-step thinking process on analyzing the screenshot and determining the best action",
+            "action": {
+                "tool_name": "type_tool",
+                "tool_params": [
                 {
-                    'name': 'box_id',
-                    'value': 22
+                    "name": "box_id",
+                    "value": 22
                 },
                 {
-                    'name': 'words',
-                    'value': 'text to type'
+                    "name": "words",
+                    "value": "text to type"
                 },
                 {
-                    'name': 'enter',
-                    'value': 'true'
+                    "name": "enter",
+                    "value": "true"
                 }
                 ]
             },
-            'answer': 'Description of the action taken and the name of the element you interacted with, and the next step, as detailed as possible'
+            "answer": "Description of the action taken and the name of the element you interacted with, and the next step, as detailed as possible"
             }
 
             OR if you found the answer and believe the task is completed:
 
             {
-            'thought': 'Your thought process',
-            'action': {
-                'tool_name': 'output_final_answer',
-                'tool_params': [
+            "thought": "Your thought process",
+            "action": {
+                "tool_name": "output_final_answer",
+                "tool_params": [
                 {
-                    'name': 'answer',
-                    'value': 'The answer is 123'
+                    "name": "answer",
+                    "value": "The answer is 123"
                 }
                 
                 ]
             },
-            'answer': 'used output_final_answer, task completed'
+            "answer": "used output_final_answer, task completed"
             }
 
 
@@ -412,27 +435,30 @@ class ComputerUseAgent:
 
             
             messages = [
-        {
-            "role": "user",
-            "content": {
-            "type": "image",
-            "image": {
-                "url": {
-                "uri": encode_image(screenshot_path)
+            {
+                "role": "user",
+                "content": {
+                "type": "image",
+                "image": {
+                    "url": {
+                    "uri": encode_image(annotated_image_path)
+                    }
                 }
+                }
+            },
+            {
+                "role": "user",
+                "content": prompt_instruction
             }
-            }
-        },
-        {
-            "role": "user",
-            "content": prompt_instruction
-        }
-]
+            ]
+            with open(f"/tmp/{test_id}_prompt_{self.step}.txt", "w") as f:         
+                json.dumps(messages)
             response = agent.create_turn(
             messages=messages,
             session_id=session_id,
             stream=True,
             )
+            #print('prompt: ', prompt_instruction)
             action_str = ""
             for log in EventLogger().log(response):  
                 action_str += log.content
