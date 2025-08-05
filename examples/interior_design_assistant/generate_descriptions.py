@@ -74,7 +74,7 @@ def main(host: str, port: int, image_dir: str, output_dir: str):
         with open(memory_dir / f"{p}.txt", "w") as f:
             f.write(response)
 
-        print(f"Finsihed processing {p}")
+        print(f"Finished processing {p}")
 
 
 if __name__ == "__main__":
